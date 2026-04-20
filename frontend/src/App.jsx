@@ -29,11 +29,13 @@ function App() {
       return;
     }
     let algorithms = parseCSV(await file.text());
-    console.log(importAlgs(algorithms));
+    console.log(algorithms);
+    console.log(await importAlgs(algorithms));
   };
 
   function parseCSV(csvText, delimiter = ",") {
-    const values = [];
+    const algorithms = [];
+
     let current = "";
     let inQuotes = false;
 
@@ -41,33 +43,47 @@ function App() {
       const char = csvText[i];
       const nextChar = csvText[i + 1];
 
+      // Handle quotes (same as TextFieldParser)
       if (char === '"') {
         if (inQuotes && nextChar === '"') {
           current += '"';
-          i += 1;
+          i++; // skip escaped quote
         } else {
           inQuotes = !inQuotes;
         }
+
+        // End of field
       } else if (char === delimiter && !inQuotes) {
         const trimmed = current.trim();
-        if (trimmed !== "") values.push(trimmed);
+        if (trimmed.length > 3) {
+          algorithms.push(trimmed);
+        }
         current = "";
+
+        // End of line
       } else if ((char === "\n" || char === "\r") && !inQuotes) {
         if (char === "\r" && nextChar === "\n") {
-          i += 1;
+          i++; // handle Windows CRLF
         }
+
         const trimmed = current.trim();
-        if (trimmed !== "") values.push(trimmed);
+        if (trimmed.length > 3) {
+          algorithms.push(trimmed);
+        }
+
         current = "";
       } else {
         current += char;
       }
     }
 
+    // last value
     const finalValue = current.trim();
-    if (finalValue !== "") values.push(finalValue);
+    if (finalValue.length > 3) {
+      algorithms.push(finalValue);
+    }
 
-    return values;
+    return algorithms;
   }
 
   return (

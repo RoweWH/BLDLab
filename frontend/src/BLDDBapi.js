@@ -34,6 +34,10 @@ export async function insertParityAlg(algObject){
 }
 
 export async function importAlgs(algorithms){
-   const response = await axios.post(`${BLDDB}/Import/ImportAlgorithms`, algorithms);
-   return response.data;
+   const response = await axios.post(`${BLDDB}/Import`, algorithms, {
+      headers: {
+         'Content-Type': 'application/json'
+      }
+   })
+   return response?.data;
 }
