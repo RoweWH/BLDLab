@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import {importAlgs} from "../BLDDBapi";
 
-export function ImportPage() {
+export function Import() {
   const [file, setFile] = useState();
 
   const inputFile = useRef(null);
@@ -110,12 +110,10 @@ export function ImportPage() {
 
   return (
     <>
-      <section id="center">
-        <input type="file" onChange={handleFile} ref={inputFile}></input>
-        <button className="counter" onClick={submitFile}>
-          Upload File
-        </button>
-      </section>
-    </>
+     <input type="file" onChange={handleFile} ref={inputFile}></input>
+      <button className="counter" onClick={submitFile}>
+        Upload File
+      </button>
+   </>
   );
 }
