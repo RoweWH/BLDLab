@@ -2,9 +2,9 @@ import axios from 'axios';
 
 const BLDDB = 'https://rowewh.com/api';
 
-export async function getEdgeAlgs(buffer, first, second){
-   const response = await axios.get(`${BLDDB}/Edges/buffer=${buffer}&first=${first}&second=${second}`);
-   return response.data;
+export async function getEdgeAlgs(buffer, first, second) {
+   const response = await axios.get(`${BLDDB}/Edges?buffer=${buffer}&first=${first}&second=${second}`);
+   return response;
 }
 
 export async function insertEdgeAlg(algObject){
@@ -12,9 +12,9 @@ export async function insertEdgeAlg(algObject){
    return response.data;
 }
 
-export async function getCornerAlgs(buffer, first, second){
-   const response = await axios.get(`${BLDDB}/Corners/buffer=${buffer}&first=${first}&second=${second}`);
-   return response.data;
+export async function getCornerAlgs(buffer, first, second) {
+   const response = await axios.get(`${BLDDB}/Corners?buffer=${buffer}&first=${first}&second=${second}`);
+   return response;
 }
     
 export async function insertCornerAlg(algObject){
@@ -22,11 +22,19 @@ export async function insertCornerAlg(algObject){
    return response.data;
 }
 
-export async function getParityAlgs(firstEdge, secondEdge, firstCorner, secondCorner, twist){
-   
-   const response = await axios.get(`${BLDDB}/Parity?firstEdge=${firstEdge}&secondEdge=${secondEdge}&firstCorner=${firstCorner}&secondCorner=${secondCorner}&twist=${twist === null ? '' : twist}`);
-   return response.data;
-}
+export async function getParityAlgs(firstEdge, secondEdge, firstCorner, secondCorner, twist) {
+   const url =
+     `${BLDDB}/Parity` +
+     `?firstEdge=${firstEdge}` +
+     `&secondEdge=${secondEdge}` +
+     `&firstCorner=${firstCorner}` +
+     `&secondCorner=${secondCorner}` +
+     `&twist=${twist ?? ""}`;
+ 
+   const response = await axios.get(url);
+   console.log(response);
+   return response;
+ }
 
 export async function insertParityAlg(algObject){
    const response = await axios.post(`${BLDDB}/Parity`, algObject);

@@ -125,17 +125,7 @@ export function NavBar() {
                       role="menuitem"
                       onClick={() => setShowParityDropdown(false)}
                     >
-                      LTCT
-                    </NavLink>
-                  </li>
-                  <li role="none">
-                    <NavLink
-                      to="/T2C"
-                      className={linkClass}
-                      role="menuitem"
-                      onClick={() => setShowParityDropdown(false)}
-                    >
-                      T2C
+                      LTCT/T2C
                     </NavLink>
                   </li>
                 </ul>

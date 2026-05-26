@@ -7,7 +7,6 @@ import {Edges} from "./pages/Edges";
 import {Corners} from "./pages/Corners";
 import {TwoE2C} from "./pages/TwoE2C";
 import {LTCT} from "./pages/LTCT";
-import {T2C} from "./pages/T2C";
 import "./App.css";
 
 function App() {
@@ -23,7 +22,6 @@ function App() {
             <Route path="/corners" element={<Corners/>}/>
             <Route path="/2E2C" element={<TwoE2C/>}/>
             <Route path="/LTCT" element={<LTCT/>}/>
-            <Route path="/T2C" element={<T2C/>}/>
           </Route>
         </Routes>
       </Router>
