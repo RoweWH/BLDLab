@@ -1,8 +1,10 @@
 import logoDark from "../assets/BLDLabLogoDark.png";
 import logoLight from "../assets/BLDLabLogoLight.png";
 import { ThemeToggle } from "../components/ThemeToggle";
-import { NavLink } from "react-router-dom";
-import { useSyncExternalStore } from "react";
+import { useLocation } from "react-router-dom";
+import { useSyncExternalStore, useState } from "react";
+import { Login } from "../components/Login";
+import { CreateAccount } from "../components/CreateAccount";
 
 function getThemeSnapshot() {
   return document.documentElement.dataset.theme === "dark";
@@ -23,24 +25,48 @@ export function Landing() {
   const dark = useSyncExternalStore(
     subscribeToTheme,
     getThemeSnapshot,
-    () => false
+    () => false,
+  );
+
+  const location = useLocation();
+
+  const [showCreateAccount, setShowCreateAccount] = useState(
+    location.state?.mode === "signup",
   );
 
   return (
-    <div className="page">
+    <div className="page landing-page">
       <ThemeToggle className="nav-bar__theme" />
 
-      <h1>
-        <img
-          src={dark ? logoDark : logoLight}
-          alt="BLDLab"
-          style={{ height: "120px", width: "auto" }}
-        />
+      <h1 className="landing-logo">
+        <img src={dark ? logoDark : logoLight} alt="BLDLab" />
       </h1>
 
-      <NavLink to="/home" className="nav-bar__link">
-        Enter
-      </NavLink>
+      <div className="auth-switch-container">
+        <div className="auth-panel">
+          {showCreateAccount ? (
+            <>
+              <CreateAccount />
+              <button
+                className="button-style auth-toggle-button"
+                onClick={() => setShowCreateAccount(false)}
+              >
+                Login
+              </button>
+            </>
+          ) : (
+            <>
+              <Login />
+              <button
+                className="button-style auth-toggle-button"
+                onClick={() => setShowCreateAccount(true)}
+              >
+                Create Account
+              </button>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

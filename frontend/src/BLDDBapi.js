@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const BLDDB = 'https://rowewh.com/api';
+const server = 'http://localhost:3000';
 
 export async function getEdgeAlgs(buffer, first, second) {
    const response = await axios.get(`${BLDDB}/Edges?buffer=${buffer}&first=${first}&second=${second}`);
@@ -48,4 +49,14 @@ export async function importAlgs(algorithms){
       }
    })
    return response?.data;
+}
+
+export async function createUser(user) {
+   const response = await axios.post(`${server}/users`, user)
+   return response;
+}
+
+export async function verifyUser(user) {
+   const response = await axios.post(`${server}/users/login`, user)
+   return response;
 }

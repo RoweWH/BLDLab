@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { NavLink } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
+import { AuthStatus } from "./AuthStatus";
 import logoDark from "../assets/BLDLabLogoDark.png";
 import logoLight from "../assets/BLDLabLogoLight.png";
 
@@ -10,19 +11,19 @@ const linkClass = ({ isActive }) =>
 const PARITY_CLOSE_MS = 220;
 
 function getThemeSnapshot() {
-    return document.documentElement.dataset.theme === "dark";
-  }
-  
-  function subscribeToTheme(callback) {
-    const obs = new MutationObserver(callback);
-  
-    obs.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-theme"],
-    });
-  
-    return () => obs.disconnect();
-  }
+  return document.documentElement.dataset.theme === "dark";
+}
+
+function subscribeToTheme(callback) {
+  const obs = new MutationObserver(callback);
+
+  obs.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
+
+  return () => obs.disconnect();
+}
 
 export function NavBar() {
   const [showParityDropdown, setShowParityDropdown] = useState(false);
@@ -50,20 +51,23 @@ export function NavBar() {
 
   useEffect(() => () => clearParityCloseTimer(), []);
 
-  const dark = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, () => false);
+  const dark = useSyncExternalStore(
+    subscribeToTheme,
+    getThemeSnapshot,
+    () => false,
+  );
 
   return (
     <header className="nav-bar">
       <div className="nav-bar__inner">
         <NavLink to="/" className="nav-bar__brand" end>
-        <img
+          <img
             src={dark ? logoDark : logoLight}
             alt="BLDLab"
             height="80px"
             width="auto"
-        />
+          />
         </NavLink>
-
         <nav className="nav-bar__nav" aria-label="Primary">
           <ul className="nav-bar__list">
             <li>
@@ -133,7 +137,7 @@ export function NavBar() {
             </li>
           </ul>
         </nav>
-
+        <AuthStatus />
         <ThemeToggle className="nav-bar__theme" />
       </div>
     </header>
