@@ -5,6 +5,7 @@ import { useLocation } from "react-router-dom";
 import { useSyncExternalStore, useState } from "react";
 import { Login } from "../components/Login";
 import { CreateAccount } from "../components/CreateAccount";
+import { NavLink } from "react-router-dom";
 
 function getThemeSnapshot() {
   return document.documentElement.dataset.theme === "dark";
@@ -67,6 +68,7 @@ export function Landing() {
           )}
         </div>
       </div>
+      <NavLink to="/home">Continue as Guest</NavLink>
     </div>
   );
 }
