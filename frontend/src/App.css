@@ -877,3 +877,31 @@ input[type='file'] {
     max-width: 100%;
   }
 }
+
+.sheet-grid {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+}
+
+.sheet-card,
+.add-sheet-card {
+  width: 180px;
+  height: 120px;
+  border-radius: 12px;
+  border: 2px solid var(--accent-color);
+  background: var(--card-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sheet-card {
+  flex-direction: column;
+}
+
+.add-sheet-card {
+  font-size: 3rem;
+  cursor: pointer;
+}
