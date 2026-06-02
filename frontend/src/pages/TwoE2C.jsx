@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { getParityAlgs } from "../BLDDBapi";
-import {EdgeDropdown} from "../components/dropdowns/EdgeDropdown";
-import {CornerDropdown} from "../components/dropdowns/CornerDropdown";
-import {AlgorithmList} from "../components/AlgorithmList";
+import { EdgeDropdown } from "../components/selectors/EdgeDropdown";
+import { CornerDropdown } from "../components/selectors/CornerDropdown";
+import { AlgorithmList } from "../components/AlgorithmList";
 
 export function TwoE2C() {
   const [parityCase, setParityCase] = useState({
@@ -10,7 +10,7 @@ export function TwoE2C() {
     secondEdge: "",
     firstCorner: "",
     secondCorner: "",
-    twist: ""
+    twist: "",
   });
 
   const [error, setError] = useState("");
@@ -37,7 +37,7 @@ export function TwoE2C() {
           parityCase.secondEdge,
           parityCase.firstCorner,
           parityCase.secondCorner,
-          null
+          null,
         );
 
         setAlgorithms(response.data);
@@ -57,7 +57,7 @@ export function TwoE2C() {
     parityCase.firstEdge,
     parityCase.secondEdge,
     parityCase.firstCorner,
-    parityCase.secondCorner
+    parityCase.secondCorner,
   ]);
 
   return (
@@ -70,9 +70,9 @@ export function TwoE2C() {
             <EdgeDropdown
               value={parityCase.firstEdge}
               onChange={(e) =>
-                setParityCase(prev => ({
+                setParityCase((prev) => ({
                   ...prev,
-                  firstEdge: e.target.value
+                  firstEdge: e.target.value,
                 }))
               }
               placeholder="First Edge"
@@ -81,9 +81,9 @@ export function TwoE2C() {
             <EdgeDropdown
               value={parityCase.secondEdge}
               onChange={(e) =>
-                setParityCase(prev => ({
+                setParityCase((prev) => ({
                   ...prev,
-                  secondEdge: e.target.value
+                  secondEdge: e.target.value,
                 }))
               }
               placeholder="Second Edge"
@@ -98,9 +98,9 @@ export function TwoE2C() {
             <CornerDropdown
               value={parityCase.firstCorner}
               onChange={(e) =>
-                setParityCase(prev => ({
+                setParityCase((prev) => ({
                   ...prev,
-                  firstCorner: e.target.value
+                  firstCorner: e.target.value,
                 }))
               }
               placeholder="First Corner"
@@ -109,9 +109,9 @@ export function TwoE2C() {
             <CornerDropdown
               value={parityCase.secondCorner}
               onChange={(e) =>
-                setParityCase(prev => ({
+                setParityCase((prev) => ({
                   ...prev,
-                  secondCorner: e.target.value
+                  secondCorner: e.target.value,
                 }))
               }
               placeholder="Second Corner"

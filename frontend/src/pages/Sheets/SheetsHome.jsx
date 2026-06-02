@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { createNewSheet, getSheets } from "../../BLDDBapi";
+import { CreateSheetModal } from "../../components/sheets/CreateSheetModal";
 
 export function SheetsHome() {
   const [sheets, setSheets] = useState([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,17 +22,9 @@ export function SheetsHome() {
     loadSheets();
   }, []);
 
-  async function createSheet() {
-    const newSheet = {
-      name: "UF",
-      type: "edge",
-      createdDate: new Date(),
-      data: {},
-    };
-
+  async function createSheet(newSheet) {
     try {
       const response = await createNewSheet(newSheet);
-
       setSheets([...sheets, response.data.sheet]);
     } catch (error) {
       console.error("Failed to create sheet:", error);
@@ -51,17 +45,26 @@ export function SheetsHome() {
       <h1>My Sheets</h1>
 
       <div className="sheet-grid">
+        <button
+          className="add-sheet-card"
+          onClick={() => setShowCreateModal(true)}
+        >
+          +
+        </button>
         {sheets.map((sheet) => (
           <div className="sheet-card" key={sheet._id}>
             <h3>{sheet.name}</h3>
             <p>{sheet.type}</p>
           </div>
         ))}
-
-        <button className="add-sheet-card" onClick={createSheet}>
-          +
-        </button>
       </div>
+
+      {showCreateModal && (
+        <CreateSheetModal
+          onClose={() => setShowCreateModal(false)}
+          onCreate={createSheet}
+        />
+      )}
     </div>
   );
 }

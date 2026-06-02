@@ -1,34 +1,33 @@
 import { useEffect, useState } from "react";
 import { getEdgeAlgs } from "../BLDDBapi";
-import {EdgeDropdown} from "../components/dropdowns/EdgeDropdown";
-import {AlgorithmList} from "../components/AlgorithmList";
+import { EdgeDropdown } from "../components/selectors/EdgeDropdown";
+import { AlgorithmList } from "../components/AlgorithmList";
 
 export function Edges() {
-  
   const [edgeCase, setEdgeCase] = useState({
     buffer: "",
     first: "",
-    second: ""
+    second: "",
   });
 
   const [error, setError] = useState("");
-  
+
   const [algorithms, setAlgorithms] = useState();
-  
+
   useEffect(() => {
     if (!edgeCase.buffer || !edgeCase.first || !edgeCase.second) {
       setAlgorithms(null);
       setError("");
       return;
     }
-    
+
     async function loadAlgorithms() {
       try {
         setError("");
         const response = await getEdgeAlgs(
           edgeCase.buffer,
           edgeCase.first,
-          edgeCase.second
+          edgeCase.second,
         );
         setAlgorithms(response.data);
       } catch (error) {
@@ -40,73 +39,71 @@ export function Edges() {
         }
       }
     }
-  
+
     loadAlgorithms();
   }, [edgeCase.buffer, edgeCase.first, edgeCase.second]);
 
   const showInverse = () => {
-    setEdgeCase(prev => ({
+    setEdgeCase((prev) => ({
       ...prev,
       first: prev.second,
-      second: prev.first
+      second: prev.first,
     }));
   };
 
   return (
     <>
-    <div className="selectors">
-      <div className="dropdown-group">
-        <label>Buffer</label>
-        <EdgeDropdown
-          value={edgeCase.buffer}
-          onChange={(e) =>
-            setEdgeCase(prev => ({
-              ...prev,
-              buffer: e.target.value
-            }))
-          }
-          placeholder="Buffer"
-        />
-      </div>
-  
-      <div className="dropdown-group">
-        <label>1st Target</label>
-        <EdgeDropdown
-          value={edgeCase.first}
-          onChange={(e) =>
-            setEdgeCase(prev => ({
-              ...prev,
-              first: e.target.value
-            }))
-          }
-          placeholder="First"
-        />
-      </div>
-  
-      <div className="dropdown-group">
-        <label>2nd Target</label>
-        <EdgeDropdown
-          value={edgeCase.second}
-          onChange={(e) =>
-            setEdgeCase(prev => ({
-              ...prev,
-              second: e.target.value
-            }))
-          }
-          placeholder="Second"
-        />
-      </div>
-      <button className="button-style" onClick={showInverse}>
-        Invert
-      </button>
-    </div>
-      {error ? (
-        <div className="error-message">
-          {error}
+      <div className="selectors">
+        <div className="dropdown-group">
+          <label>Buffer</label>
+          <EdgeDropdown
+            value={edgeCase.buffer}
+            onChange={(e) =>
+              setEdgeCase((prev) => ({
+                ...prev,
+                buffer: e.target.value,
+              }))
+            }
+            placeholder="Buffer"
+          />
         </div>
+
+        <div className="dropdown-group">
+          <label>1st Target</label>
+          <EdgeDropdown
+            value={edgeCase.first}
+            onChange={(e) =>
+              setEdgeCase((prev) => ({
+                ...prev,
+                first: e.target.value,
+              }))
+            }
+            placeholder="First"
+          />
+        </div>
+
+        <div className="dropdown-group">
+          <label>2nd Target</label>
+          <EdgeDropdown
+            value={edgeCase.second}
+            onChange={(e) =>
+              setEdgeCase((prev) => ({
+                ...prev,
+                second: e.target.value,
+              }))
+            }
+            placeholder="Second"
+          />
+        </div>
+        <button className="button-style" onClick={showInverse}>
+          Invert
+        </button>
+      </div>
+      {error ? (
+        <div className="error-message">{error}</div>
       ) : (
-      algorithms && <AlgorithmList data={algorithms} />
+        algorithms && <AlgorithmList data={algorithms} />
       )}
-  </>
+    </>
   );
 }
