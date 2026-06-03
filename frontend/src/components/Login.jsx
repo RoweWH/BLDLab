@@ -17,13 +17,15 @@ export function Login() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    let response = await verifyUser(user);
+
+    const response = await verifyUser(user);
+
     if (response.data.success) {
       sessionStorage.setItem("User", response.data.token);
-      sessionStorage.setItem("Name", response.data.name);
-      sessionStorage.setItem("Email", response.data.email);
+
       axios.defaults.headers.common["Authorization"] =
         `Bearer ${response.data.token}`;
+
       navigate("/home");
     } else {
       alert(response.data.message);
@@ -33,20 +35,22 @@ export function Login() {
   return (
     <form onSubmit={handleSubmit}>
       <input
-        placeholder={"Email"}
+        placeholder="Email"
         onChange={handleChange}
         name="email"
         required
         maxLength={40}
       />
+
       <input
-        placeholder={"Password"}
+        placeholder="Password"
         onChange={handleChange}
         name="password"
         type="password"
         required
         maxLength={20}
       />
+
       <button>Login</button>
     </form>
   );

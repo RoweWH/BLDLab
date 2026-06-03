@@ -61,6 +61,18 @@ export async function verifyUser(user) {
    return response;
 }
 
+export async function getCurrentUser() {
+  const token = sessionStorage.getItem("User");
+
+  const response = await axios.get(`${server}/users/me`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return response;
+}
+
 export async function getSheets() {
   const token = sessionStorage.getItem("User");
 

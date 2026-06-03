@@ -1,5 +1,4 @@
-import { createUser } from "../BLDDBapi";
-import { verifyUser } from "../BLDDBapi";
+import { createUser, verifyUser } from "../BLDDBapi";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
@@ -22,18 +21,26 @@ export function CreateAccount() {
 
     try {
       let response = await createUser(user);
+
       if (response.data.message) {
         alert(response.data.message);
         return;
       }
-      response = await verifyUser(user);
+
+      response = await verifyUser({
+        email: user.email,
+        password: user.password,
+      });
+
       if (response.data.success) {
         sessionStorage.setItem("User", response.data.token);
-        sessionStorage.setItem("Name", response.data.name);
-        sessionStorage.setItem("Email", response.data.email);
+
         axios.defaults.headers.common["Authorization"] =
           `Bearer ${response.data.token}`;
+
         navigate("/home");
+      } else {
+        alert(response.data.message);
       }
     } catch (err) {
       console.log(err);
@@ -44,27 +51,30 @@ export function CreateAccount() {
   return (
     <form onSubmit={handleSubmit}>
       <input
-        placeholder={"Name"}
+        placeholder="Name"
         onChange={handleChange}
         name="name"
         required
         maxLength={20}
       />
+
       <input
-        placeholder={"Email"}
+        placeholder="Email"
         onChange={handleChange}
         name="email"
         required
         maxLength={40}
       />
+
       <input
-        placeholder={"Password"}
+        placeholder="Password"
         onChange={handleChange}
         name="password"
         type="password"
         required
         maxLength={20}
       />
+
       <button type="submit">Create Account</button>
     </form>
   );

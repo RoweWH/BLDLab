@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { createNewSheet, getSheets } from "../../BLDDBapi";
 import { CreateSheetModal } from "../../components/sheets/CreateSheetModal";
+import { buildCycleSheet } from "../../data/SheetBuilds/BuildCycleSheet";
+import { getCurrentUser } from "../../BLDDBapi";
 
 export function SheetsHome() {
   const [sheets, setSheets] = useState([]);
@@ -24,8 +26,20 @@ export function SheetsHome() {
 
   async function createSheet(newSheet) {
     try {
-      const response = await createNewSheet(newSheet);
-      setSheets([...sheets, response.data.sheet]);
+      let populatedSheet;
+
+      if (newSheet.type === "edges" || newSheet.type === "corners") {
+        const response = await getCurrentUser();
+        const user = response.data;
+
+        populatedSheet = await buildCycleSheet(newSheet, user);
+      } else {
+        populatedSheet = newSheet;
+      }
+
+      const sheetResponse = await createNewSheet(populatedSheet);
+
+      setSheets([...sheets, sheetResponse.data.sheet]);
     } catch (error) {
       console.error("Failed to create sheet:", error);
     }
