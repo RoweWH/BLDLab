@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { createNewSheet, getSheets } from "../../BLDDBapi";
 import { CreateSheetModal } from "../../components/sheets/CreateSheetModal";
 import { buildCycleSheet } from "../../data/SheetBuilds/BuildCycleSheet";
@@ -8,6 +9,8 @@ export function SheetsHome() {
   const [sheets, setSheets] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function loadSheets() {
@@ -40,9 +43,14 @@ export function SheetsHome() {
       const sheetResponse = await createNewSheet(populatedSheet);
 
       setSheets([...sheets, sheetResponse.data.sheet]);
+      setShowCreateModal(false);
     } catch (error) {
       console.error("Failed to create sheet:", error);
     }
+  }
+
+  function openSheet(sheetId) {
+    navigate(`/sheets/${sheetId}`);
   }
 
   if (loading) {
@@ -65,11 +73,17 @@ export function SheetsHome() {
         >
           +
         </button>
+
         {sheets.map((sheet) => (
-          <div className="sheet-card" key={sheet._id}>
+          <button
+            type="button"
+            className="sheet-card"
+            key={sheet._id}
+            onClick={() => openSheet(sheet._id)}
+          >
             <h3>{sheet.name}</h3>
             <p>{sheet.type}</p>
-          </div>
+          </button>
         ))}
       </div>
 

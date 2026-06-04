@@ -8,6 +8,11 @@ export async function getEdgeAlgs(buffer, first, second) {
    return response;
 }
 
+export async function getEdgeAlgById(id) {
+   const response = await axios.get(`${BLDDB}/Edges/${id}`);
+   return response;
+}
+
 export async function insertEdgeAlg(algObject){
    const response = await axios.post(`${BLDDB}/Edges`, algObject);
    return response.data;
@@ -15,6 +20,11 @@ export async function insertEdgeAlg(algObject){
 
 export async function getCornerAlgs(buffer, first, second) {
    const response = await axios.get(`${BLDDB}/Corners?buffer=${buffer}&first=${first}&second=${second}`);
+   return response;
+}
+
+export async function getCornerAlgById(id) {
+   const response = await axios.get(`${BLDDB}/Corners/${id}`);
    return response;
 }
     
@@ -36,6 +46,11 @@ export async function getParityAlgs(firstEdge, secondEdge, firstCorner, secondCo
    console.log(response);
    return response;
  }
+
+export async function getParityAlgById(id) {
+   const response = await axios.get(`${BLDDB}/Parity/${id}`);
+   return response;
+}
 
 export async function insertParityAlg(algObject){
    const response = await axios.post(`${BLDDB}/Parity`, algObject);
@@ -97,7 +112,7 @@ export async function createNewSheet(sheet) {
   return response;
 }
 
-export async function getSheetById(id) {
+export async function getSheet(id) {
    const response = await axios.get(`${server}/sheets/${id}`);
    return response;
 }

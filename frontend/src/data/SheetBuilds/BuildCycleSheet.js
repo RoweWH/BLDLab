@@ -20,6 +20,39 @@ function pairAndSortPieces(pieces, letterScheme, buffer) {
     .sort((a, b) => a.letter.localeCompare(b.letter));
 }
 
+function buildBufferColumn(pieces, letterScheme, buffer) {
+  const allPieces = pieces.map((piece, index) => ({
+    piece,
+    letter: letterScheme.charAt(index),
+  }));
+
+  const bufferTarget = allPieces.find(
+    (target) => normalizePiece(target.piece) === normalizePiece(buffer)
+  );
+
+  if (!bufferTarget) {
+    return {
+      column: null,
+      rows: [],
+    };
+  }
+
+  const rows = allPieces
+    .filter(
+      (target) => normalizePiece(target.piece) !== normalizePiece(buffer)
+    )
+    .sort((a, b) => a.letter.localeCompare(b.letter))
+    .map((target) => ({
+      row: target,
+      algorithms: [],
+    }));
+
+  return {
+    column: bufferTarget,
+    rows,
+  };
+}
+
 async function loadDefaults(buffer, first, second) {
   try {
     let response;
@@ -54,7 +87,9 @@ async function loadDefaults(buffer, first, second) {
 async function buildSheetData(pieces, letterScheme, buffer, blankSheet) {
   const targets = pairAndSortPieces(pieces, letterScheme, buffer);
 
-  const columns = await Promise.all(
+  const bufferColumn = buildBufferColumn(pieces, letterScheme, buffer);
+
+  const cycleColumns = await Promise.all(
     targets.map(async (columnTarget) => ({
       column: columnTarget,
 
@@ -81,7 +116,12 @@ async function buildSheetData(pieces, letterScheme, buffer, blankSheet) {
     }))
   );
 
-  return { columns };
+  return {
+    columns: [
+      bufferColumn,
+      ...cycleColumns,
+    ],
+  };
 }
 
 export async function buildCycleSheet(newSheet, user) {

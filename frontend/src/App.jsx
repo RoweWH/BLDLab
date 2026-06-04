@@ -7,7 +7,8 @@ import { Edges } from "./pages/Edges";
 import { Corners } from "./pages/Corners";
 import { TwoE2C } from "./pages/TwoE2C";
 import { LTCT } from "./pages/LTCT";
-import { SheetsHome } from "./pages/Sheets/SheetsHome";
+import { SheetsHome } from "./pages/sheets/SheetsHome";
+import { SheetView } from "./pages/sheets/SheetView";
 import "./App.css";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
             <Route path="/2E2C" element={<TwoE2C />} />
             <Route path="/LTCT" element={<LTCT />} />
             <Route path="/sheets" element={<SheetsHome />} />
+            <Route path="/sheets/:id" element={<SheetView />} />
           </Route>
         </Routes>
       </Router>
