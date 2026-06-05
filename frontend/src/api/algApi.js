@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 const BLDDB = 'https://rowewh.com/api';
-const server = 'http://localhost:3000';
 
 export async function getEdgeAlgs(buffer, first, second) {
    const response = await axios.get(`${BLDDB}/Edges?buffer=${buffer}&first=${first}&second=${second}`);
@@ -64,55 +63,4 @@ export async function importAlgs(algorithms){
       }
    })
    return response?.data;
-}
-
-export async function createUser(user) {
-   const response = await axios.post(`${server}/users`, user)
-   return response;
-}
-
-export async function verifyUser(user) {
-   const response = await axios.post(`${server}/users/login`, user)
-   return response;
-}
-
-export async function getCurrentUser() {
-  const token = sessionStorage.getItem("User");
-
-  const response = await axios.get(`${server}/users/me`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  return response;
-}
-
-export async function getSheets() {
-  const token = sessionStorage.getItem("User");
-
-  const response = await axios.get(`${server}/sheets`, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
-
-  return response;
-}
-
-export async function createNewSheet(sheet) {
-  const token = sessionStorage.getItem("User");
-
-  const response = await axios.post(`${server}/sheets`, sheet, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
-
-  return response;
-}
-
-export async function getSheet(id) {
-   const response = await axios.get(`${server}/sheets/${id}`);
-   return response;
 }

@@ -1,4 +1,4 @@
-import { verifyUser } from "../BLDDBapi";
+import { verifyUser } from "../api/userApi";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";

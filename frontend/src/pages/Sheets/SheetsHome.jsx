@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createNewSheet, getSheets } from "../../BLDDBapi";
+import { createNewSheet, getSheets } from "../../api/sheetApi";
 import { CreateSheetModal } from "../../components/sheets/CreateSheetModal";
 import { buildCycleSheet } from "../../data/SheetBuilds/BuildCycleSheet";
-import { getCurrentUser } from "../../BLDDBapi";
+import { getCurrentUser } from "../../api/userApi";
 
 export function SheetsHome() {
   const [sheets, setSheets] = useState([]);

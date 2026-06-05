@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getEdgeAlgs } from "../BLDDBapi";
+import { getEdgeAlgs } from "../api/algApi";
 import { EdgeDropdown } from "../components/selectors/EdgeDropdown";
 import { AlgorithmList } from "../components/AlgorithmList";
 

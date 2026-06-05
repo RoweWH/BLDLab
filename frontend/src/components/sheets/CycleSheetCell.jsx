@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getEdgeAlgById, getCornerAlgById } from "../../BLDDBapi";
+import { getEdgeAlgById, getCornerAlgById } from "../../api/algApi";
 
 export function CycleSheetCell({ cell, type }) {
   const [primaryAlg, setPrimaryAlg] = useState("");

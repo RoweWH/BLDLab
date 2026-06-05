@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import {importAlgs} from "../BLDDBapi";
+import { importAlgs } from "../api/algApi";
 
 export function Import() {
   const [file, setFile] = useState();
@@ -9,7 +9,6 @@ export function Import() {
   const [errorMessage, setErrorMessage] = useState("");
 
   const inputFile = useRef(null);
-
 
   const handleFile = (e) => {
     const file = e.target.files[0];
@@ -24,7 +23,7 @@ export function Import() {
   };
 
   const submitFile = async () => {
-    try{
+    try {
       setErrorMessage("");
       let file = inputFile.current.files[0];
       if (!file) {
@@ -36,11 +35,9 @@ export function Import() {
       setValid(response.validAlgorithms);
       setInvalid(response.invalidAlgorithms);
       setDuplicate(response.duplicateAlgorithms);
-      }
-    catch(error){
+    } catch (error) {
       setErrorMessage("Failed to Import");
     }
-    
   };
 
   function parseCSV(csvText, delimiter = ",", minLength = 10) {
@@ -122,30 +119,20 @@ export function Import() {
     return algorithms;
   }
 
-  const hasUploadResults =
-  valid?.length > 0 || duplicate?.length > 0;
+  const hasUploadResults = valid?.length > 0 || duplicate?.length > 0;
 
   return (
     <div className="import-section">
       <div className="upload-card">
-        <input
-          type="file"
-          onChange={handleFile}
-          ref={inputFile}
-        />
-  
-        <button
-          className="button-style"
-          onClick={submitFile}
-        >
+        <input type="file" onChange={handleFile} ref={inputFile} />
+
+        <button className="button-style" onClick={submitFile}>
           Upload File
         </button>
       </div>
-  
+
       {errorMessage ? (
-        <div className="error-message">
-          {errorMessage}
-        </div>
+        <div className="error-message">{errorMessage}</div>
       ) : (
         hasUploadResults && (
           <div className="results-section">
@@ -153,26 +140,23 @@ export function Import() {
               <summary>
                 Successfully Imported Algorithms ({valid.length})
               </summary>
-  
+
               <div className="result-content">
                 {valid.map((alg, index) => (
                   <div key={index}>{alg}</div>
                 ))}
               </div>
             </details>
-  
+
             <details className="result-dropdown">
-              <summary>
-                Duplicate Algorithms ({duplicate.length})
-              </summary>
-  
+              <summary>Duplicate Algorithms ({duplicate.length})</summary>
+
               <div className="result-content">
                 {duplicate.map((alg, index) => (
                   <div key={index}>{alg}</div>
                 ))}
               </div>
             </details>
-
           </div>
         )
       )}

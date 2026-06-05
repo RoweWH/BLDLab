@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { CycleSheet } from "../../components/sheets/CycleSheet";
-import { getSheet } from "../../BLDDBapi";
+import { getSheet } from "../../api/sheetApi";
 
 export function SheetView() {
   const { id } = useParams();

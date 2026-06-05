@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getCornerAlgs } from "../BLDDBapi";
+import { getCornerAlgs } from "../api/algApi";
 import { CornerDropdown } from "../components/selectors/CornerDropdown";
 import { AlgorithmList } from "../components/AlgorithmList";
 

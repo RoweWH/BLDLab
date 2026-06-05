@@ -1,6 +1,6 @@
 import { edgePieces } from "../EdgePieces";
 import { cornerPieces } from "../CornerPieces";
-import { getEdgeAlgs, getCornerAlgs } from "../../BLDDBapi";
+import { getEdgeAlgs, getCornerAlgs } from "../../api/algApi";
 
 function normalizePiece(piece) {
   return piece.split("").sort().join("");

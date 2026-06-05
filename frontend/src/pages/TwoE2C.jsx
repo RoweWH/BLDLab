@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getParityAlgs } from "../BLDDBapi";
+import { getParityAlgs } from "../api/algApi";
 import { EdgeDropdown } from "../components/selectors/EdgeDropdown";
 import { CornerDropdown } from "../components/selectors/CornerDropdown";
 import { AlgorithmList } from "../components/AlgorithmList";
