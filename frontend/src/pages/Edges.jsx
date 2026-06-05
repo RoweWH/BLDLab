@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getEdgeAlgs } from "../api/algApi";
 import { EdgeDropdown } from "../components/selectors/EdgeDropdown";
-import { AlgorithmList } from "../components/AlgorithmList";
+import { AlgorithmList } from "../components/ui/AlgorithmList";
 
 export function Edges() {
   const [edgeCase, setEdgeCase] = useState({

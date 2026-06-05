@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getCurrentUser } from "../api/userApi";
+import { getCurrentUser } from "../../api/userApi";
 
 export function AuthStatus() {
   const [user, setUser] = useState(null);

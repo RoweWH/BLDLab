@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getParityAlgs } from "../api/algApi";
 import { EdgeDropdown } from "../components/selectors/EdgeDropdown";
 import { CornerDropdown } from "../components/selectors/CornerDropdown";
-import { AlgorithmList } from "../components/AlgorithmList";
+import { AlgorithmList } from "../components/ui/AlgorithmList";
 
 export function TwoE2C() {
   const [parityCase, setParityCase] = useState({

@@ -3,7 +3,7 @@ import { getParityAlgs } from "../api/algApi";
 import { EdgeDropdown } from "../components/selectors/EdgeDropdown";
 import { CornerDropdown } from "../components/selectors/CornerDropdown";
 import { TwistDropdown } from "../components/selectors/TwistDropdown";
-import { AlgorithmList } from "../components/AlgorithmList";
+import { AlgorithmList } from "../components/ui/AlgorithmList";
 
 export function LTCT() {
   const [parityCase, setParityCase] = useState({

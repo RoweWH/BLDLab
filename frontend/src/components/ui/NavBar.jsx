@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { NavLink } from "react-router-dom";
-import { ThemeToggle } from "./ThemeToggle";
-import { AuthStatus } from "./AuthStatus";
-import logoDark from "../assets/BLDLabLogoDark.png";
-import logoLight from "../assets/BLDLabLogoLight.png";
+import { ThemeToggle } from "../layout/ThemeToggle";
+import { AuthStatus } from "../auth/AuthStatus";
+import logoDark from "../../assets/BLDLabLogoDark.png";
+import logoLight from "../../assets/BLDLabLogoLight.png";
 
 const linkClass = ({ isActive }) =>
   "nav-bar__link" + (isActive ? " nav-bar__link--active" : "");

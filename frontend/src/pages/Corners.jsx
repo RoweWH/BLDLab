@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getCornerAlgs } from "../api/algApi";
 import { CornerDropdown } from "../components/selectors/CornerDropdown";
-import { AlgorithmList } from "../components/AlgorithmList";
+import { AlgorithmList } from "../components/ui/AlgorithmList";
 
 export function Corners() {
   const [cornerCase, setCornerCase] = useState({

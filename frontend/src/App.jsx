@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Import } from "./pages/Import";
 import { Landing } from "./pages/Landing";
-import { Layout } from "./components/Layout";
+import { Layout } from "./components/layout/Layout";
 import { Home } from "./pages/Home";
 import { Edges } from "./pages/Edges";
 import { Corners } from "./pages/Corners";
