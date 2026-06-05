@@ -27,7 +27,7 @@ function buildBufferColumn(pieces, letterScheme, buffer) {
   }));
 
   const bufferTarget = allPieces.find(
-    (target) => normalizePiece(target.piece) === normalizePiece(buffer)
+    (target) => target.piece === buffer
   );
 
   if (!bufferTarget) {
@@ -37,9 +37,11 @@ function buildBufferColumn(pieces, letterScheme, buffer) {
     };
   }
 
+  const normalizedBuffer = normalizePiece(buffer);
+
   const rows = allPieces
     .filter(
-      (target) => normalizePiece(target.piece) !== normalizePiece(buffer)
+      (target) => normalizePiece(target.piece) !== normalizedBuffer
     )
     .sort((a, b) => a.letter.localeCompare(b.letter))
     .map((target) => ({
@@ -85,6 +87,7 @@ async function loadDefaults(buffer, first, second) {
 }
 
 async function buildSheetData(pieces, letterScheme, buffer, blankSheet) {
+  console.log(buffer);
   const targets = pairAndSortPieces(pieces, letterScheme, buffer);
 
   const bufferColumn = buildBufferColumn(pieces, letterScheme, buffer);

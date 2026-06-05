@@ -2,24 +2,24 @@ function normalizePiece(piece) {
   return piece.split("").sort().join("");
 }
 
-function isExcluded(piece, excluded = []) {
+function isExcluded(piece, exclude = []) {
   const normalizedPiece = normalizePiece(piece);
 
-  return excluded
+  return exclude
     .map((excludedPiece) => normalizePiece(excludedPiece))
     .includes(normalizedPiece);
 }
 
-export function BufferColumn({ column, excluded = [] }) {
+export function BufferColumn({ column, exclude = [], variant = "" }) {
   const rows = column.rows.filter(
-    (cell) => !isExcluded(cell.row.piece, excluded),
+    (cell) => !isExcluded(cell.row.piece, exclude),
   );
 
   return (
-    <div className="buffer-column">
-      <div className="buffer-column__header">
-        {column.column.piece} ({column.column.letter})
-      </div>
+    <div
+      className={`buffer-column ${variant ? `buffer-column--${variant}` : ""}`}
+    >
+      <div className="buffer-column__header">{column.column.piece}</div>
 
       {rows.map((cell) => (
         <div className="buffer-column__cell" key={cell.row.piece}>

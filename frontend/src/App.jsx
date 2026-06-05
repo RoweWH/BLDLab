@@ -17,6 +17,8 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/sheets/:id" element={<SheetView />} />
+          <Route path="/sheets" element={<SheetsHome />} />
           <Route element={<Layout />}>
             <Route path="/home" element={<Home />} />
             <Route path="/import" element={<Import />} />
@@ -24,8 +26,6 @@ function App() {
             <Route path="/corners" element={<Corners />} />
             <Route path="/2E2C" element={<TwoE2C />} />
             <Route path="/LTCT" element={<LTCT />} />
-            <Route path="/sheets" element={<SheetsHome />} />
-            <Route path="/sheets/:id" element={<SheetView />} />
           </Route>
         </Routes>
       </Router>
