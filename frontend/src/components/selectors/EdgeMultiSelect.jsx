@@ -1,4 +1,4 @@
-import { edgePieces } from "../../data/EdgePieces";
+import { edgePieces } from "../../data/pieces/EdgePieces";
 
 function normalizePiece(piece) {
   return piece.split("").sort().join("");

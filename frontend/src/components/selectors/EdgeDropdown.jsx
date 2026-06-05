@@ -1,4 +1,4 @@
-import { edgePieces } from "../../data/EdgePieces";
+import { edgePieces } from "../../data/pieces/EdgePieces";
 
 export function EdgeDropdown({ name, value, onChange }) {
   return (

@@ -1,8 +1,8 @@
-import { cornerPieces } from "../../data/CornerPieces";
+import { cornerPieces } from "../../data/pieces/CornerPieces";
 
 export function TwistDropdown({ value, onChange }) {
   const filteredCorners = cornerPieces.filter(
-    (corner) => !corner.startsWith("U") && !corner.startsWith("D")
+    (corner) => !corner.startsWith("U") && !corner.startsWith("D"),
   );
 
   return (

@@ -1,5 +1,5 @@
-import { edgePieces } from "../EdgePieces";
-import { cornerPieces } from "../CornerPieces";
+import { edgePieces } from "../../data/pieces/EdgePieces";
+import { cornerPieces } from "../../data/pieces/CornerPieces";
 import { getEdgeAlgs, getCornerAlgs } from "../../api/algApi";
 
 function normalizePiece(piece) {

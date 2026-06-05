@@ -1,4 +1,4 @@
-import { cornerPieces } from "../../data/CornerPieces";
+import { cornerPieces } from "../../data/pieces/CornerPieces";
 
 export function CornerDropdown({ name, value, onChange }) {
   return (
