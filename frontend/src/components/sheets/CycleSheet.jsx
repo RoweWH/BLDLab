@@ -35,7 +35,9 @@ export function CycleSheet({ sheet }) {
 
   return (
     <div className="cycle-sheet">
-      <BufferColumn column={bufferColumn} exclude={exclude} />
+      {!selectedColumnPiece && (
+        <BufferColumn column={bufferColumn} exclude={exclude} />
+      )}
 
       {cycleColumns.map((column) => {
         const isSelected = selectedColumnPiece === column.column.piece;
