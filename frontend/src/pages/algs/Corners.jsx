@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { getEdgeAlgs } from "../api/algApi";
-import { EdgeDropdown } from "../components/selectors/EdgeDropdown";
-import { AlgorithmList } from "../components/ui/AlgorithmList";
+import { getCornerAlgs } from "../../api/algApi";
+import { CornerDropdown } from "../../components/selectors/CornerDropdown";
+import { AlgorithmList } from "../../components/ui/AlgorithmList";
 
-export function Edges() {
-  const [edgeCase, setEdgeCase] = useState({
+export function Corners() {
+  const [cornerCase, setCornerCase] = useState({
     buffer: "",
     first: "",
     second: "",
@@ -15,7 +15,7 @@ export function Edges() {
   const [algorithms, setAlgorithms] = useState();
 
   useEffect(() => {
-    if (!edgeCase.buffer || !edgeCase.first || !edgeCase.second) {
+    if (!cornerCase.buffer || !cornerCase.first || !cornerCase.second) {
       setAlgorithms(null);
       setError("");
       return;
@@ -24,10 +24,10 @@ export function Edges() {
     async function loadAlgorithms() {
       try {
         setError("");
-        const response = await getEdgeAlgs(
-          edgeCase.buffer,
-          edgeCase.first,
-          edgeCase.second,
+        const response = await getCornerAlgs(
+          cornerCase.buffer,
+          cornerCase.first,
+          cornerCase.second,
         );
         setAlgorithms(response.data);
       } catch (error) {
@@ -41,10 +41,10 @@ export function Edges() {
     }
 
     loadAlgorithms();
-  }, [edgeCase.buffer, edgeCase.first, edgeCase.second]);
+  }, [cornerCase.buffer, cornerCase.first, cornerCase.second]);
 
   const showInverse = () => {
-    setEdgeCase((prev) => ({
+    setCornerCase((prev) => ({
       ...prev,
       first: prev.second,
       second: prev.first,
@@ -56,10 +56,10 @@ export function Edges() {
       <div className="selectors">
         <div className="dropdown-group">
           <label>Buffer</label>
-          <EdgeDropdown
-            value={edgeCase.buffer}
+          <CornerDropdown
+            value={cornerCase.buffer}
             onChange={(e) =>
-              setEdgeCase((prev) => ({
+              setCornerCase((prev) => ({
                 ...prev,
                 buffer: e.target.value,
               }))
@@ -70,10 +70,10 @@ export function Edges() {
 
         <div className="dropdown-group">
           <label>1st Target</label>
-          <EdgeDropdown
-            value={edgeCase.first}
+          <CornerDropdown
+            value={cornerCase.first}
             onChange={(e) =>
-              setEdgeCase((prev) => ({
+              setCornerCase((prev) => ({
                 ...prev,
                 first: e.target.value,
               }))
@@ -84,10 +84,10 @@ export function Edges() {
 
         <div className="dropdown-group">
           <label>2nd Target</label>
-          <EdgeDropdown
-            value={edgeCase.second}
+          <CornerDropdown
+            value={cornerCase.second}
             onChange={(e) =>
-              setEdgeCase((prev) => ({
+              setCornerCase((prev) => ({
                 ...prev,
                 second: e.target.value,
               }))

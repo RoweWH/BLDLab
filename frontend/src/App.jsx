@@ -1,12 +1,12 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Import } from "./pages/Import";
-import { Landing } from "./pages/Landing";
+import { Import } from "./pages/algs/Import";
+import { Landing } from "./pages/auth/Landing";
 import { Layout } from "./components/layout/Layout";
 import { Home } from "./pages/Home";
-import { Edges } from "./pages/Edges";
-import { Corners } from "./pages/Corners";
-import { TwoE2C } from "./pages/TwoE2C";
-import { LTCT } from "./pages/LTCT";
+import { Edges } from "./pages/algs/Edges";
+import { Corners } from "./pages/algs/Corners";
+import { TwoE2C } from "./pages/algs/TwoE2C";
+import { LTCT } from "./pages/algs/LTCT";
 import { SheetsHome } from "./pages/sheets/SheetsHome";
 import { SheetView } from "./pages/sheets/SheetView";
 import "./App.css";

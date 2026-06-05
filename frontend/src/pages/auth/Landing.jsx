@@ -1,10 +1,10 @@
-import logoDark from "../assets/BLDLabLogoDark.png";
-import logoLight from "../assets/BLDLabLogoLight.png";
-import { ThemeToggle } from "../components/layout/ThemeToggle";
+import logoDark from "../../assets/BLDLabLogoDark.png";
+import logoLight from "../../assets/BLDLabLogoLight.png";
+import { ThemeToggle } from "../../components/layout/ThemeToggle";
 import { useLocation } from "react-router-dom";
 import { useSyncExternalStore, useState } from "react";
-import { Login } from "../components/auth/Login";
-import { CreateAccount } from "../components/auth/CreateAccount";
+import { Login } from "../../components/auth/Login";
+import { CreateAccount } from "../../components/auth/CreateAccount";
 import { NavLink } from "react-router-dom";
 
 function getThemeSnapshot() {

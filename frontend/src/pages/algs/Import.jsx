@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { importAlgs } from "../api/algApi";
+import { importAlgs } from "../../api/algApi";
 
 export function Import() {
   const [file, setFile] = useState();
