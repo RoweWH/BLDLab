@@ -19,8 +19,8 @@ export function CreateSheetModal({ onClose, onCreate }) {
   const isLTCTorT2C = form.type === "ltct" || form.type === "t2c";
 
   function handleChange(name, value) {
-    setForm({
-      ...form,
+    setForm((current) => ({
+      ...current,
       [name]: value,
 
       ...(name === "type" && {
@@ -28,7 +28,14 @@ export function CreateSheetModal({ onClose, onCreate }) {
         edgeSwap: ["", ""],
         exclude: [],
       }),
-    });
+    }));
+  }
+
+  function handleEdgeSwapChange(index, value) {
+    const newEdgeSwap = [...form.edgeSwap];
+    newEdgeSwap[index] = value;
+
+    handleChange("edgeSwap", newEdgeSwap);
   }
 
   function buildOptions() {
@@ -162,26 +169,26 @@ export function CreateSheetModal({ onClose, onCreate }) {
               <div className="pair-selectors">
                 <EdgeDropdown
                   value={form.edgeSwap[0]}
-                  onChange={(e) =>
-                    handleChange("edgeSwap", [e.target.value, form.edgeSwap[1]])
-                  }
+                  onChange={(e) => handleEdgeSwapChange(0, e.target.value)}
                 />
 
                 <EdgeDropdown
                   value={form.edgeSwap[1]}
-                  onChange={(e) =>
-                    handleChange("edgeSwap", [form.edgeSwap[0], e.target.value])
-                  }
+                  onChange={(e) => handleEdgeSwapChange(1, e.target.value)}
                 />
               </div>
             </label>
 
-            <label>
-              Exclude
+            <div className="sheet-modal__field">
+              <div className="sheet-modal__label">Buffer Order</div>
+
               <CornerMultiSelect
                 value={form.exclude}
                 onChange={(newExclude) => handleChange("exclude", newExclude)}
+                showAllCorners={true}
+                blockEquivalentCorners={true}
               />
+
               <button
                 type="button"
                 className="clear-button"
@@ -189,7 +196,7 @@ export function CreateSheetModal({ onClose, onCreate }) {
               >
                 Clear
               </button>
-            </label>
+            </div>
           </div>
         )}
 
@@ -200,16 +207,12 @@ export function CreateSheetModal({ onClose, onCreate }) {
               <div className="pair-selectors">
                 <EdgeDropdown
                   value={form.edgeSwap[0]}
-                  onChange={(e) =>
-                    handleChange("edgeSwap", [e.target.value, form.edgeSwap[1]])
-                  }
+                  onChange={(e) => handleEdgeSwapChange(0, e.target.value)}
                 />
 
                 <EdgeDropdown
                   value={form.edgeSwap[1]}
-                  onChange={(e) =>
-                    handleChange("edgeSwap", [form.edgeSwap[0], e.target.value])
-                  }
+                  onChange={(e) => handleEdgeSwapChange(1, e.target.value)}
                 />
               </div>
             </label>

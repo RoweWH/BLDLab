@@ -1092,6 +1092,8 @@ input[type='file'] {
   margin-top: 0.75rem;
 }
 
+/* ---------- Multi select controls ---------- */
+
 .multi-select {
   display: grid;
   gap: 0.5rem;
@@ -1099,7 +1101,19 @@ input[type='file'] {
   margin-top: 0.5rem;
 }
 
+.corner-multi-select {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.edge-multi-select {
+  grid-template-columns: repeat(6, auto);
+}
+
 .multi-select__button {
+  position: relative;
+
+  min-width: 3.25rem;
+  min-height: 2.15rem;
   padding: 0.45rem 0.7rem;
 
   border: 1px solid var(--border);
@@ -1110,24 +1124,73 @@ input[type='file'] {
 
   cursor: pointer;
 
-  transition: 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.12s ease,
+    opacity 0.15s ease;
 }
 
-.multi-select__button:hover {
+.multi-select__button:not(:disabled):not(.selected):hover {
   border-color: var(--accent-border);
   background: var(--accent-bg);
   color: var(--accent);
 }
 
-.multi-select__button.selected {
-  background: var(--accent);
-  color: white;
-  border-color: var(--accent);
+.multi-select__button:not(:disabled):active {
+  transform: scale(0.97);
 }
 
+.multi-select__button.selected {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+}
+
+.multi-select__button.disabled,
 .multi-select__button:disabled {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+
+  opacity: 0.45;
   cursor: not-allowed;
-  opacity: 0.65;
+  text-decoration: line-through;
+}
+
+.multi-select__button:focus,
+.multi-select__button:focus-visible,
+.multi-select__button:active {
+  outline: none;
+  box-shadow: none;
+}
+
+.multi-select__button:disabled:hover,
+.multi-select__button.disabled:hover {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.multi-select__order,
+.multi-select__number {
+  font-weight: 800;
+}
+
+.multi-select__order {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+
+  font-size: 0.7rem;
+  line-height: 1;
+  opacity: 0.9;
+}
+
+.multi-select__number {
+  font-size: 1.15rem;
+  line-height: 1;
 }
 
 .radio-group {
@@ -1160,13 +1223,6 @@ input[type='file'] {
   cursor: pointer;
 }
 
-.corner-multi-select {
-  grid-template-columns: repeat(4, auto);
-}
-
-.edge-multi-select {
-  grid-template-columns: repeat(6, auto);
-}
 
 .clear-button {
   width: fit-content;
@@ -1355,4 +1411,16 @@ input[type='file'] {
   z-index: -1;
 
   background: var(--surface-elevated);
+}
+
+.sheet-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.sheet-modal__label {
+  color: var(--text-h);
+  font-size: 0.95rem;
+  font-weight: 600;
 }
