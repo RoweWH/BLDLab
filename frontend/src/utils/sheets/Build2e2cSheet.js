@@ -1,6 +1,23 @@
 import { cornerPieces } from "../../data/pieces/CornerPieces";
 import { getParityAlgs } from "../../api/algApi";
 
+function countAlgorithms(columns, exclude) {
+  return columns.reduce((total, column) => {
+    return (
+      total +
+      column.rows.reduce((sum, row) => {
+        const excluded = exclude.some(
+          (excludedPiece) =>
+            normalizePiece(excludedPiece) === normalizePiece(row.row.piece) ||
+            normalizePiece(excludedPiece) === normalizePiece(column.column.piece)
+        );
+
+        return excluded ? sum : sum + row.algorithms.length;
+      }, 0)
+    );
+  }, 0);
+}
+
 function normalizePiece(piece) {
   return piece.split("").sort().join("");
 }
@@ -22,12 +39,15 @@ function getEquivalentPieces(piece) {
   );
 }
 
-function buildBufferColumn(bufferOrder, letterScheme) {
+function buildBufferColumn(edgeSwap, bufferOrder, letterScheme) {
   const firstBuffer = bufferOrder[0];
 
   if (!firstBuffer) {
     return {
-      column: null,
+      column: {
+        piece: `${edgeSwap[0]}/${edgeSwap[1]}`,
+        letter: "",
+      },
       rows: [],
     };
   }
@@ -44,7 +64,10 @@ function buildBufferColumn(bufferOrder, letterScheme) {
     }));
 
   return {
-    column: getTarget(firstBuffer, letterScheme),
+    column: {
+      piece: `${edgeSwap[0]}/${edgeSwap[1]}`,
+      letter: "",
+    },
     rows,
   };
 }
@@ -82,8 +105,8 @@ async function load2E2CDefault(edgeSwap, columnPiece, rowPiece) {
   }
 }
 
-async function build2E2CData(edgeSwap, bufferOrder, letterScheme, blankSheet) {
-  const bufferColumn = buildBufferColumn(bufferOrder, letterScheme);
+async function build2E2CData(edgeSwap, bufferOrder, letterScheme, blankSheet, exclude) {
+  const bufferColumn = buildBufferColumn(edgeSwap, bufferOrder, letterScheme);
 
   const columnTargets = bufferOrder.map((corner) =>
     getTarget(corner, letterScheme)
@@ -92,43 +115,54 @@ async function build2E2CData(edgeSwap, bufferOrder, letterScheme, blankSheet) {
   const rowTargets = bufferColumn.rows.map((row) => row.row);
 
   const cycleColumns = await Promise.all(
-  columnTargets.map(async (columnTarget, columnIndex) => {
-    const previousBufferPieces = columnTargets
-      .slice(0, columnIndex)
-      .map((target) => target.piece);
+    columnTargets.map(async (columnTarget, columnIndex) => {
+      const previousBufferPieces = columnTargets
+        .slice(0, columnIndex)
+        .map((target) => target.piece);
 
-    const blockedPieces = [...previousBufferPieces, columnTarget.piece];
+      const blockedPieces = [...previousBufferPieces, columnTarget.piece];
 
-    return {
-      column: columnTarget,
+      return {
+        column: columnTarget,
 
-      rows: await Promise.all(
-        rowTargets.map(async (rowTarget) => {
-          const isBlocked = blockedPieces.some(
-            (blockedPiece) =>
-              normalizePiece(blockedPiece) === normalizePiece(rowTarget.piece)
-          );
+        rows: await Promise.all(
+          rowTargets.map(async (rowTarget) => {
+            const isBlocked = blockedPieces.some(
+              (blockedPiece) =>
+                normalizePiece(blockedPiece) === normalizePiece(rowTarget.piece)
+            );
 
-          return {
-            row: rowTarget,
+            return {
+              row: rowTarget,
 
-            algorithms:
-              blankSheet || isBlocked
-                ? []
-                : await load2E2CDefault(
-                    edgeSwap,
-                    columnTarget.piece,
-                    rowTarget.piece
-                  ),
-          };
-        })
-      ),
-    };
-  })
-);
+              algorithms:
+                blankSheet || isBlocked
+                  ? []
+                  : await load2E2CDefault(
+                      edgeSwap,
+                      columnTarget.piece,
+                      rowTarget.piece
+                    ),
+            };
+          })
+        ),
+      };
+    })
+  );
+
+  const algCount = countAlgorithms(cycleColumns, exclude);
 
   return {
-    columns: [bufferColumn, ...cycleColumns],
+    columns: [
+      {
+        ...bufferColumn,
+        column: {
+          ...bufferColumn.column,
+          piece: `${bufferColumn.column.piece} (${algCount})`,
+        },
+      },
+      ...cycleColumns,
+    ],
   };
 }
 
@@ -142,7 +176,8 @@ export async function build2e2cSheet(newSheet, user) {
     edgeSwap,
     bufferOrder,
     letterScheme,
-    blankSheet
+    blankSheet,
+    newSheet.options.exclude
   );
 
   return {

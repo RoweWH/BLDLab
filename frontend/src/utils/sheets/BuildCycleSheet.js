@@ -2,6 +2,23 @@ import { edgePieces } from "../../data/pieces/EdgePieces";
 import { cornerPieces } from "../../data/pieces/CornerPieces";
 import { getEdgeAlgs, getCornerAlgs } from "../../api/algApi";
 
+function countAlgorithms(columns, exclude) {
+  return columns.reduce((total, column) => {
+    return (
+      total +
+      column.rows.reduce((sum, row) => {
+        const excluded = exclude.some(
+          (excludedPiece) =>
+            normalizePiece(excludedPiece) === normalizePiece(row.row.piece) ||
+            normalizePiece(excludedPiece) === normalizePiece(column.column.piece)
+        );
+
+        return excluded ? sum : sum + row.algorithms.length;
+      }, 0)
+    );
+  }, 0);
+}
+
 function normalizePiece(piece) {
   return piece.split("").sort().join("");
 }
@@ -26,9 +43,7 @@ function buildBufferColumn(pieces, letterScheme, buffer) {
     letter: letterScheme.charAt(index),
   }));
 
-  const bufferTarget = allPieces.find(
-    (target) => target.piece === buffer
-  );
+  const bufferTarget = allPieces.find((target) => target.piece === buffer);
 
   if (!bufferTarget) {
     return {
@@ -40,9 +55,7 @@ function buildBufferColumn(pieces, letterScheme, buffer) {
   const normalizedBuffer = normalizePiece(buffer);
 
   const rows = allPieces
-    .filter(
-      (target) => normalizePiece(target.piece) !== normalizedBuffer
-    )
+    .filter((target) => normalizePiece(target.piece) !== normalizedBuffer)
     .sort((a, b) => a.letter.localeCompare(b.letter))
     .map((target) => ({
       row: target,
@@ -86,10 +99,8 @@ async function loadDefaults(buffer, first, second) {
   }
 }
 
-async function buildSheetData(pieces, letterScheme, buffer, blankSheet) {
-  console.log(buffer);
+async function buildSheetData(pieces, letterScheme, buffer, blankSheet, exclude) {
   const targets = pairAndSortPieces(pieces, letterScheme, buffer);
-
   const bufferColumn = buildBufferColumn(pieces, letterScheme, buffer);
 
   const cycleColumns = await Promise.all(
@@ -119,9 +130,17 @@ async function buildSheetData(pieces, letterScheme, buffer, blankSheet) {
     }))
   );
 
+  const algCount = countAlgorithms(cycleColumns, exclude);
+
   return {
     columns: [
-      bufferColumn,
+      {
+        ...bufferColumn,
+        column: {
+          ...bufferColumn.column,
+          piece: `${bufferColumn.column.piece} (${algCount})`,
+        },
+      },
       ...cycleColumns,
     ],
   };
@@ -145,7 +164,8 @@ export async function buildCycleSheet(newSheet, user) {
     pieces,
     letterScheme,
     newSheet.options.buffer,
-    newSheet.options.blankSheet
+    newSheet.options.blankSheet,
+    newSheet.options.exclude
   );
 
   return {
