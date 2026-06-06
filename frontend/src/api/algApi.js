@@ -42,7 +42,6 @@ export async function getParityAlgs(firstEdge, secondEdge, firstCorner, secondCo
      `&twist=${twist ?? ""}`;
  
    const response = await axios.get(url);
-   console.log(response);
    return response;
  }
 

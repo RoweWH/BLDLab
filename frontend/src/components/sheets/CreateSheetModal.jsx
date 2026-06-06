@@ -11,6 +11,7 @@ export function CreateSheetModal({ onClose, onCreate }) {
     buffer: "",
     edgeSwap: ["", ""],
     exclude: [],
+    bufferOrder: [],
     blankSheet: false,
   });
 
@@ -27,6 +28,7 @@ export function CreateSheetModal({ onClose, onCreate }) {
         buffer: "",
         edgeSwap: ["", ""],
         exclude: [],
+        bufferOrder: [],
       }),
     }));
   }
@@ -50,7 +52,7 @@ export function CreateSheetModal({ onClose, onCreate }) {
     if (is2E2C) {
       return {
         edgeSwap: form.edgeSwap,
-        exclude: form.exclude,
+        bufferOrder: form.bufferOrder,
         blankSheet: form.blankSheet,
       };
     }
@@ -183,8 +185,8 @@ export function CreateSheetModal({ onClose, onCreate }) {
               <div className="sheet-modal__label">Buffer Order</div>
 
               <CornerMultiSelect
-                value={form.exclude}
-                onChange={(newExclude) => handleChange("exclude", newExclude)}
+                value={form.bufferOrder}
+                onChange={(newOrder) => handleChange("bufferOrder", newOrder)}
                 showAllCorners={true}
                 blockEquivalentCorners={true}
               />
@@ -192,7 +194,7 @@ export function CreateSheetModal({ onClose, onCreate }) {
               <button
                 type="button"
                 className="clear-button"
-                onClick={() => handleChange("exclude", [])}
+                onClick={() => handleChange("bufferOrder", [])}
               >
                 Clear
               </button>

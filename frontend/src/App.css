@@ -1244,16 +1244,21 @@ input[type='file'] {
   position: fixed;
   inset: 1rem;
 
+  --sheet-cell-width: 115px;
+  --sheet-cell-height: 42px;
+  --sheet-selected-cell-width: 170px;
+  --sheet-selected-cell-height: 60px;
+  --sheet-helper-width: 60px;
+
   display: flex;
   align-items: flex-start;
+  justify-content: flex-start;
 
   overflow-x: auto;
   overflow-y: auto;
 
   border: 1px solid var(--border);
   border-radius: 14px;
-
-  padding: 0;
 
   background: var(--surface-elevated);
   box-shadow: var(--shadow);
@@ -1278,15 +1283,16 @@ input[type='file'] {
   display: flex;
   flex-direction: column;
   flex: 0 0 auto;
-  opacity: 1;
+
   background: var(--surface-elevated);
 }
 
 .buffer-column {
   position: sticky;
   left: 0;
-  z-index: 20;
-  box-shadow: 6px 0 12px rgba(0, 0, 0, 0.08);
+  z-index: 50;
+
+  box-shadow: 8px 0 16px rgba(0, 0, 0, 0.14);
 }
 
 .buffer-column--selected-helper {
@@ -1300,33 +1306,29 @@ input[type='file'] {
 .buffer-column__cell,
 .cycle-sheet-column__header,
 .cycle-sheet-cell {
-  width: 110px;
-  height: 42px;
+  width: var(--sheet-cell-width);
+  height: var(--sheet-cell-height);
+
   box-sizing: border-box;
+
   border: 1px solid var(--border);
+
   display: flex;
-  justify-content: center;
   align-items: center;
-  text-align: center;
+  justify-content: center;
+
   padding: 5px;
-  opacity: 1;
-  background-clip: padding-box;
-  transition:
-    background 0.15s ease,
-    color 0.15s ease,
-    width 0.18s ease,
-    height 0.18s ease,
-    font-size 0.18s ease,
-    filter 0.15s ease,
-    opacity 0.15s ease;
+
+  text-align: center;
 }
 
 .buffer-column__header,
 .cycle-sheet-column__header {
-  font-weight: 800;
-  font-size: 0.85rem;
   background: var(--accent);
   color: white;
+
+  font-weight: 800;
+  font-size: 0.85rem;
 }
 
 .cycle-sheet-column__header {
@@ -1334,19 +1336,23 @@ input[type='file'] {
 }
 
 .buffer-column__cell {
-  font-weight: 800;
-  font-size: 0.8rem;
   background: var(--accent-bg);
   color: var(--accent);
+
+  font-weight: 800;
+  font-size: 0.8rem;
 }
 
 .cycle-sheet-cell {
-  font-size: 0.65rem;
-  line-height: 1.1;
-  word-break: break-word;
-  overflow: hidden;
   background: var(--surface);
   color: var(--text);
+
+  font-size: 0.68rem;
+  line-height: 1.15;
+
+  overflow: hidden;
+
+  word-break: break-word;
 }
 
 .cycle-sheet-cell:hover {
@@ -1358,31 +1364,25 @@ input[type='file'] {
 .cycle-sheet-column--selected {
   position: relative;
   z-index: 30;
+
   background: var(--surface-elevated);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
 }
 
 .cycle-sheet-column--selected .cycle-sheet-column__header,
 .cycle-sheet-column--selected .cycle-sheet-cell {
-  width: 180px;
-  height: 66px;
-  font-size: 0.95rem;
-}
+  width: var(--sheet-selected-cell-width);
+  height: var(--sheet-selected-cell-height);
 
-.cycle-sheet-column--selected .cycle-sheet-cell {
-  font-size: 0.82rem;
+  font-size: 0.85rem;
 }
 
 .buffer-column--selected-helper .buffer-column__header,
 .buffer-column--selected-helper .buffer-column__cell {
-  width: 60px;
-  height: 66px;
-  font-size: 0.65rem;
-  padding: 3px;
-}
+  width: var(--sheet-helper-width);
+  height: var(--sheet-selected-cell-height);
 
-.buffer-column--selected-helper .buffer-column__header {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
 }
 
 .cycle-sheet-cell:empty {
@@ -1393,34 +1393,4 @@ input[type='file'] {
       rgba(100, 100, 100, 0.14) 8px,
       rgba(100, 100, 100, 0.14) 16px),
     var(--surface);
-}
-
-.buffer-column {
-  position: sticky;
-  left: 0;
-  z-index: 50;
-
-  background: var(--surface-elevated);
-  box-shadow: 8px 0 16px rgba(0, 0, 0, 0.14);
-}
-
-.buffer-column::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-
-  background: var(--surface-elevated);
-}
-
-.sheet-modal__field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.sheet-modal__label {
-  color: var(--text-h);
-  font-size: 0.95rem;
-  font-weight: 600;
 }

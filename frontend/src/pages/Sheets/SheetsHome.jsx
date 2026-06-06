@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { createNewSheet, getSheets } from "../../api/sheetApi";
 import { CreateSheetModal } from "../../components/sheets/CreateSheetModal";
 import { buildCycleSheet } from "../../utils/sheets/BuildCycleSheet";
+import { build2e2cSheet } from "../../utils/sheets/Build2e2cSheet";
 import { getCurrentUser } from "../../api/userApi";
 
 export function SheetsHome() {
@@ -30,12 +31,12 @@ export function SheetsHome() {
   async function createSheet(newSheet) {
     try {
       let populatedSheet;
-
+      const response = await getCurrentUser();
+      const user = response.data;
       if (newSheet.type === "edges" || newSheet.type === "corners") {
-        const response = await getCurrentUser();
-        const user = response.data;
-
         populatedSheet = await buildCycleSheet(newSheet, user);
+      } else if (newSheet.type === "2e2c") {
+        populatedSheet = await build2e2cSheet(newSheet, user);
       } else {
         populatedSheet = newSheet;
       }

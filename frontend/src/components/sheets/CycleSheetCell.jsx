@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { getEdgeAlgById, getCornerAlgById } from "../../api/algApi";
+import {
+  getEdgeAlgById,
+  getCornerAlgById,
+  getParityAlgById,
+} from "../../api/algApi";
 
 export function CycleSheetCell({ cell, type }) {
   const [primaryAlg, setPrimaryAlg] = useState("");
@@ -20,6 +24,8 @@ export function CycleSheetCell({ cell, type }) {
           response = await getEdgeAlgById(primary.algorithm);
         } else if (type === "corners") {
           response = await getCornerAlgById(primary.algorithm);
+        } else if (type === "2e2c") {
+          response = await getParityAlgById(primary.algorithm);
         } else {
           setPrimaryAlg("");
           return;
