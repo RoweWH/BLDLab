@@ -1248,7 +1248,7 @@ input[type='file'] {
   --sheet-cell-height: 42px;
   --sheet-selected-cell-width: 170px;
   --sheet-selected-cell-height: 60px;
-  --sheet-helper-width: 60px;
+  --sheet-helper-width: 85px;
 
   display: flex;
   align-items: flex-start;
@@ -1393,4 +1393,56 @@ input[type='file'] {
       rgba(100, 100, 100, 0.14) 8px,
       rgba(100, 100, 100, 0.14) 16px),
     var(--surface);
+}
+
+.cycle-sheet-column {
+  position: relative;
+}
+
+.cycle-sheet-column--selected {
+  min-width: 120px;
+}
+
+/* Make selected column's inner cells stretch with the dragged column */
+.cycle-sheet-column--selected .cycle-sheet-column__header,
+.cycle-sheet-column--selected .cycle-sheet-cell {
+  width: 100%;
+  min-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Invisible but hoverable drag zone */
+.cycle-sheet-column__resize-handle {
+  position: absolute;
+  top: 0;
+  right: -6px;
+  width: 12px;
+  height: 100%;
+  cursor: ew-resize;
+  z-index: 100;
+}
+
+/* Makes it obvious on hover */
+.cycle-sheet-column__resize-handle:hover {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.cycle-sheet-column__resize-handle::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 5px;
+  width: 2px;
+  height: 100%;
+  background: transparent;
+}
+
+.cycle-sheet-column__resize-handle:hover::after {
+  background: var(--accent);
+}
+
+.buffer-column__header,
+.cycle-sheet-column__header {
+  min-height: 64px;
+  white-space: pre-line;
 }

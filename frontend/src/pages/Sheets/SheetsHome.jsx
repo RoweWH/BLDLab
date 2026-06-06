@@ -4,6 +4,7 @@ import { createNewSheet, getSheets } from "../../api/sheetApi";
 import { CreateSheetModal } from "../../components/sheets/CreateSheetModal";
 import { buildCycleSheet } from "../../utils/sheets/BuildCycleSheet";
 import { build2e2cSheet } from "../../utils/sheets/Build2e2cSheet";
+import { buildLTCTSheet } from "../../utils/sheets/BuildLTCTSheet";
 import { getCurrentUser } from "../../api/userApi";
 
 export function SheetsHome() {
@@ -37,6 +38,8 @@ export function SheetsHome() {
         populatedSheet = await buildCycleSheet(newSheet, user);
       } else if (newSheet.type === "2e2c") {
         populatedSheet = await build2e2cSheet(newSheet, user);
+      } else if (newSheet.type === "ltct") {
+        populatedSheet = await buildLTCTSheet(newSheet, user);
       } else {
         populatedSheet = newSheet;
       }

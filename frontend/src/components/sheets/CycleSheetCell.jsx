@@ -26,6 +26,8 @@ export function CycleSheetCell({ cell, type }) {
           response = await getCornerAlgById(primary.algorithm);
         } else if (type === "2e2c") {
           response = await getParityAlgById(primary.algorithm);
+        } else if (type === "ltct") {
+          response = await getParityAlgById(primary.algorithm);
         } else {
           setPrimaryAlg("");
           return;
