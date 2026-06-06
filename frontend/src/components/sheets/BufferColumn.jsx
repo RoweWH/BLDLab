@@ -10,7 +10,12 @@ function isExcluded(piece, exclude = []) {
     .includes(normalizedPiece);
 }
 
-export function BufferColumn({ column, exclude = [], variant = "" }) {
+export function BufferColumn({
+  column,
+  exclude = [],
+  variant = "",
+  hideHeader = false,
+}) {
   const rows = column.rows.filter(
     (cell) => !isExcluded(cell.row.piece, exclude),
   );
@@ -19,9 +24,11 @@ export function BufferColumn({ column, exclude = [], variant = "" }) {
     <div
       className={`buffer-column ${variant ? `buffer-column--${variant}` : ""}`}
     >
-      <div className="buffer-column__header">
-        {variant === "selected-helper" ? "" : column.column.piece}
-      </div>
+      {!hideHeader && (
+        <div className="buffer-column__header">
+          {variant === "selected-helper" ? "" : column.column.piece}
+        </div>
+      )}
 
       {rows.map((cell) => (
         <div className="buffer-column__cell" key={cell.row.piece}>

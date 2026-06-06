@@ -18,15 +18,6 @@ function startsWithUOrD(piece) {
   return cleanPiece.startsWith("U") || cleanPiece.startsWith("D");
 }
 
-function countAlgorithms(columns) {
-  return columns.reduce((total, column) => {
-    return (
-      total +
-      column.rows.reduce((sum, row) => sum + row.algorithms.length, 0)
-    );
-  }, 0);
-}
-
 function getTarget(piece, letterScheme) {
   const index = cornerPieces.indexOf(piece);
 
@@ -140,15 +131,13 @@ async function buildLTCTData(
     }))
   );
 
-  const algCount = countAlgorithms(cycleColumns);
-
   return {
     columns: [
       {
         ...bufferColumn,
         column: {
           ...bufferColumn.column,
-          piece: `${bufferColumn.column.piece}\n(${algCount})`,
+          piece: bufferColumn.column.piece,
         },
       },
       ...cycleColumns,

@@ -2,23 +2,6 @@ import { edgePieces } from "../../data/pieces/EdgePieces";
 import { cornerPieces } from "../../data/pieces/CornerPieces";
 import { getEdgeAlgs, getCornerAlgs } from "../../api/algApi";
 
-function countAlgorithms(columns, exclude) {
-  return columns.reduce((total, column) => {
-    return (
-      total +
-      column.rows.reduce((sum, row) => {
-        const excluded = exclude.some(
-          (excludedPiece) =>
-            normalizePiece(excludedPiece) === normalizePiece(row.row.piece) ||
-            normalizePiece(excludedPiece) === normalizePiece(column.column.piece)
-        );
-
-        return excluded ? sum : sum + row.algorithms.length;
-      }, 0)
-    );
-  }, 0);
-}
-
 function normalizePiece(piece) {
   return piece.split("").sort().join("");
 }
@@ -99,7 +82,7 @@ async function loadDefaults(buffer, first, second) {
   }
 }
 
-async function buildSheetData(pieces, letterScheme, buffer, blankSheet, exclude) {
+async function buildSheetData(pieces, letterScheme, buffer, blankSheet) {
   const targets = pairAndSortPieces(pieces, letterScheme, buffer);
   const bufferColumn = buildBufferColumn(pieces, letterScheme, buffer);
 
@@ -130,15 +113,13 @@ async function buildSheetData(pieces, letterScheme, buffer, blankSheet, exclude)
     }))
   );
 
-  const algCount = countAlgorithms(cycleColumns, exclude);
-
   return {
     columns: [
       {
         ...bufferColumn,
         column: {
           ...bufferColumn.column,
-          piece: `${bufferColumn.column.piece} (${algCount})`,
+          piece: bufferColumn.column.piece,
         },
       },
       ...cycleColumns,
@@ -164,8 +145,7 @@ export async function buildCycleSheet(newSheet, user) {
     pieces,
     letterScheme,
     newSheet.options.buffer,
-    newSheet.options.blankSheet,
-    newSheet.options.exclude
+    newSheet.options.blankSheet
   );
 
   return {
