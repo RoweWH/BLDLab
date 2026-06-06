@@ -19,7 +19,9 @@ export function BufferColumn({ column, exclude = [], variant = "" }) {
     <div
       className={`buffer-column ${variant ? `buffer-column--${variant}` : ""}`}
     >
-      <div className="buffer-column__header">{column.column.piece}</div>
+      <div className="buffer-column__header">
+        {variant === "selected-helper" ? "" : column.column.piece}
+      </div>
 
       {rows.map((cell) => (
         <div className="buffer-column__cell" key={cell.row.piece}>

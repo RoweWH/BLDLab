@@ -1,25 +1,31 @@
 import { cornerPieces } from "../../data/pieces/CornerPieces";
 import { getParityAlgs } from "../../api/algApi";
 
-function countAlgorithms(columns, exclude) {
+function normalizePiece(piece) {
+  return piece.split("").sort().join("");
+}
+
+function isExcluded(piece, exclude = []) {
+  const normalizedPiece = normalizePiece(piece);
+
+  return exclude.some(
+    (excludedPiece) => normalizePiece(excludedPiece) === normalizedPiece
+  );
+}
+
+function countAlgorithms(columns, exclude = []) {
   return columns.reduce((total, column) => {
     return (
       total +
       column.rows.reduce((sum, row) => {
-        const excluded = exclude.some(
-          (excludedPiece) =>
-            normalizePiece(excludedPiece) === normalizePiece(row.row.piece) ||
-            normalizePiece(excludedPiece) === normalizePiece(column.column.piece)
-        );
+        const excluded =
+          isExcluded(column.column.piece, exclude) ||
+          isExcluded(row.row.piece, exclude);
 
         return excluded ? sum : sum + row.algorithms.length;
       }, 0)
     );
   }, 0);
-}
-
-function normalizePiece(piece) {
-  return piece.split("").sort().join("");
 }
 
 function getTarget(piece, letterScheme) {
@@ -105,7 +111,13 @@ async function load2E2CDefault(edgeSwap, columnPiece, rowPiece) {
   }
 }
 
-async function build2E2CData(edgeSwap, bufferOrder, letterScheme, blankSheet, exclude) {
+async function build2E2CData(
+  edgeSwap,
+  bufferOrder,
+  letterScheme,
+  blankSheet,
+  exclude = []
+) {
   const bufferColumn = buildBufferColumn(edgeSwap, bufferOrder, letterScheme);
 
   const columnTargets = bufferOrder.map((corner) =>
@@ -170,6 +182,7 @@ export async function build2e2cSheet(newSheet, user) {
   const edgeSwap = newSheet.options.edgeSwap;
   const bufferOrder = newSheet.options.bufferOrder;
   const blankSheet = newSheet.options.blankSheet;
+  const exclude = newSheet.options.exclude ?? [];
   const letterScheme = user.letterScheme.corners;
 
   const data = await build2E2CData(
@@ -177,7 +190,7 @@ export async function build2e2cSheet(newSheet, user) {
     bufferOrder,
     letterScheme,
     blankSheet,
-    newSheet.options.exclude
+    exclude
   );
 
   return {
