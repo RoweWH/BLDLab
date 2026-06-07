@@ -14,8 +14,26 @@ function isExcluded(piece, exclude = []) {
     .includes(normalizedPiece);
 }
 
-function countAlgorithms(columns, exclude = []) {
-  return columns.slice(1).reduce((total, column) => {
+function getBufferColumns(columns) {
+  const markedBufferColumns = columns.filter((column) => column.isBuffer);
+
+  if (markedBufferColumns.length > 0) {
+    return markedBufferColumns;
+  }
+
+  return [columns[0]];
+}
+
+function getCycleColumns(columns, bufferColumns) {
+  const bufferPieces = bufferColumns.map((column) => column.column.piece);
+
+  return columns.filter(
+    (column) => !bufferPieces.includes(column.column.piece)
+  );
+}
+
+function countAlgorithms(cycleColumns, exclude = []) {
+  return cycleColumns.reduce((total, column) => {
     return (
       total +
       column.rows.reduce((sum, row) => {
@@ -23,16 +41,17 @@ function countAlgorithms(columns, exclude = []) {
           isExcluded(column.column.piece, exclude) ||
           isExcluded(row.row.piece, exclude);
 
-        return excluded ? sum : sum + row.algorithms.length;
+        const invalid =
+          excluded || (typeof row.invalid === "boolean" && row.invalid);
+
+        return invalid ? sum : sum + row.algorithms.length;
       }, 0)
     );
   }, 0);
 }
 
-function countCases(columns, exclude = [], type) {
-  const cycleColumns = columns.slice(1);
-
-  return cycleColumns.reduce((total, column, columnIndex) => {
+function countCases(cycleColumns, exclude = []) {
+  return cycleColumns.reduce((total, column) => {
     return (
       total +
       column.rows.reduce((sum, row) => {
@@ -43,19 +62,9 @@ function countCases(columns, exclude = [], type) {
         const samePiece =
           normalizePiece(column.column.piece) === normalizePiece(row.row.piece);
 
-        let invalid = excluded || samePiece;
-
-        if (type === "2e2c") {
-          const previousAndCurrentColumns = cycleColumns
-            .slice(0, columnIndex + 1)
-            .map((col) => col.column.piece);
-
-          const blockedByPreviousBuffer = previousAndCurrentColumns.some(
-            (piece) => normalizePiece(piece) === normalizePiece(row.row.piece),
-          );
-
-          invalid = excluded || blockedByPreviousBuffer;
-        }
+        const invalid =
+          excluded ||
+          (typeof row.invalid === "boolean" ? row.invalid : samePiece);
 
         return invalid ? sum : sum + 1;
       }, 0)
@@ -72,14 +81,13 @@ export function CycleSheet({ sheet }) {
 
   const exclude = sheet.options?.exclude ?? [];
 
-  const bufferColumn = sheet.data.columns[0];
+  const bufferColumns = getBufferColumns(sheet.data.columns);
+  const cycleColumns = getCycleColumns(sheet.data.columns, bufferColumns).filter(
+    (column) => !isExcluded(column.column.piece, exclude)
+  );
 
-  const cycleColumns = sheet.data.columns
-    .slice(1)
-    .filter((column) => !isExcluded(column.column.piece, exclude));
-
-  const loadedCount = countAlgorithms(sheet.data.columns, exclude);
-  const possibleCount = countCases(sheet.data.columns, exclude, sheet.type);
+  const loadedCount = countAlgorithms(cycleColumns, exclude);
+  const possibleCount = countCases(cycleColumns, exclude);
 
   function handleColumnHeaderClick(piece) {
     setSelectedColumnPiece((current) => (current === piece ? null : piece));
@@ -90,17 +98,25 @@ export function CycleSheet({ sheet }) {
       {!selectedColumnPiece && (
         <div className="cycle-sheet__buffer-area">
           <div className="cycle-sheet__top-left-header">
-            <div>{bufferColumn.column.piece}</div>
+            <div>
+              {bufferColumns
+                .map((bufferColumn) => bufferColumn.column.piece)
+                .join(" / ")}
+            </div>
+
             <div>
               ({loadedCount}/{possibleCount})
             </div>
           </div>
 
-          <BufferColumn
-            column={bufferColumn}
-            exclude={exclude}
-            hideHeader={true}
-          />
+          {bufferColumns.map((bufferColumn) => (
+            <BufferColumn
+              key={bufferColumn.column.piece}
+              column={bufferColumn}
+              exclude={exclude}
+              hideHeader={true}
+            />
+          ))}
         </div>
       )}
 
@@ -109,13 +125,15 @@ export function CycleSheet({ sheet }) {
 
         return (
           <div className="cycle-sheet__column-group" key={column.column.piece}>
-            {isSelected && (
-              <BufferColumn
-                column={bufferColumn}
-                exclude={exclude}
-                variant="selected-helper"
-              />
-            )}
+            {isSelected &&
+              bufferColumns.map((bufferColumn) => (
+                <BufferColumn
+                  key={bufferColumn.column.piece}
+                  column={bufferColumn}
+                  exclude={exclude}
+                  variant="selected-helper"
+                />
+              ))}
 
             <CycleSheetColumn
               column={column}

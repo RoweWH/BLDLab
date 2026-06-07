@@ -2,7 +2,7 @@ import { cornerPieces } from "../../data/pieces/CornerPieces";
 import { getParityAlgs } from "../../api/algApi";
 
 function normalizePiece(piece) {
-  return piece.split("").sort().join("");
+  return piece.replace(/[()]/g, "").split("").sort().join("");
 }
 
 function getTarget(piece, letterScheme) {
@@ -25,10 +25,12 @@ function getEquivalentPieces(piece) {
 function buildBufferColumn(edgeSwap, bufferOrder, letterScheme) {
   const firstBuffer = bufferOrder[0];
 
+  const columnPiece = `${edgeSwap[0]}/${edgeSwap[1]}`;
+
   if (!firstBuffer) {
     return {
       column: {
-        piece: `${edgeSwap[0]}/${edgeSwap[1]}`,
+        piece: columnPiece,
         letter: "",
       },
       rows: [],
@@ -44,11 +46,12 @@ function buildBufferColumn(edgeSwap, bufferOrder, letterScheme) {
     .map((target) => ({
       row: target,
       algorithms: [],
+      invalid: false,
     }));
 
   return {
     column: {
-      piece: `${edgeSwap[0]}/${edgeSwap[1]}`,
+      piece: columnPiece,
       letter: "",
     },
     rows,
@@ -88,12 +91,19 @@ async function load2E2CDefault(edgeSwap, columnPiece, rowPiece) {
   }
 }
 
-async function build2E2CData(
-  edgeSwap,
-  bufferOrder,
-  letterScheme,
-  blankSheet
-) {
+function isSamePiece(pieceA, pieceB) {
+  return normalizePiece(pieceA) === normalizePiece(pieceB);
+}
+
+function isBlocked2E2CCell(columnTargets, columnIndex, rowPiece) {
+  const previousAndCurrentBuffers = columnTargets
+    .slice(0, columnIndex + 1)
+    .map((target) => target.piece);
+
+  return previousAndCurrentBuffers.some((piece) => isSamePiece(piece, rowPiece));
+}
+
+async function build2E2CData(edgeSwap, bufferOrder, letterScheme, blankSheet) {
   const bufferColumn = buildBufferColumn(edgeSwap, bufferOrder, letterScheme);
 
   const columnTargets = bufferOrder.map((corner) =>
@@ -104,27 +114,22 @@ async function build2E2CData(
 
   const cycleColumns = await Promise.all(
     columnTargets.map(async (columnTarget, columnIndex) => {
-      const previousBufferPieces = columnTargets
-        .slice(0, columnIndex)
-        .map((target) => target.piece);
-
-      const blockedPieces = [...previousBufferPieces, columnTarget.piece];
-
       return {
         column: columnTarget,
 
         rows: await Promise.all(
           rowTargets.map(async (rowTarget) => {
-            const isBlocked = blockedPieces.some(
-              (blockedPiece) =>
-                normalizePiece(blockedPiece) === normalizePiece(rowTarget.piece)
+            const invalid = isBlocked2E2CCell(
+              columnTargets,
+              columnIndex,
+              rowTarget.piece
             );
 
             return {
               row: rowTarget,
-
+              invalid,
               algorithms:
-                blankSheet || isBlocked
+                blankSheet || invalid
                   ? []
                   : await load2E2CDefault(
                       edgeSwap,
@@ -139,16 +144,7 @@ async function build2E2CData(
   );
 
   return {
-    columns: [
-      {
-        ...bufferColumn,
-        column: {
-          ...bufferColumn.column,
-          piece: bufferColumn.column.piece,
-        },
-      },
-      ...cycleColumns,
-    ],
+    columns: [bufferColumn, ...cycleColumns],
   };
 }
 
