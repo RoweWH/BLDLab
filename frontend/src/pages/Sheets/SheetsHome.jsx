@@ -5,6 +5,7 @@ import { CreateSheetModal } from "../../components/sheets/CreateSheetModal";
 import { buildCycleSheet } from "../../utils/sheets/BuildCycleSheet";
 import { build2e2cSheet } from "../../utils/sheets/Build2e2cSheet";
 import { buildLTCTSheet } from "../../utils/sheets/BuildLTCTSheet";
+import { buildT2CSheet } from "../../utils/sheets/BuildT2CSheet";
 import { getCurrentUser } from "../../api/userApi";
 
 export function SheetsHome() {
@@ -40,6 +41,8 @@ export function SheetsHome() {
         populatedSheet = await build2e2cSheet(newSheet, user);
       } else if (newSheet.type === "ltct") {
         populatedSheet = await buildLTCTSheet(newSheet, user);
+      } else if (newSheet.type === "t2c") {
+        populatedSheet = await buildT2CSheet(newSheet, user);
       } else {
         populatedSheet = newSheet;
       }

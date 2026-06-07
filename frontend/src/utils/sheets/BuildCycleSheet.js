@@ -43,6 +43,7 @@ function buildBufferColumn(pieces, letterScheme, buffer) {
     .map((target) => ({
       row: target,
       algorithms: [],
+      invalid: false,
     }));
 
   return {
@@ -97,17 +98,14 @@ async function buildSheetData(pieces, letterScheme, buffer, blankSheet) {
             normalizePiece(rowTarget.piece);
 
           return {
-            row: rowTarget,
+  row: rowTarget,
+  invalid: samePiece,
 
-            algorithms:
-              blankSheet || samePiece
-                ? []
-                : await loadDefaults(
-                    buffer,
-                    columnTarget.piece,
-                    rowTarget.piece
-                  ),
-          };
+  algorithms:
+    blankSheet || samePiece
+      ? []
+      : await loadDefaults(buffer, columnTarget.piece, rowTarget.piece),
+};
         })
       ),
     }))

@@ -10,9 +10,17 @@ export function CornerMultiSelect({
   buffer,
   showAllCorners = false,
   blockEquivalentCorners = false,
+  maxSelections = 7,
+  showNumbers = true,
 }) {
   function isBufferPiece(piece) {
-    return buffer && normalizePiece(piece) === normalizePiece(buffer);
+    if (!buffer) return false;
+
+    const buffers = Array.isArray(buffer) ? buffer : [buffer];
+
+    return buffers.some(
+      (bufferPiece) => normalizePiece(piece) === normalizePiece(bufferPiece),
+    );
   }
 
   function hasEquivalentSelected(piece) {
@@ -23,14 +31,21 @@ export function CornerMultiSelect({
     );
   }
 
-  function toggleCorner(corner) {
-    if (isBufferPiece(corner)) {
-      return;
-    }
+  function maxHasBeenReached(corner) {
+    return (
+      blockEquivalentCorners &&
+      maxSelections !== null &&
+      value.length >= maxSelections &&
+      !value.includes(corner)
+    );
+  }
 
-    if (blockEquivalentCorners && hasEquivalentSelected(corner)) {
-      return;
-    }
+  function toggleCorner(corner) {
+    if (isBufferPiece(corner)) return;
+
+    if (blockEquivalentCorners && hasEquivalentSelected(corner)) return;
+
+    if (maxHasBeenReached(corner)) return;
 
     if (value.includes(corner)) {
       onChange(value.filter((x) => x !== corner));
@@ -52,8 +67,7 @@ export function CornerMultiSelect({
         const isBuffer = isBufferPiece(corner);
         const orderNumber = value.indexOf(corner) + 1;
 
-        const maxSelected =
-          blockEquivalentCorners && value.length >= 7 && !isSelected;
+        const maxSelected = maxHasBeenReached(corner);
 
         const disabled =
           isBuffer ||
@@ -78,7 +92,7 @@ export function CornerMultiSelect({
           >
             <span>{corner}</span>
 
-            {isSelected && (
+            {isSelected && showNumbers && (
               <span className="multi-select__order">{orderNumber}</span>
             )}
           </button>

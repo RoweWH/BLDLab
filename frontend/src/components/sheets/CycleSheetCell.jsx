@@ -12,7 +12,7 @@ export function CycleSheetCell({ cell, type }) {
 
   useEffect(() => {
     async function loadAlg() {
-      if (!primary) {
+      if (cell.invalid || !primary) {
         setPrimaryAlg("");
         return;
       }
@@ -24,9 +24,7 @@ export function CycleSheetCell({ cell, type }) {
           response = await getEdgeAlgById(primary.algorithm);
         } else if (type === "corners") {
           response = await getCornerAlgById(primary.algorithm);
-        } else if (type === "2e2c") {
-          response = await getParityAlgById(primary.algorithm);
-        } else if (type === "ltct") {
+        } else if (type === "2e2c" || type === "ltct" || type === "t2c") {
           response = await getParityAlgById(primary.algorithm);
         } else {
           setPrimaryAlg("");
@@ -44,7 +42,18 @@ export function CycleSheetCell({ cell, type }) {
     }
 
     loadAlg();
-  }, [primary?.algorithm, type]);
+  }, [cell.invalid, primary?.algorithm, type]);
 
-  return <div className="cycle-sheet-cell">{primaryAlg}</div>;
+  return (
+    <div
+      className={[
+        "cycle-sheet-cell",
+        cell.invalid ? "cycle-sheet-cell--invalid" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      {cell.invalid ? "" : primaryAlg}
+    </div>
+  );
 }

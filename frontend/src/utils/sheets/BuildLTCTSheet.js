@@ -41,6 +41,7 @@ function buildBufferColumn(edgeSwap, cornerBuffer, letterScheme, exclude = []) {
         piece: `(${target.piece})`,
       },
       algorithms: [],
+      invalid: false,
     }));
 
   return {
@@ -115,19 +116,26 @@ async function buildLTCTData(
       column: columnTarget,
 
       rows: await Promise.all(
-        rowTargets.map(async (rowTarget) => ({
-          row: rowTarget,
+  rowTargets.map(async (rowTarget) => {
+    const invalid =
+      normalizePiece(columnTarget.piece) === normalizePiece(rowTarget.piece);
 
-          algorithms: blankSheet
-            ? []
-            : await loadLTCTDefault(
-                edgeSwap,
-                cornerBuffer,
-                columnTarget.piece,
-                rowTarget.piece
-              ),
-        }))
-      ),
+    return {
+      row: rowTarget,
+      invalid,
+
+      algorithms:
+        blankSheet || invalid
+          ? []
+          : await loadLTCTDefault(
+              edgeSwap,
+              cornerBuffer,
+              columnTarget.piece,
+              rowTarget.piece
+            ),
+    };
+  })
+),
     }))
   );
 

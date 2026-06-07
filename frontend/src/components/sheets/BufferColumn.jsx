@@ -30,8 +30,16 @@ export function BufferColumn({
         </div>
       )}
 
-      {rows.map((cell) => (
-        <div className="buffer-column__cell" key={cell.row.piece}>
+      {rows.map((cell, index) => (
+        <div
+          className={[
+            "buffer-column__cell",
+            cell.rowSpan === 2 ? "buffer-column__cell--double" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          key={`${cell.row.piece}-${index}`}
+        >
           {cell.row.piece} ({cell.row.letter})
         </div>
       ))}

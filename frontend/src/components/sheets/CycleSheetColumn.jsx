@@ -21,6 +21,7 @@ export function CycleSheetColumn({
   exclude = [],
   isSelected,
   onHeaderClick,
+  hideHeader = false,
 }) {
   const [width, setWidth] = useState(DEFAULT_WIDTH);
 
@@ -70,13 +71,15 @@ export function CycleSheetColumn({
           : undefined
       }
     >
-      <button
-        type="button"
-        className="cycle-sheet-column__header"
-        onClick={() => onHeaderClick(column.column.piece)}
-      >
-        {column.column.piece} ({column.column.letter})
-      </button>
+      {!hideHeader && (
+        <button
+          type="button"
+          className="cycle-sheet-column__header"
+          onClick={() => onHeaderClick(column.column.piece)}
+        >
+          {column.column.piece} ({column.column.letter})
+        </button>
+      )}
 
       {rows.map((cell) => (
         <CycleSheetCell key={cell.row.piece} cell={cell} type={type} />

@@ -9,6 +9,7 @@ export function CreateSheetModal({ onClose, onCreate }) {
     name: "",
     type: "",
     buffer: "",
+    twistedCorner: "",
     edgeSwap: ["", ""],
     exclude: [],
     bufferOrder: [],
@@ -17,7 +18,8 @@ export function CreateSheetModal({ onClose, onCreate }) {
 
   const isEdgesOrCorners = form.type === "edges" || form.type === "corners";
   const is2E2C = form.type === "2e2c";
-  const isLTCTorT2C = form.type === "ltct" || form.type === "t2c";
+  const isLTCT = form.type === "ltct";
+  const isT2C = form.type === "t2c";
 
   function handleChange(name, value) {
     setForm((current) => ({
@@ -26,8 +28,17 @@ export function CreateSheetModal({ onClose, onCreate }) {
 
       ...(name === "type" && {
         buffer: "",
+        twistedCorner: "",
         edgeSwap: ["", ""],
         exclude: [],
+        bufferOrder: [],
+      }),
+
+      ...(name === "twistedCorner" && {
+        bufferOrder: [],
+      }),
+
+      ...(name === "exclude" && {
         bufferOrder: [],
       }),
     }));
@@ -57,10 +68,20 @@ export function CreateSheetModal({ onClose, onCreate }) {
       };
     }
 
-    if (isLTCTorT2C) {
+    if (isLTCT) {
       return {
         edgeSwap: form.edgeSwap,
         buffer: form.buffer,
+        exclude: form.exclude,
+        blankSheet: form.blankSheet,
+      };
+    }
+
+    if (isT2C) {
+      return {
+        edgeSwap: form.edgeSwap,
+        twistedCorner: form.twistedCorner,
+        bufferOrder: form.bufferOrder,
         exclude: form.exclude,
         blankSheet: form.blankSheet,
       };
@@ -151,6 +172,7 @@ export function CreateSheetModal({ onClose, onCreate }) {
                   buffer={form.buffer}
                   value={form.exclude}
                   onChange={(newExclude) => handleChange("exclude", newExclude)}
+                  showNumbers={false}
                 />
               )}
               <button
@@ -182,7 +204,7 @@ export function CreateSheetModal({ onClose, onCreate }) {
             </label>
 
             <div className="sheet-modal__field">
-              <div className="sheet-modal__label">Buffer Order</div>
+              <label>Buffer Order</label>
 
               <CornerMultiSelect
                 value={form.bufferOrder}
@@ -202,7 +224,7 @@ export function CreateSheetModal({ onClose, onCreate }) {
           </div>
         )}
 
-        {isLTCTorT2C && (
+        {isLTCT && (
           <div className="modal-section">
             <label>
               Edge Swap
@@ -233,6 +255,7 @@ export function CreateSheetModal({ onClose, onCreate }) {
                 buffer={form.buffer}
                 value={form.exclude}
                 onChange={(newExclude) => handleChange("exclude", newExclude)}
+                showNumbers={false}
               />
               <button
                 type="button"
@@ -242,6 +265,74 @@ export function CreateSheetModal({ onClose, onCreate }) {
                 Clear
               </button>
             </label>
+          </div>
+        )}
+
+        {isT2C && (
+          <div className="modal-section">
+            <label>
+              Edge Swap
+              <div className="pair-selectors">
+                <EdgeDropdown
+                  value={form.edgeSwap[0]}
+                  onChange={(e) => handleEdgeSwapChange(0, e.target.value)}
+                />
+
+                <EdgeDropdown
+                  value={form.edgeSwap[1]}
+                  onChange={(e) => handleEdgeSwapChange(1, e.target.value)}
+                />
+              </div>
+            </label>
+
+            <label>
+              Twisted Corner (Buffer)
+              <CornerDropdown
+                value={form.twistedCorner}
+                onChange={(e) => handleChange("twistedCorner", e.target.value)}
+                startsWithUDOnly={true}
+              />
+            </label>
+
+            <div className="sheet-modal__field">
+              <label>Exclude</label>
+              <CornerMultiSelect
+                value={form.exclude}
+                onChange={(newExclude) => handleChange("exclude", newExclude)}
+                buffer={form.twistedCorner}
+                showAllCorners={false}
+                blockEquivalentCorners={true}
+                showNumbers={false}
+              />
+              <button
+                type="button"
+                className="clear-button"
+                onClick={() => handleChange("exclude", [])}
+              >
+                Clear
+              </button>
+            </div>
+
+            <div className="sheet-modal__field">
+              <label>Piece Order</label>
+
+              <CornerMultiSelect
+                value={form.bufferOrder}
+                onChange={(newOrder) => handleChange("bufferOrder", newOrder)}
+                buffer={[form.twistedCorner, ...form.exclude].filter(Boolean)}
+                showAllCorners={true}
+                blockEquivalentCorners={true}
+                maxSelections={6 - form.exclude.length}
+              />
+
+              <button
+                type="button"
+                className="clear-button"
+                onClick={() => handleChange("bufferOrder", [])}
+              >
+                Clear
+              </button>
+            </div>
           </div>
         )}
 
