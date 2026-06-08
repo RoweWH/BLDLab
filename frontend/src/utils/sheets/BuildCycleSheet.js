@@ -6,74 +6,40 @@ function normalizePiece(piece) {
   return piece.split("").sort().join("");
 }
 
-function pairAndSortPieces(pieces, letterScheme, buffer) {
-  return pieces
-    .map((piece, index) => ({
-      piece,
-      letter: letterScheme.charAt(index),
-    }))
-    .filter((target) => {
-      if (!buffer) return true;
-
-      return normalizePiece(target.piece) !== normalizePiece(buffer);
-    })
-    .sort((a, b) => a.letter.localeCompare(b.letter));
+function isSamePiece(firstPiece, secondPiece) {
+  return normalizePiece(firstPiece) === normalizePiece(secondPiece);
 }
 
-function buildBufferColumn(pieces, letterScheme, buffer) {
-  const allPieces = pieces.map((piece, index) => ({
-    piece,
-    letter: letterScheme.charAt(index),
-  }));
-
-  const bufferTarget = allPieces.find((target) => target.piece === buffer);
-
-  if (!bufferTarget) {
-    return {
-      column: null,
-      rows: [],
-    };
-  }
-
-  const normalizedBuffer = normalizePiece(buffer);
-
-  const rows = allPieces
-    .filter((target) => normalizePiece(target.piece) !== normalizedBuffer)
-    .sort((a, b) => a.letter.localeCompare(b.letter))
-    .map((target) => ({
-      row: target,
-      algorithms: [],
-      invalid: false,
-    }));
-
-  return {
-    column: bufferTarget,
-    rows,
-  };
+function pieceIsInList(piece, list = []) {
+  return list.some((listPiece) => isSamePiece(piece, listPiece));
 }
 
-async function loadDefaults(buffer, first, second) {
+function getVisiblePieces(pieces, fixed = [], exclude = []) {
+  return pieces.filter((piece) => {
+    return !pieceIsInList(piece, fixed) && !pieceIsInList(piece, exclude);
+  });
+}
+
+function buildBufferColumns(pieces, fixed, exclude) {
+  return [getVisiblePieces(pieces, fixed, exclude)];
+}
+
+async function loadDefaults(buffer, first, second, blankSheet) {
+  if (blankSheet) return [];
+
   try {
-    let response;
-
-    if (first.length === 2) {
-      response = await getEdgeAlgs(buffer, first, second);
-    } else if (first.length === 3) {
-      response = await getCornerAlgs(buffer, first, second);
-    } else {
-      return [];
-    }
+    const response =
+      first.length === 2
+        ? await getEdgeAlgs(buffer, first, second)
+        : await getCornerAlgs(buffer, first, second);
 
     const firstAlgorithm = response.data?.algorithms?.[0];
 
-    if (!firstAlgorithm) {
-      return [];
-    }
+    if (!firstAlgorithm) return [];
 
     return [
       {
         algorithm: firstAlgorithm.id,
-        custom: "",
         primary: true,
       },
     ];
@@ -83,71 +49,59 @@ async function loadDefaults(buffer, first, second) {
   }
 }
 
-async function buildSheetData(pieces, letterScheme, buffer, blankSheet) {
-  const targets = pairAndSortPieces(pieces, letterScheme, buffer);
-  const bufferColumn = buildBufferColumn(pieces, letterScheme, buffer);
-
-  const cycleColumns = await Promise.all(
-    targets.map(async (columnTarget) => ({
-      column: columnTarget,
-
-      rows: await Promise.all(
-        targets.map(async (rowTarget) => {
-          const samePiece =
-            normalizePiece(columnTarget.piece) ===
-            normalizePiece(rowTarget.piece);
-
-          return {
-  row: rowTarget,
-  invalid: samePiece,
-
-  algorithms:
-    blankSheet || samePiece
-      ? []
-      : await loadDefaults(buffer, columnTarget.piece, rowTarget.piece),
-};
-        })
-      ),
-    }))
+async function buildCycleColumn(buffer, columnPiece, rowPieces, blankSheet) {
+  const rows = await Promise.all(
+    rowPieces
+      .filter((rowPiece) => !isSamePiece(columnPiece, rowPiece))
+      .map(async (rowPiece) => ({
+        piece: rowPiece,
+        algorithms: await loadDefaults(
+          buffer,
+          columnPiece,
+          rowPiece,
+          blankSheet
+        ),
+      }))
   );
 
   return {
-    columns: [
-      {
-        ...bufferColumn,
-        column: {
-          ...bufferColumn.column,
-          piece: bufferColumn.column.piece,
-        },
-      },
-      ...cycleColumns,
-    ],
+    piece: columnPiece,
+    rows,
   };
 }
 
-export async function buildCycleSheet(newSheet, user) {
-  let pieces;
-  let letterScheme;
+async function buildSheetData(pieces, fixed, exclude, blankSheet) {
+  const buffer = fixed[0];
+  const visiblePieces = getVisiblePieces(pieces, fixed, exclude);
 
-  if (newSheet.type === "edges") {
-    pieces = edgePieces;
-    letterScheme = user.letterScheme.edges;
-  } else if (newSheet.type === "corners") {
-    pieces = cornerPieces;
-    letterScheme = user.letterScheme.corners;
-  } else {
-    return newSheet;
-  }
-
-  const data = await buildSheetData(
-    pieces,
-    letterScheme,
-    newSheet.options.buffer,
-    newSheet.options.blankSheet
+  const columns = await Promise.all(
+    visiblePieces.map((columnPiece) =>
+      buildCycleColumn(buffer, columnPiece, visiblePieces, blankSheet)
+    )
   );
 
   return {
+    bufferColumns: buildBufferColumns(pieces, fixed, exclude),
+    columns,
+  };
+}
+
+export async function buildCycleSheet(newSheet) {
+  const pieces = newSheet.type === "edges" ? edgePieces : cornerPieces;
+
+  const fixed = newSheet.options.fixed ?? [];
+  const exclude = newSheet.options.exclude ?? [];
+  const blankSheet = newSheet.options.blankSheet;
+
+  const data = await buildSheetData(pieces, fixed, exclude, blankSheet);
+
+  return {
     ...newSheet,
+    options: {
+      fixed,
+      exclude,
+      blankSheet,
+    },
     data,
   };
 }

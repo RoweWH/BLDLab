@@ -54,7 +54,7 @@ export function CreateSheetModal({ onClose, onCreate }) {
   function buildOptions() {
     if (isEdgesOrCorners) {
       return {
-        buffer: form.buffer,
+        fixed: [form.buffer],
         exclude: form.exclude,
         blankSheet: form.blankSheet,
       };
@@ -62,7 +62,7 @@ export function CreateSheetModal({ onClose, onCreate }) {
 
     if (is2E2C) {
       return {
-        edgeSwap: form.edgeSwap,
+        fixed: form.edgeSwap,
         bufferOrder: form.bufferOrder,
         blankSheet: form.blankSheet,
       };
@@ -70,8 +70,7 @@ export function CreateSheetModal({ onClose, onCreate }) {
 
     if (isLTCT) {
       return {
-        edgeSwap: form.edgeSwap,
-        buffer: form.buffer,
+        fixed: [...form.edgeSwap, form.buffer],
         exclude: form.exclude,
         blankSheet: form.blankSheet,
       };
@@ -79,8 +78,7 @@ export function CreateSheetModal({ onClose, onCreate }) {
 
     if (isT2C) {
       return {
-        edgeSwap: form.edgeSwap,
-        twistedCorner: form.twistedCorner,
+        fixed: [...form.edgeSwap, form.twistedCorner],
         bufferOrder: form.bufferOrder,
         exclude: form.exclude,
         blankSheet: form.blankSheet,
@@ -88,6 +86,8 @@ export function CreateSheetModal({ onClose, onCreate }) {
     }
 
     return {
+      fixed: [],
+      exclude: [],
       blankSheet: form.blankSheet,
     };
   }
