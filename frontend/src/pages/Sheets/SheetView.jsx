@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { CycleSheet } from "../../components/sheets/CycleSheet";
+import { Sheet } from "../../components/sheets/Sheet";
 import { getSheet } from "../../api/sheetApi";
 
 export function SheetView() {
@@ -30,7 +30,7 @@ export function SheetView() {
     <div className="page">
       <h1>{sheet.name}</h1>
 
-      <CycleSheet sheet={sheet} />
+      <Sheet sheet={sheet} />
     </div>
   );
 }

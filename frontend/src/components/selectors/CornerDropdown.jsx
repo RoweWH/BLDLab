@@ -13,7 +13,7 @@ export function CornerDropdown({
     : cornerPieces;
 
   return (
-    <select name={name} value={value} onChange={onChange}>
+    <select name={name} value={value} onChange={onChange} required>
       <option value=""> -- </option>
 
       {cornersToShow.map((corner) => (

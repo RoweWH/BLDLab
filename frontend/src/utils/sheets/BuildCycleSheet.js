@@ -2,34 +2,34 @@ import { edgePieces } from "../../data/pieces/EdgePieces";
 import { cornerPieces } from "../../data/pieces/CornerPieces";
 import { getEdgeAlgs, getCornerAlgs } from "../../api/algApi";
 
-function normalizePiece(piece) {
-  return piece.split("").sort().join("");
-}
-
-function isSamePiece(firstPiece, secondPiece) {
-  return normalizePiece(firstPiece) === normalizePiece(secondPiece);
+function normalizePiece(piece = "") {
+  return piece.replace(/[()]/g, "").split("").sort().join("");
 }
 
 function pieceIsInList(piece, list = []) {
-  return list.some((listPiece) => isSamePiece(piece, listPiece));
+  const normalizedPiece = normalizePiece(piece);
+
+  return list
+    .map((listPiece) => normalizePiece(listPiece))
+    .includes(normalizedPiece);
 }
 
-function getVisiblePieces(pieces, fixed = [], exclude = []) {
+function getTargets(pieces, fixed = [], exclude = []) {
   return pieces.filter((piece) => {
     return !pieceIsInList(piece, fixed) && !pieceIsInList(piece, exclude);
   });
 }
 
-function buildBufferColumns(pieces, fixed, exclude) {
-  return [getVisiblePieces(pieces, fixed, exclude)];
-}
-
-async function loadDefaults(buffer, first, second, blankSheet) {
+async function loadDefaults(type, buffer, first, second, blankSheet) {
   if (blankSheet) return [];
+
+  if (normalizePiece(first) === normalizePiece(second)) return [];
+
+  if (!buffer) return [];
 
   try {
     const response =
-      first.length === 2
+      type === "edges"
         ? await getEdgeAlgs(buffer, first, second)
         : await getCornerAlgs(buffer, first, second);
 
@@ -49,19 +49,28 @@ async function loadDefaults(buffer, first, second, blankSheet) {
   }
 }
 
-async function buildCycleColumn(buffer, columnPiece, rowPieces, blankSheet) {
+async function buildCycleColumn(type, buffer, columnPiece, targets, blankSheet) {
   const rows = await Promise.all(
-    rowPieces
-      .filter((rowPiece) => !isSamePiece(columnPiece, rowPiece))
-      .map(async (rowPiece) => ({
+    targets.map(async (rowPiece) => {
+      const invalid = normalizePiece(columnPiece) === normalizePiece(rowPiece);
+
+      if (invalid) {
+        return {
+          piece: rowPiece,
+        };
+      }
+
+      return {
         piece: rowPiece,
         algorithms: await loadDefaults(
+          type,
           buffer,
           columnPiece,
           rowPiece,
           blankSheet
         ),
-      }))
+      };
+    })
   );
 
   return {
@@ -70,38 +79,38 @@ async function buildCycleColumn(buffer, columnPiece, rowPieces, blankSheet) {
   };
 }
 
-async function buildSheetData(pieces, fixed, exclude, blankSheet) {
+async function buildSheetData(type, pieces, fixed, exclude, blankSheet) {
   const buffer = fixed[0];
-  const visiblePieces = getVisiblePieces(pieces, fixed, exclude);
+  const targets = getTargets(pieces, fixed, exclude);
 
   const columns = await Promise.all(
-    visiblePieces.map((columnPiece) =>
-      buildCycleColumn(buffer, columnPiece, visiblePieces, blankSheet)
+    targets.map((columnPiece) =>
+      buildCycleColumn(type, buffer, columnPiece, targets, blankSheet)
     )
   );
 
   return {
-    bufferColumns: buildBufferColumns(pieces, fixed, exclude),
+    bufferColumns: [targets],
     columns,
   };
 }
 
 export async function buildCycleSheet(newSheet) {
   const pieces = newSheet.type === "edges" ? edgePieces : cornerPieces;
+  const fixed = newSheet.options?.fixed ?? [];
+  const exclude = newSheet.options?.exclude ?? [];
+  const blankSheet = newSheet.options?.blankSheet ?? false;
 
-  const fixed = newSheet.options.fixed ?? [];
-  const exclude = newSheet.options.exclude ?? [];
-  const blankSheet = newSheet.options.blankSheet;
-
-  const data = await buildSheetData(pieces, fixed, exclude, blankSheet);
+  const data = await buildSheetData(
+    newSheet.type,
+    pieces,
+    fixed,
+    exclude,
+    blankSheet
+  );
 
   return {
     ...newSheet,
-    options: {
-      fixed,
-      exclude,
-      blankSheet,
-    },
     data,
   };
 }

@@ -6,7 +6,7 @@ export function TwistDropdown({ value, onChange }) {
   );
 
   return (
-    <select value={value} onChange={onChange}>
+    <select value={value} onChange={onChange} required>
       <option value=""> -- </option>
 
       {filteredCorners.map((corner) => (

@@ -2,7 +2,7 @@ import { edgePieces } from "../../data/pieces/EdgePieces";
 
 export function EdgeDropdown({ name, value, onChange }) {
   return (
-    <select name={name} value={value} onChange={onChange}>
+    <select name={name} value={value} onChange={onChange} required>
       <option value=""> -- </option>
 
       {edgePieces.map((edge) => (
