@@ -27,73 +27,69 @@ export function Sheet({ sheet }) {
 
   if (!columns.length) return null;
 
-  const selectedColumn = columns.find(
-    (column) => column.piece === selectedColumnPiece,
-  );
-
   function toggleSelectedColumn(piece) {
     setSelectedColumnPiece((current) => (current === piece ? null : piece));
   }
 
-  function renderBufferColumns(variant = "") {
+  function renderBufferArea(showHeader = true) {
     return (
-      <div className="cycle-sheet__buffer-columns">
-        {bufferColumns.map((bufferColumn, index) => (
-          <BufferColumn
-            key={`buffer-column-${variant}-${index}`}
-            pieces={bufferColumn}
-            variant={variant}
-          />
-        ))}
-      </div>
-    );
-  }
-
-  if (selectedColumn) {
-    return (
-      <div className="cycle-sheet">
-        <div className="cycle-sheet__column-group cycle-sheet__column-group--selected">
-          <div className="cycle-sheet__selected-body">
-            {renderBufferColumns("selected-helper")}
-
-            <Column
-              column={selectedColumn}
-              type={sheet.type}
-              isSelected={true}
-              onHeaderClick={toggleSelectedColumn}
-            />
+      <div
+        className="cycle-sheet__buffer-area"
+        style={{ "--buffer-count": bufferColumns.length }}
+      >
+        {showHeader && (
+          <div className="cycle-sheet__top-left-header">
+            <div>{fixed.join(" ")}</div>
+            <div>
+              ({countAlgorithms(columns)}/{countCases(columns)})
+            </div>
           </div>
+        )}
+
+        {!showHeader && <div className="cycle-sheet__top-left-header" />}
+
+        <div className="cycle-sheet__buffer-columns">
+          {bufferColumns.map((bufferColumn, index) => (
+            <BufferColumn
+              key={`buffer-column-${index}`}
+              pieces={bufferColumn}
+            />
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="cycle-sheet">
-      <div
-        className="cycle-sheet__buffer-area"
-        style={{ "--buffer-count": bufferColumns.length }}
-      >
-        <div className="cycle-sheet__top-left-header">
-          <div>{fixed.join(" ")}</div>
-          <div>
-            ({countAlgorithms(columns)}/{countCases(columns)})
+    <div
+      className={`cycle-sheet ${
+        selectedColumnPiece ? "cycle-sheet--has-selected-column" : ""
+      }`}
+    >
+      {!selectedColumnPiece && renderBufferArea(true)}
+
+      {columns.map((column) => {
+        const isSelected = column.piece === selectedColumnPiece;
+        const isBlurred = selectedColumnPiece && !isSelected;
+
+        return (
+          <div
+            className={`cycle-sheet__column-group ${
+              isSelected ? "cycle-sheet__column-group--selected" : ""
+            } ${isBlurred ? "cycle-sheet__column-group--blurred" : ""}`}
+            key={column.piece}
+          >
+            {isSelected && renderBufferArea(false)}
+
+            <Column
+              column={column}
+              type={sheet.type}
+              isSelected={isSelected}
+              onHeaderClick={toggleSelectedColumn}
+            />
           </div>
-        </div>
-
-        {renderBufferColumns()}
-      </div>
-
-      {columns.map((column) => (
-        <div className="cycle-sheet__column-group" key={column.piece}>
-          <Column
-            column={column}
-            type={sheet.type}
-            isSelected={false}
-            onHeaderClick={toggleSelectedColumn}
-          />
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
