@@ -77,16 +77,69 @@ userRoutes.route("/users").post(async (request, response) => {
         const hash = await bcrypt.hash(request.body.password, saltRounds)
 
         let mongoObject = {
-            name: request.body.name,
-            email: request.body.email,
-            password: hash,
-            joinDate: new Date(),
-            letterScheme: {
-                edges: "ABCDEFGHIJKLMNOPQRSTUVWX",
-                corners: "ABCDEFGHIJKLMNOPQRSTUVWX"
-            },
-            orientation: ["W", "G"]
-        }
+  name: request.body.name,
+  email: request.body.email,
+  password: hash,
+  joinDate: new Date(),
+
+  letterScheme: {
+    edges: {
+      UF: "A",
+      UL: "B",
+      UB: "C",
+      UR: "D",
+      FD: "E",
+      FL: "F",
+      FU: "G",
+      FR: "H",
+      LD: "I",
+      LB: "J",
+      LU: "K",
+      LF: "L",
+      BD: "M",
+      BR: "N",
+      BU: "O",
+      BL: "P",
+      RD: "Q",
+      RF: "R",
+      RU: "S",
+      RB: "T",
+      DB: "U",
+      DL: "V",
+      DF: "W",
+      DR: "X"
+    },
+
+    corners: {
+      UFL: "A",
+      UBL: "B",
+      UBR: "C",
+      UFR: "D",
+      FDL: "E",
+      FUL: "F",
+      FUR: "G",
+      FDR: "H",
+      LDB: "I",
+      LUB: "J",
+      LUF: "K",
+      LDF: "L",
+      BDR: "M",
+      BUR: "N",
+      BUL: "O",
+      BDL: "P",
+      RDF: "Q",
+      RUF: "R",
+      RUB: "S",
+      RDB: "T",
+      DBL: "U",
+      DFL: "V",
+      DFR: "W",
+      DBR: "X"
+    }
+  },
+
+  orientation: ["W", "G"]
+};
         let data = await db.collection("users").insertOne(mongoObject)
         response.json(data)
     }

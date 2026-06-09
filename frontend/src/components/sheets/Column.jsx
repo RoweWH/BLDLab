@@ -3,7 +3,13 @@ import { Cell } from "./Cell";
 
 const DEFAULT_WIDTH = 200;
 
-export function Column({ column, type, isSelected, onHeaderClick }) {
+export function Column({
+  column,
+  type,
+  letterScheme,
+  isSelected,
+  onHeaderClick,
+}) {
   const [width, setWidth] = useState(DEFAULT_WIDTH);
 
   useEffect(() => {
@@ -51,6 +57,7 @@ export function Column({ column, type, isSelected, onHeaderClick }) {
         onClick={() => onHeaderClick(column.piece)}
       >
         {column.piece}
+        {letterScheme?.[column.piece] ? ` (${letterScheme[column.piece]})` : ""}
       </button>
 
       {column.rows.map((row) => (

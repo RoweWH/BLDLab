@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BufferColumn } from "./BufferColumn";
 import { Column } from "./Column";
+import { getCurrentUser } from "../../api/userApi";
+import {formatPiecesWithLetters} from "../../utils/sheets/FormatPiecesWithLetters"
 
 function countAlgorithms(columns = []) {
   return columns.reduce((total, column) => {
@@ -20,7 +22,18 @@ function countCases(columns = []) {
 
 export function Sheet({ sheet }) {
   const [selectedColumnPiece, setSelectedColumnPiece] = useState(null);
+  const [user, setUser] = useState(null);
 
+  useEffect(() => {
+    async function loadUser() {
+      const response = await getCurrentUser();
+      setUser(response.data);
+    }
+
+    loadUser();
+  }, []);
+
+  const letterScheme = sheet.type === "edges" ? user?.letterScheme?.edges : user?.letterScheme?.corners;
   const fixed = sheet.options?.fixed ?? [];
   const bufferColumns = sheet.data?.bufferColumns ?? [];
   const columns = sheet.data?.columns ?? [];
@@ -37,6 +50,8 @@ export function Sheet({ sheet }) {
       setSelectedColumnPiece(piece);
     }
   }
+
+  
 
   return (
     <div className="cycle-sheet">
@@ -56,7 +71,8 @@ export function Sheet({ sheet }) {
             {bufferColumns.map((bufferColumn, index) => (
               <BufferColumn
                 key={`main-buffer-column-${index}`}
-                pieces={bufferColumn}
+                pieces={formatPiecesWithLetters(bufferColumn, letterScheme)}
+                
               />
             ))}
           </div>
@@ -85,7 +101,7 @@ export function Sheet({ sheet }) {
                   {bufferColumns.map((bufferColumn, index) => (
                     <BufferColumn
                       key={`selected-buffer-column-${index}`}
-                      pieces={bufferColumn}
+                      pieces={formatPiecesWithLetters(bufferColumn, letterScheme)}
                     />
                   ))}
                 </div>
@@ -95,6 +111,7 @@ export function Sheet({ sheet }) {
             <Column
               column={column}
               type={sheet.type}
+              letterScheme={letterScheme}
               isSelected={isSelected}
               onHeaderClick={toggleSelectedColumn}
             />
