@@ -25,61 +25,72 @@ export function Sheet({ sheet }) {
   const bufferColumns = sheet.data?.bufferColumns ?? [];
   const columns = sheet.data?.columns ?? [];
 
+  const algorithmCount = countAlgorithms(columns);
+  const caseCount = countCases(columns);
+
   if (!columns.length) return null;
 
   function toggleSelectedColumn(piece) {
-    setSelectedColumnPiece((current) => (current === piece ? null : piece));
-  }
-
-  function renderBufferArea(showHeader = true) {
-    return (
-      <div
-        className="cycle-sheet__buffer-area"
-        style={{ "--buffer-count": bufferColumns.length }}
-      >
-        {showHeader && (
-          <div className="cycle-sheet__top-left-header">
-            <div>{fixed.join(" ")}</div>
-            <div>
-              ({countAlgorithms(columns)}/{countCases(columns)})
-            </div>
-          </div>
-        )}
-
-        {!showHeader && <div className="cycle-sheet__top-left-header" />}
-
-        <div className="cycle-sheet__buffer-columns">
-          {bufferColumns.map((bufferColumn, index) => (
-            <BufferColumn
-              key={`buffer-column-${index}`}
-              pieces={bufferColumn}
-            />
-          ))}
-        </div>
-      </div>
-    );
+    if (selectedColumnPiece === piece) {
+      setSelectedColumnPiece(null);
+    } else {
+      setSelectedColumnPiece(piece);
+    }
   }
 
   return (
-    <div
-      className={`cycle-sheet ${
-        selectedColumnPiece ? "cycle-sheet--has-selected-column" : ""
-      }`}
-    >
-      {!selectedColumnPiece && renderBufferArea(true)}
+    <div className="cycle-sheet">
+      {!selectedColumnPiece && (
+        <div
+          className="cycle-sheet__buffer-area"
+          style={{ "--buffer-count": bufferColumns.length }}
+        >
+          <div className="cycle-sheet__top-left-header">
+            <div>{fixed.join(" ")}</div>
+            <div>
+              ({algorithmCount}/{caseCount})
+            </div>
+          </div>
+
+          <div className="cycle-sheet__buffer-columns">
+            {bufferColumns.map((bufferColumn, index) => (
+              <BufferColumn
+                key={`main-buffer-column-${index}`}
+                pieces={bufferColumn}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {columns.map((column) => {
-        const isSelected = column.piece === selectedColumnPiece;
+        const isSelected = selectedColumnPiece === column.piece;
         const isBlurred = selectedColumnPiece && !isSelected;
 
         return (
           <div
+            key={column.piece}
             className={`cycle-sheet__column-group ${
               isSelected ? "cycle-sheet__column-group--selected" : ""
             } ${isBlurred ? "cycle-sheet__column-group--blurred" : ""}`}
-            key={column.piece}
           >
-            {isSelected && renderBufferArea(false)}
+            {isSelected && (
+              <div
+                className="cycle-sheet__buffer-area"
+                style={{ "--buffer-count": bufferColumns.length }}
+              >
+                <div className="cycle-sheet__top-left-header" />
+
+                <div className="cycle-sheet__buffer-columns">
+                  {bufferColumns.map((bufferColumn, index) => (
+                    <BufferColumn
+                      key={`selected-buffer-column-${index}`}
+                      pieces={bufferColumn}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
             <Column
               column={column}

@@ -1335,7 +1335,6 @@ input[type='file'] {
 /* ----- Headers / cells ----- */
 
 .cycle-sheet__top-left-header,
-.buffer-column__header,
 .buffer-column__cell,
 .cycle-sheet-column__header,
 .cycle-sheet-cell {
@@ -1359,7 +1358,6 @@ input[type='file'] {
 }
 
 .cycle-sheet__top-left-header,
-.buffer-column__header,
 .cycle-sheet-column__header {
   height: var(--sheet-header-height);
 
@@ -1479,7 +1477,7 @@ input[type='file'] {
   background: var(--accent);
 }
 
-.cycle-sheet__column-group--selected .buffer-column__header,
+.cycle-sheet__column-group--selected,
 .cycle-sheet__column-group--selected .buffer-column__cell {
   height: var(--sheet-selected-cell-height);
 
