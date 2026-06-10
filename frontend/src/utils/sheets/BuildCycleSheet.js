@@ -14,18 +14,28 @@ function pieceIsInList(piece, list = []) {
     .includes(normalizedPiece);
 }
 
-function getTargets(pieces, fixed = [], exclude = []) {
+function getTargets(pieces, buffer, exclude = []) {
   return pieces.filter((piece) => {
-    return !pieceIsInList(piece, fixed) && !pieceIsInList(piece, exclude);
+    return (
+      !pieceIsInList(piece, [buffer]) &&
+      !pieceIsInList(piece, exclude)
+    );
+  });
+}
+
+function sortPiecesByLetter(pieces = [], letterScheme = {}) {
+  return [...pieces].sort((a, b) => {
+    const letterA = letterScheme[a] ?? "";
+    const letterB = letterScheme[b] ?? "";
+
+    return letterA.localeCompare(letterB);
   });
 }
 
 async function loadDefaults(type, buffer, first, second, blankSheet) {
   if (blankSheet) return [];
-
-  if (normalizePiece(first) === normalizePiece(second)) return [];
-
   if (!buffer) return [];
+  if (normalizePiece(first) === normalizePiece(second)) return [];
 
   try {
     const response =
@@ -49,9 +59,9 @@ async function loadDefaults(type, buffer, first, second, blankSheet) {
   }
 }
 
-async function buildCycleColumn(type, buffer, columnPiece, targets, blankSheet) {
+async function buildColumn(type, buffer, columnPiece, rowTargets, blankSheet) {
   const rows = await Promise.all(
-    targets.map(async (rowPiece) => {
+    rowTargets.map(async (rowPiece) => {
       const invalid = normalizePiece(columnPiece) === normalizePiece(rowPiece);
 
       if (invalid) {
@@ -79,35 +89,55 @@ async function buildCycleColumn(type, buffer, columnPiece, targets, blankSheet) 
   };
 }
 
-async function buildSheetData(type, pieces, fixed, exclude, blankSheet) {
-  const buffer = fixed[0];
-  const targets = getTargets(pieces, fixed, exclude);
+async function buildSheetData({
+  type,
+  pieces,
+  headerInfo,
+  buffer,
+  exclude,
+  blankSheet,
+  letterScheme,
+}) {
+  const targets = sortPiecesByLetter(
+    getTargets(pieces, buffer, exclude),
+    letterScheme
+  );
 
   const columns = await Promise.all(
     targets.map((columnPiece) =>
-      buildCycleColumn(type, buffer, columnPiece, targets, blankSheet)
+      buildColumn(type, buffer, columnPiece, targets, blankSheet)
     )
   );
 
   return {
+    headerInfo,
     bufferColumns: [targets],
     columns,
   };
 }
 
-export async function buildCycleSheet(newSheet) {
+export async function buildCycleSheet(newSheet, user) {
   const pieces = newSheet.type === "edges" ? edgePieces : cornerPieces;
-  const fixed = newSheet.options?.fixed ?? [];
+
+  const letterScheme =
+    newSheet.type === "edges"
+      ? user.letterScheme.edges
+      : user.letterScheme.corners;
+
+  const headerInfo = newSheet.options?.headerInfo ?? [];
+  const buffer = newSheet.options?.buffer;
   const exclude = newSheet.options?.exclude ?? [];
   const blankSheet = newSheet.options?.blankSheet ?? false;
 
-  const data = await buildSheetData(
-    newSheet.type,
+  const data = await buildSheetData({
+    type: newSheet.type,
     pieces,
-    fixed,
+    headerInfo,
+    buffer,
     exclude,
-    blankSheet
-  );
+    blankSheet,
+    letterScheme,
+  });
 
   return {
     ...newSheet,

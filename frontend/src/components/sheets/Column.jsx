@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Cell } from "./Cell";
 
-const DEFAULT_WIDTH = 200;
+const DEFAULT_WIDTH = 360;
+const MIN_WIDTH = 200;
 
 export function Column({
   column,
@@ -18,15 +19,22 @@ export function Column({
     }
   }, [isSelected]);
 
+  function getMaxWidth() {
+    return Math.max(MIN_WIDTH, window.innerWidth - 260);
+  }
+
   function handleResizeStart(e) {
     e.preventDefault();
 
     const startX = e.clientX;
     const startWidth = width;
+    const maxWidth = getMaxWidth();
 
     function resize(e) {
       const newWidth = startWidth + e.clientX - startX;
-      setWidth(Math.max(DEFAULT_WIDTH, newWidth));
+      const clampedWidth = Math.min(maxWidth, Math.max(MIN_WIDTH, newWidth));
+
+      setWidth(clampedWidth);
     }
 
     function stopResize() {
@@ -44,8 +52,7 @@ export function Column({
 
   const selectedStyle = isSelected
     ? {
-        width: `${width}px`,
-        minWidth: `${width}px`,
+        "--selected-column-width": `${width}px`,
       }
     : undefined;
 
@@ -60,8 +67,12 @@ export function Column({
         {letterScheme?.[column.piece] ? ` (${letterScheme[column.piece]})` : ""}
       </button>
 
-      {column.rows.map((row) => (
-        <Cell key={row.piece} cell={row} type={type} />
+      {column.rows.map((row, index) => (
+        <Cell
+          key={`${column.piece}-${row.piece}-${index}`}
+          cell={row}
+          type={type}
+        />
       ))}
 
       {isSelected && (

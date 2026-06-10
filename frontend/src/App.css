@@ -969,10 +969,15 @@ input[type='file'] {
   justify-content: center;
 
   padding: 1rem;
+
+  overflow-y: auto;
 }
 
 .sheet-modal {
   width: min(460px, 100%);
+  max-height: calc(100svh - 2rem);
+  overflow-y: auto;
+
   box-sizing: border-box;
 
   background: var(--surface-elevated);
@@ -1243,33 +1248,32 @@ input[type='file'] {
 .cycle-sheet {
   position: fixed;
   inset: 1rem;
+  z-index: 1;
 
   --sheet-cell-width: 115px;
   --sheet-cell-height: 42px;
   --sheet-header-height: 64px;
   --sheet-selected-cell-height: 60px;
+  --sheet-selected-column-width: 360px;
 
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
 
-  overflow-x: auto;
-  overflow-y: auto;
+  overflow: auto;
 
   border: 1px solid var(--border);
   border-radius: 14px;
 
   background: var(--surface-elevated);
   box-shadow: var(--shadow);
-
-  z-index: 1;
 }
-
 
 /* ----- Layout ----- */
 
 .cycle-sheet__buffer-area,
 .cycle-sheet__column-group,
+.cycle-sheet__buffer-columns,
 .buffer-column,
 .cycle-sheet-column {
   display: flex;
@@ -1282,11 +1286,7 @@ input[type='file'] {
   flex-direction: column;
 }
 
-.cycle-sheet__buffer-columns {
-  display: flex;
-  align-items: flex-start;
-}
-
+.cycle-sheet__buffer-columns,
 .cycle-sheet__column-group {
   align-items: flex-start;
 }
@@ -1296,7 +1296,6 @@ input[type='file'] {
 .cycle-sheet-column {
   background: var(--surface-elevated);
 }
-
 
 /* ----- Selection ----- */
 
@@ -1312,18 +1311,13 @@ input[type='file'] {
 
 .cycle-sheet-column--selected {
   position: relative;
-
-  min-width: 120px;
-
   background: var(--surface-elevated);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
 }
 
 .cycle-sheet-column--selected .cycle-sheet-column__header,
 .cycle-sheet-column--selected .cycle-sheet-cell {
-  width: 100%;
-  min-width: 100%;
-
+  width: var(--selected-column-width);
   font-size: 0.85rem;
 }
 
@@ -1331,8 +1325,7 @@ input[type='file'] {
   height: var(--sheet-selected-cell-height);
 }
 
-
-/* ----- Headers / cells ----- */
+/* ----- Headers / Cells ----- */
 
 .cycle-sheet__top-left-header,
 .buffer-column__cell,
@@ -1348,13 +1341,7 @@ input[type='file'] {
   justify-content: center;
 
   padding: 5px;
-
   text-align: center;
-}
-
-.cycle-sheet__top-left-header {
-  width: calc(var(--sheet-cell-width) * var(--buffer-count));
-  flex-direction: column;
 }
 
 .cycle-sheet__top-left-header,
@@ -1371,17 +1358,16 @@ input[type='file'] {
   white-space: pre-line;
 }
 
-.buffer-column__cell,
-.cycle-sheet-cell {
-  height: var(--sheet-cell-height);
+.cycle-sheet__top-left-header {
+  width: calc(var(--sheet-cell-width) * var(--buffer-count));
+  flex-direction: column;
 }
 
-.buffer-column__cell--double {
-  height: calc(var(--sheet-cell-height) * 2);
+.cycle-sheet-column__header {
+  cursor: pointer;
 }
 
-
-/* ----- Buffer ----- */
+/* ----- Buffer Columns ----- */
 
 .buffer-column {
   z-index: 50;
@@ -1399,22 +1385,23 @@ input[type='file'] {
   font-size: 0.8rem;
 }
 
+.cycle-sheet__column-group--selected .buffer-column__cell {
+  font-size: 0.85rem;
+}
+
 .buffer-column+.buffer-column .buffer-column__cell {
   border-left: 1px solid var(--border);
 }
 
-
-/* ----- Algorithm cells ----- */
+/* ----- Algorithm Cells ----- */
 
 .cycle-sheet-column {
   position: relative;
 }
 
-.cycle-sheet-column__header {
-  cursor: pointer;
-}
-
 .cycle-sheet-cell {
+  height: var(--sheet-cell-height);
+
   background: var(--surface);
   color: var(--text);
 
@@ -1444,8 +1431,7 @@ input[type='file'] {
   pointer-events: none;
 }
 
-
-/* ----- Resize handle ----- */
+/* ----- Resize Handle ----- */
 
 .cycle-sheet-column__resize-handle {
   position: absolute;
@@ -1464,7 +1450,6 @@ input[type='file'] {
 
 .cycle-sheet-column__resize-handle::after {
   content: "";
-
   position: absolute;
   top: 0;
   right: 5px;
@@ -1475,15 +1460,4 @@ input[type='file'] {
 
 .cycle-sheet-column__resize-handle:hover::after {
   background: var(--accent);
-}
-
-.cycle-sheet__column-group--selected,
-.cycle-sheet__column-group--selected .buffer-column__cell {
-  height: var(--sheet-selected-cell-height);
-
-  font-size: 0.85rem;
-}
-
-.cycle-sheet__column-group--selected .buffer-column__cell--double {
-  height: calc(var(--sheet-selected-cell-height) * 2);
 }

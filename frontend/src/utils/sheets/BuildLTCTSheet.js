@@ -1,86 +1,85 @@
 import { cornerPieces } from "../../data/pieces/CornerPieces";
 import { getParityAlgs } from "../../api/algApi";
 
-function normalizePiece(piece) {
+function normalizePiece(piece = "") {
   return piece.replace(/[()]/g, "").split("").sort().join("");
 }
 
-function isExcluded(piece, exclude = []) {
+function pieceIsInList(piece, list = []) {
   const normalizedPiece = normalizePiece(piece);
 
-  return exclude.some(
-    (excludedPiece) => normalizePiece(excludedPiece) === normalizedPiece
-  );
+  return list
+    .map((listPiece) => normalizePiece(listPiece))
+    .includes(normalizedPiece);
 }
 
-function startsWithUOrD(piece) {
+function startsWithUOrD(piece = "") {
   const cleanPiece = piece.replace(/[()]/g, "");
   return cleanPiece.startsWith("U") || cleanPiece.startsWith("D");
 }
 
-function getTarget(piece, letterScheme) {
-  const index = cornerPieces.indexOf(piece);
-
-  return {
-    piece,
-    letter: letterScheme.charAt(index),
-  };
+function getColumnTargets(buffer, exclude = []) {
+  return cornerPieces.filter((corner) => {
+    return (
+      !pieceIsInList(corner, [buffer]) &&
+      !pieceIsInList(corner, exclude)
+    );
+  });
 }
 
-function buildBufferColumn(edgeSwap, cornerBuffer, letterScheme, exclude = []) {
-  const fullExclude = [...exclude, cornerBuffer];
-
-  const rows = cornerPieces
-    .filter((corner) => !isExcluded(corner, fullExclude))
-    .filter((corner) => !startsWithUOrD(corner))
-    .map((corner) => getTarget(corner, letterScheme))
-    .sort((a, b) => a.letter.localeCompare(b.letter))
-    .map((target) => ({
-      row: {
-        ...target,
-        piece: `(${target.piece})`,
-      },
-      algorithms: [],
-      invalid: false,
-    }));
-
-  return {
-    column: {
-      piece: `${cornerBuffer} ${edgeSwap[0]}/${edgeSwap[1]}`,
-      letter: "",
-    },
-    rows,
-  };
+function getRowTargets(buffer, exclude = []) {
+  return cornerPieces.filter((corner) => {
+    return (
+      !pieceIsInList(corner, [buffer]) &&
+      !pieceIsInList(corner, exclude) &&
+      !startsWithUOrD(corner)
+    );
+  });
 }
 
-async function loadLTCTDefault(edgeSwap, buffer, secondCorner, twist) {
+function sortPiecesByLetter(pieces = [], letterScheme = {}) {
+  return [...pieces].sort((a, b) => {
+    const letterA = letterScheme[a] ?? "";
+    const letterB = letterScheme[b] ?? "";
+
+    return letterA.localeCompare(letterB);
+  });
+}
+
+async function loadLTCTDefault(
+  edgeSwap,
+  buffer,
+  columnPiece,
+  rowPiece,
+  blankSheet
+) {
+  if (blankSheet) return [];
+  if (!edgeSwap[0] || !edgeSwap[1]) return [];
+  if (!buffer) return [];
+  if (normalizePiece(columnPiece) === normalizePiece(rowPiece)) return [];
+
   try {
-    const cleanTwist = twist.replace(/[()]/g, "");
-
     const response = await getParityAlgs(
       edgeSwap[0],
       edgeSwap[1],
       buffer,
-      secondCorner,
-      cleanTwist
+      columnPiece,
+      rowPiece.replace(/[()]/g, "")
     );
 
     const firstAlgorithm = response.data?.algorithms?.[0];
 
-    if (!firstAlgorithm) {
-      return [];
-    }
+    if (!firstAlgorithm) return [];
 
     return [
       {
         algorithm: firstAlgorithm.id,
-        custom: "",
         primary: true,
       },
     ];
   } catch (error) {
     console.error(
-      `Failed to load LTCT ${edgeSwap[0]}-${edgeSwap[1]}-${buffer}-${secondCorner}-${twist}:`,
+      `Failed to load LTCT ${edgeSwap[0]}-${edgeSwap[1]}-${buffer}-${columnPiece}-${rowPiece}:`,
       error
     );
 
@@ -88,85 +87,89 @@ async function loadLTCTDefault(edgeSwap, buffer, secondCorner, twist) {
   }
 }
 
-async function buildLTCTData(
+async function buildLTCTColumn(
   edgeSwap,
-  cornerBuffer,
-  letterScheme,
-  blankSheet,
-  exclude = []
+  buffer,
+  columnPiece,
+  rowTargets,
+  blankSheet
 ) {
-  const fullExclude = [...exclude, cornerBuffer];
+  const rows = await Promise.all(
+    rowTargets.map(async (rowPiece) => {
+      const invalid = normalizePiece(columnPiece) === normalizePiece(rowPiece);
 
-  const bufferColumn = buildBufferColumn(
-    edgeSwap,
-    cornerBuffer,
-    letterScheme,
-    exclude
-  );
+      if (invalid) {
+        return {
+          piece: rowPiece,
+        };
+      }
 
-  const columnTargets = cornerPieces
-    .filter((corner) => !isExcluded(corner, fullExclude))
-    .map((corner) => getTarget(corner, letterScheme))
-    .sort((a, b) => a.letter.localeCompare(b.letter));
-
-  const rowTargets = bufferColumn.rows.map((row) => row.row);
-
-  const cycleColumns = await Promise.all(
-    columnTargets.map(async (columnTarget) => ({
-      column: columnTarget,
-
-      rows: await Promise.all(
-  rowTargets.map(async (rowTarget) => {
-    const invalid =
-      normalizePiece(columnTarget.piece) === normalizePiece(rowTarget.piece);
-
-    return {
-      row: rowTarget,
-      invalid,
-
-      algorithms:
-        blankSheet || invalid
-          ? []
-          : await loadLTCTDefault(
-              edgeSwap,
-              cornerBuffer,
-              columnTarget.piece,
-              rowTarget.piece
-            ),
-    };
-  })
-),
-    }))
+      return {
+        piece: rowPiece,
+        algorithms: await loadLTCTDefault(
+          edgeSwap,
+          buffer,
+          columnPiece,
+          rowPiece,
+          blankSheet
+        ),
+      };
+    })
   );
 
   return {
-    columns: [
-      {
-        ...bufferColumn,
-        column: {
-          ...bufferColumn.column,
-          piece: bufferColumn.column.piece,
-        },
-      },
-      ...cycleColumns,
-    ],
+    piece: columnPiece,
+    rows,
+  };
+}
+
+async function buildLTCTData({
+  headerInfo,
+  edgeSwap,
+  buffer,
+  exclude,
+  blankSheet,
+  letterScheme,
+}) {
+  const columnTargets = sortPiecesByLetter(
+    getColumnTargets(buffer, exclude),
+    letterScheme
+  );
+
+  const rowTargets = sortPiecesByLetter(
+    getRowTargets(buffer, exclude),
+    letterScheme
+  );
+
+  const columns = await Promise.all(
+    columnTargets.map((columnPiece) =>
+      buildLTCTColumn(edgeSwap, buffer, columnPiece, rowTargets, blankSheet)
+    )
+  );
+
+  return {
+    headerInfo,
+    bufferColumns: [rowTargets],
+    columns,
   };
 }
 
 export async function buildLTCTSheet(newSheet, user) {
-  const edgeSwap = newSheet.options.edgeSwap;
-  const cornerBuffer = newSheet.options.buffer;
-  const blankSheet = newSheet.options.blankSheet;
-  const exclude = newSheet.options.exclude ?? [];
+  const headerInfo = newSheet.options?.headerInfo ?? [];
+  const edgeSwap = newSheet.options?.edgeSwap ?? [];
+  const buffer = newSheet.options?.buffer;
+  const exclude = newSheet.options?.exclude ?? [];
+  const blankSheet = newSheet.options?.blankSheet ?? false;
   const letterScheme = user.letterScheme.corners;
 
-  const data = await buildLTCTData(
+  const data = await buildLTCTData({
+    headerInfo,
     edgeSwap,
-    cornerBuffer,
-    letterScheme,
+    buffer,
+    exclude,
     blankSheet,
-    exclude
-  );
+    letterScheme,
+  });
 
   return {
     ...newSheet,

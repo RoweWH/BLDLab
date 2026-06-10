@@ -1,17 +1,20 @@
 import { cornerPieces } from "../../data/pieces/CornerPieces";
 import { getParityAlgs } from "../../api/algApi";
 
-function normalizePiece(piece) {
+function normalizePiece(piece = "") {
   return piece.replace(/[()]/g, "").split("").sort().join("");
 }
 
-function getTarget(piece, letterScheme) {
-  const index = cornerPieces.indexOf(piece);
+function pieceIsInList(piece, list = []) {
+  const normalizedPiece = normalizePiece(piece);
 
-  return {
-    piece,
-    letter: letterScheme.charAt(index),
-  };
+  return list
+    .map((listPiece) => normalizePiece(listPiece))
+    .includes(normalizedPiece);
+}
+
+function cleanPiece(piece = "") {
+  return piece.replace(/[()]/g, "");
 }
 
 function getEquivalentPieces(piece) {
@@ -22,100 +25,86 @@ function getEquivalentPieces(piece) {
   );
 }
 
-function isSamePiece(pieceA, pieceB) {
-  return normalizePiece(pieceA) === normalizePiece(pieceB);
-}
-
 function getAllEquivalentPieces(pieces = []) {
   return pieces.flatMap((piece) => getEquivalentPieces(piece));
 }
 
-function buildFirstBufferColumn(
-  edgeSwap,
-  twistedCorner,
-  firstColumnPiece,
-  exclude,
-  letterScheme
-) {
-  const excludedPieces = [
+function getFirstBufferTargets(twistedCorner, firstColumnPiece, exclude = []) {
+  if (!twistedCorner || !firstColumnPiece) return [];
+
+  const blockedPieces = [
     ...getEquivalentPieces(twistedCorner),
     ...getEquivalentPieces(firstColumnPiece),
     ...getAllEquivalentPieces(exclude),
   ];
 
-  const rows = cornerPieces
-    .filter(
-      (corner) =>
-        !excludedPieces.some((excludedPiece) =>
-          isSamePiece(corner, excludedPiece)
-        )
-    )
-    .map((corner) => getTarget(corner, letterScheme))
-    .sort((a, b) => a.letter.localeCompare(b.letter))
-    .map((target) => ({
-      row: target,
-      algorithms: [],
-      invalid: false,
-      rowSpan: 2,
-    }));
-
-  return {
-    isBuffer: true,
-    column: {
-      piece: `${edgeSwap[0]}/${edgeSwap[1]}`,
-      letter: "",
-    },
-    rows,
-  };
+  return cornerPieces.filter(
+    (corner) => !pieceIsInList(corner, blockedPieces)
+  );
 }
 
-function buildSecondBufferColumn(twistedCorner, firstBufferColumn, letterScheme) {
-  const twistVariants = getEquivalentPieces(twistedCorner).filter(
-    (corner) => corner !== twistedCorner
-  );
+function getTwistVariants(twistedCorner) {
+  const cleanTwistedCorner = cleanPiece(twistedCorner);
 
-  const rows = firstBufferColumn.rows.flatMap(() =>
-    twistVariants.map((twistVariant) => ({
-      row: getTarget(twistVariant, letterScheme),
-      algorithms: [],
-      invalid: false,
-    }))
-  );
+  return cornerPieces.filter((corner) => {
+    const cleanCorner = cleanPiece(corner);
 
-  return {
-    isBuffer: true,
-    column: {
-      piece: twistedCorner,
-      letter: "",
-    },
-    rows,
-  };
+    return (
+      normalizePiece(cleanCorner) === normalizePiece(cleanTwistedCorner) &&
+      cleanCorner !== cleanTwistedCorner
+    );
+  });
 }
 
-function buildRowTargets(firstBufferColumn, secondBufferColumn) {
-  return secondBufferColumn.rows.map((twistCell, index) => {
+function getTwistTargets(twistedCorner, firstBufferTargets) {
+  if (!twistedCorner) return [];
+
+  const twistVariants = getTwistVariants(twistedCorner);
+
+  return firstBufferTargets.flatMap(() => twistVariants);
+}
+
+function sortPiecesByLetter(pieces = [], letterScheme = {}) {
+  return [...pieces].sort((a, b) => {
+    const letterA = letterScheme[a] ?? "";
+    const letterB = letterScheme[b] ?? "";
+
+    return letterA.localeCompare(letterB);
+  });
+}
+
+function buildRowTargets(firstBufferTargets, twistTargets) {
+  return twistTargets.map((twistPiece, index) => {
     const firstBufferIndex = Math.floor(index / 2);
-    const firstBufferCell = firstBufferColumn.rows[firstBufferIndex];
+    const secondPiece = firstBufferTargets[firstBufferIndex];
 
     return {
-      row: twistCell.row,
-      secondPiece: firstBufferCell.row,
-      twistPiece: twistCell.row,
+      piece: twistPiece,
+      secondPiece,
+      twistPiece,
     };
   });
 }
 
-function isBlockedT2CCell(columnTargets, columnIndex, secondPiece) {
-  const previousAndCurrentColumns = columnTargets
-    .slice(0, columnIndex + 1)
-    .map((target) => target.piece);
+function isBlockedT2CCell(bufferOrder, columnIndex, secondPiece) {
+  const previousAndCurrentBuffers = bufferOrder.slice(0, columnIndex + 1);
 
-  return previousAndCurrentColumns.some((columnPiece) =>
-    isSamePiece(columnPiece, secondPiece)
+  return previousAndCurrentBuffers.some((piece) =>
+    pieceIsInList(secondPiece, [piece])
   );
 }
 
-async function loadT2CDefault(edgeSwap, firstPiece, secondPiece, twistPiece) {
+async function loadT2CDefault(
+  edgeSwap,
+  firstPiece,
+  secondPiece,
+  twistPiece,
+  blankSheet
+) {
+  if (blankSheet) return [];
+  if (!edgeSwap[0] || !edgeSwap[1]) return [];
+  if (!firstPiece || !secondPiece || !twistPiece) return [];
+
   try {
     const response = await getParityAlgs(
       edgeSwap[0],
@@ -127,14 +116,11 @@ async function loadT2CDefault(edgeSwap, firstPiece, secondPiece, twistPiece) {
 
     const firstAlgorithm = response.data?.algorithms?.[0];
 
-    if (!firstAlgorithm) {
-      return [];
-    }
+    if (!firstAlgorithm) return [];
 
     return [
       {
         algorithm: firstAlgorithm.id,
-        custom: "",
         primary: true,
       },
     ];
@@ -148,97 +134,116 @@ async function loadT2CDefault(edgeSwap, firstPiece, secondPiece, twistPiece) {
   }
 }
 
-async function buildT2CData(
+async function buildT2CColumn(
   edgeSwap,
-  twistedCorner,
   bufferOrder,
-  exclude,
-  letterScheme,
+  columnPiece,
+  columnIndex,
+  rowTargets,
   blankSheet
 ) {
-  const columnTargets = bufferOrder.map((corner) =>
-    getTarget(corner, letterScheme)
-  );
+  const rows = await Promise.all(
+    rowTargets.map(async (rowTarget) => {
+      const invalid = isBlockedT2CCell(
+        bufferOrder,
+        columnIndex,
+        rowTarget.secondPiece
+      );
 
-  const firstColumnPiece = columnTargets[0]?.piece;
+      if (invalid) {
+        return {
+          piece: rowTarget.piece,
+          secondPiece: rowTarget.secondPiece,
+          twistPiece: rowTarget.twistPiece,
+        };
+      }
 
-  if (!firstColumnPiece || !twistedCorner) {
-    return {
-      columns: [],
-    };
-  }
-
-  const firstBufferColumn = buildFirstBufferColumn(
-    edgeSwap,
-    twistedCorner,
-    firstColumnPiece,
-    exclude,
-    letterScheme
-  );
-
-  const secondBufferColumn = buildSecondBufferColumn(
-    twistedCorner,
-    firstBufferColumn,
-    letterScheme
-  );
-
-  const rowTargets = buildRowTargets(firstBufferColumn, secondBufferColumn);
-
-  const cycleColumns = await Promise.all(
-    columnTargets.map(async (columnTarget, columnIndex) => {
       return {
-        column: columnTarget,
-
-        rows: await Promise.all(
-          rowTargets.map(async (rowTarget) => {
-            const invalid = isBlockedT2CCell(
-              columnTargets,
-              columnIndex,
-              rowTarget.secondPiece.piece
-            );
-
-            return {
-              row: rowTarget.row,
-              secondPiece: rowTarget.secondPiece,
-              twistPiece: rowTarget.twistPiece,
-              invalid,
-              algorithms:
-                blankSheet || invalid
-                  ? []
-                  : await loadT2CDefault(
-                      edgeSwap,
-                      columnTarget.piece,
-                      rowTarget.secondPiece.piece,
-                      rowTarget.twistPiece.piece
-                    ),
-            };
-          })
+        piece: rowTarget.piece,
+        secondPiece: rowTarget.secondPiece,
+        twistPiece: rowTarget.twistPiece,
+        algorithms: await loadT2CDefault(
+          edgeSwap,
+          columnPiece,
+          rowTarget.secondPiece,
+          rowTarget.twistPiece,
+          blankSheet
         ),
       };
     })
   );
 
   return {
-    columns: [firstBufferColumn, secondBufferColumn, ...cycleColumns],
+    piece: columnPiece,
+    rows,
+  };
+}
+
+async function buildT2CData({
+  headerInfo,
+  edgeSwap,
+  twistedCorner,
+  bufferOrder,
+  exclude,
+  blankSheet,
+  letterScheme,
+}) {
+  const firstColumnPiece = bufferOrder[0];
+
+  if (!firstColumnPiece || !twistedCorner) {
+    return {
+      headerInfo,
+      bufferColumns: [],
+      columns: [],
+    };
+  }
+
+  const firstBufferTargets = sortPiecesByLetter(
+    getFirstBufferTargets(twistedCorner, firstColumnPiece, exclude),
+    letterScheme
+  );
+
+  const twistTargets = getTwistTargets(twistedCorner, firstBufferTargets);
+  const rowTargets = buildRowTargets(firstBufferTargets, twistTargets);
+
+  const columns = await Promise.all(
+    bufferOrder.map((columnPiece, columnIndex) =>
+      buildT2CColumn(
+        edgeSwap,
+        bufferOrder,
+        columnPiece,
+        columnIndex,
+        rowTargets,
+        blankSheet
+      )
+    )
+  );
+
+  return {
+    headerInfo,
+    bufferColumns: [firstBufferTargets, twistTargets],
+    columns,
   };
 }
 
 export async function buildT2CSheet(newSheet, user) {
-  const edgeSwap = newSheet.options.edgeSwap;
-  const twistedCorner = newSheet.options.twistedCorner;
-  const bufferOrder = newSheet.options.bufferOrder;
-  const exclude = newSheet.options.exclude ?? [];
-  const blankSheet = newSheet.options.blankSheet;
+  const headerInfo = newSheet.options?.headerInfo ?? [];
+  const edgeSwap = newSheet.options?.edgeSwap ?? [];
+  const twistedCorner = newSheet.options?.twistedCorner;
+  const bufferOrder = newSheet.options?.bufferOrder ?? [];
+  const exclude = newSheet.options?.exclude ?? [];
+  const blankSheet = newSheet.options?.blankSheet ?? false;
   const letterScheme = user.letterScheme.corners;
 
-  const data = await buildT2CData(
+  const data = await buildT2CData({
+    headerInfo,
     edgeSwap,
     twistedCorner,
     bufferOrder,
     exclude,
+    blankSheet,
     letterScheme,
-    blankSheet
-  );
+  });
 
   return {
     ...newSheet,

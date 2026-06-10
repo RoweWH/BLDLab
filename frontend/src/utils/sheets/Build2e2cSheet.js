@@ -1,17 +1,16 @@
 import { cornerPieces } from "../../data/pieces/CornerPieces";
 import { getParityAlgs } from "../../api/algApi";
 
-function normalizePiece(piece) {
+function normalizePiece(piece = "") {
   return piece.replace(/[()]/g, "").split("").sort().join("");
 }
 
-function getTarget(piece, letterScheme) {
-  const index = cornerPieces.indexOf(piece);
+function pieceIsInList(piece, list = []) {
+  const normalizedPiece = normalizePiece(piece);
 
-  return {
-    piece,
-    letter: letterScheme.charAt(index),
-  };
+  return list
+    .map((listPiece) => normalizePiece(listPiece))
+    .includes(normalizedPiece);
 }
 
 function getEquivalentPieces(piece) {
@@ -22,43 +21,29 @@ function getEquivalentPieces(piece) {
   );
 }
 
-function buildBufferColumn(edgeSwap, bufferOrder, letterScheme) {
-  const firstBuffer = bufferOrder[0];
-
-  const columnPiece = `${edgeSwap[0]}/${edgeSwap[1]}`;
-
-  if (!firstBuffer) {
-    return {
-      column: {
-        piece: columnPiece,
-        letter: "",
-      },
-      rows: [],
-    };
-  }
+function getTargets(firstBuffer) {
+  if (!firstBuffer) return [];
 
   const excludedPieces = getEquivalentPieces(firstBuffer);
 
-  const rows = cornerPieces
-    .filter((corner) => !excludedPieces.includes(corner))
-    .map((corner) => getTarget(corner, letterScheme))
-    .sort((a, b) => a.letter.localeCompare(b.letter))
-    .map((target) => ({
-      row: target,
-      algorithms: [],
-      invalid: false,
-    }));
-
-  return {
-    column: {
-      piece: columnPiece,
-      letter: "",
-    },
-    rows,
-  };
+  return cornerPieces.filter(
+    (corner) => !pieceIsInList(corner, excludedPieces)
+  );
 }
 
-async function load2E2CDefault(edgeSwap, columnPiece, rowPiece) {
+function sortPiecesByLetter(pieces = [], letterScheme = {}) {
+  return [...pieces].sort((a, b) => {
+    const letterA = letterScheme[a] ?? "";
+    const letterB = letterScheme[b] ?? "";
+
+    return letterA.localeCompare(letterB);
+  });
+}
+
+async function load2E2CDefault(edgeSwap, columnPiece, rowPiece, blankSheet) {
+  if (blankSheet) return [];
+  if (!edgeSwap[0] || !edgeSwap[1]) return [];
+
   try {
     const response = await getParityAlgs(
       edgeSwap[0],
@@ -70,14 +55,11 @@ async function load2E2CDefault(edgeSwap, columnPiece, rowPiece) {
 
     const firstAlgorithm = response.data?.algorithms?.[0];
 
-    if (!firstAlgorithm) {
-      return [];
-    }
+    if (!firstAlgorithm) return [];
 
     return [
       {
         algorithm: firstAlgorithm.id,
-        custom: "",
         primary: true,
       },
     ];
@@ -86,80 +68,102 @@ async function load2E2CDefault(edgeSwap, columnPiece, rowPiece) {
       `Failed to load 2E2C ${edgeSwap[0]}-${edgeSwap[1]}-${columnPiece}-${rowPiece}:`,
       error
     );
-
     return [];
   }
 }
 
-function isSamePiece(pieceA, pieceB) {
-  return normalizePiece(pieceA) === normalizePiece(pieceB);
-}
+function isBlocked2E2CCell(bufferOrder, columnIndex, rowPiece) {
+  const previousAndCurrentBuffers = bufferOrder.slice(0, columnIndex + 1);
 
-function isBlocked2E2CCell(columnTargets, columnIndex, rowPiece) {
-  const previousAndCurrentBuffers = columnTargets
-    .slice(0, columnIndex + 1)
-    .map((target) => target.piece);
-
-  return previousAndCurrentBuffers.some((piece) => isSamePiece(piece, rowPiece));
-}
-
-async function build2E2CData(edgeSwap, bufferOrder, letterScheme, blankSheet) {
-  const bufferColumn = buildBufferColumn(edgeSwap, bufferOrder, letterScheme);
-
-  const columnTargets = bufferOrder.map((corner) =>
-    getTarget(corner, letterScheme)
+  return previousAndCurrentBuffers.some((piece) =>
+    pieceIsInList(rowPiece, [piece])
   );
+}
 
-  const rowTargets = bufferColumn.rows.map((row) => row.row);
+async function build2E2CColumn(
+  edgeSwap,
+  bufferOrder,
+  columnPiece,
+  columnIndex,
+  rowTargets,
+  blankSheet
+) {
+  const rows = await Promise.all(
+    rowTargets.map(async (rowPiece) => {
+      const invalid = isBlocked2E2CCell(bufferOrder, columnIndex, rowPiece);
 
-  const cycleColumns = await Promise.all(
-    columnTargets.map(async (columnTarget, columnIndex) => {
+      if (invalid) {
+        return {
+          piece: rowPiece,
+        };
+      }
+
       return {
-        column: columnTarget,
-
-        rows: await Promise.all(
-          rowTargets.map(async (rowTarget) => {
-            const invalid = isBlocked2E2CCell(
-              columnTargets,
-              columnIndex,
-              rowTarget.piece
-            );
-
-            return {
-              row: rowTarget,
-              invalid,
-              algorithms:
-                blankSheet || invalid
-                  ? []
-                  : await load2E2CDefault(
-                      edgeSwap,
-                      columnTarget.piece,
-                      rowTarget.piece
-                    ),
-            };
-          })
+        piece: rowPiece,
+        algorithms: await load2E2CDefault(
+          edgeSwap,
+          columnPiece,
+          rowPiece,
+          blankSheet
         ),
       };
     })
   );
 
   return {
-    columns: [bufferColumn, ...cycleColumns],
+    piece: columnPiece,
+    rows,
+  };
+}
+
+async function build2E2CData({
+  headerInfo,
+  edgeSwap,
+  bufferOrder,
+  blankSheet,
+  letterScheme,
+}) {
+  const firstBuffer = bufferOrder[0];
+
+  const rowTargets = sortPiecesByLetter(
+    getTargets(firstBuffer),
+    letterScheme
+  );
+
+  const columns = await Promise.all(
+    bufferOrder.map((columnPiece, columnIndex) =>
+      build2E2CColumn(
+        edgeSwap,
+        bufferOrder,
+        columnPiece,
+        columnIndex,
+        rowTargets,
+        blankSheet
+      )
+    )
+  );
+
+  return {
+    headerInfo,
+    bufferColumns: [rowTargets],
+    columns,
   };
 }
 
 export async function build2e2cSheet(newSheet, user) {
-  const edgeSwap = newSheet.options.edgeSwap;
-  const bufferOrder = newSheet.options.bufferOrder;
-  const blankSheet = newSheet.options.blankSheet;
+  const headerInfo = newSheet.options?.headerInfo ?? [];
+  const edgeSwap = newSheet.options?.edgeSwap ?? [];
+  const bufferOrder = newSheet.options?.bufferOrder ?? [];
+  const blankSheet = newSheet.options?.blankSheet ?? false;
   const letterScheme = user.letterScheme.corners;
 
-  const data = await build2E2CData(
+  const data = await build2E2CData({
+    headerInfo,
     edgeSwap,
     bufferOrder,
+    blankSheet,
     letterScheme,
-    blankSheet
-  );
+  });
 
   return {
     ...newSheet,
