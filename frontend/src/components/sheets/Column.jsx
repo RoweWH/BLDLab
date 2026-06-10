@@ -10,6 +10,7 @@ export function Column({
   letterScheme,
   isSelected,
   onHeaderClick,
+  onCellClick
 }) {
   const [width, setWidth] = useState(DEFAULT_WIDTH);
 
@@ -72,6 +73,7 @@ export function Column({
           key={`${column.piece}-${row.piece}-${index}`}
           cell={row}
           type={type}
+          onClick={() => onCellClick(row)}
         />
       ))}
 

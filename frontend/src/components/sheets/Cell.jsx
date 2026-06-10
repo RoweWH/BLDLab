@@ -5,7 +5,7 @@ import {
   getParityAlgById,
 } from "../../api/algApi";
 
-export function Cell({ cell, type }) {
+export function Cell({ cell, type, onClick }) {
   const [primaryAlg, setPrimaryAlg] = useState("");
 
   const primaryAlgorithmId = cell.algorithms?.find(
@@ -47,5 +47,9 @@ export function Cell({ cell, type }) {
     return <div className="cycle-sheet-cell cycle-sheet-cell--invalid" />;
   }
 
-  return <div className="cycle-sheet-cell">{primaryAlg}</div>;
+  return (
+    <div className="cycle-sheet-cell" onClick={onClick}>
+      {primaryAlg}
+    </div>
+  );
 }

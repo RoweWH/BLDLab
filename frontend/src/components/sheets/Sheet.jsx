@@ -3,6 +3,7 @@ import { BufferColumn } from "./BufferColumn";
 import { Column } from "./Column";
 import { getCurrentUser } from "../../api/userApi";
 import { formatPiecesWithLetters } from "../../utils/sheets/FormatPiecesWithLetters";
+import { AlgModal } from "./AlgModal";
 
 function countAlgorithms(columns = []) {
   return columns.reduce((total, column) => {
@@ -41,6 +42,7 @@ function renderBufferColumns(bufferColumns, letterScheme, selected = false) {
 
 export function Sheet({ sheet }) {
   const [selectedColumnPiece, setSelectedColumnPiece] = useState(null);
+  const [selectedCell, setSelectedCell] = useState(null);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -70,60 +72,79 @@ export function Sheet({ sheet }) {
     setSelectedColumnPiece((current) => (current === piece ? null : piece));
   }
 
+  function openAlgModal(cell) {
+    setSelectedCell(cell);
+  }
+
+  function closeAlgModal() {
+    setSelectedCell(null);
+  }
+
   return (
-    <div className="cycle-sheet">
-      {!selectedColumnPiece && (
-        <div
-          className="cycle-sheet__buffer-area"
-          style={{ "--buffer-count": bufferColumns.length }}
-        >
-          <div className="cycle-sheet__top-left-header">
-            <div>{headerInfo.join(" ")}</div>
-            <div>
-              ({algorithmCount}/{caseCount})
+    <>
+      <div className="cycle-sheet">
+        {!selectedColumnPiece && (
+          <div
+            className="cycle-sheet__buffer-area"
+            style={{ "--buffer-count": bufferColumns.length }}
+          >
+            <div className="cycle-sheet__top-left-header">
+              <div>{headerInfo.join(" ")}</div>
+              <div>
+                ({algorithmCount}/{caseCount})
+              </div>
+            </div>
+
+            <div className="cycle-sheet__buffer-columns">
+              {renderBufferColumns(bufferColumns, letterScheme)}
             </div>
           </div>
+        )}
 
-          <div className="cycle-sheet__buffer-columns">
-            {renderBufferColumns(bufferColumns, letterScheme)}
-          </div>
-        </div>
-      )}
+        {columns.map((column) => {
+          const isSelected = selectedColumnPiece === column.piece;
+          const isBlurred = selectedColumnPiece && !isSelected;
 
-      {columns.map((column) => {
-        const isSelected = selectedColumnPiece === column.piece;
-        const isBlurred = selectedColumnPiece && !isSelected;
+          return (
+            <div
+              key={column.piece}
+              className={`cycle-sheet__column-group ${
+                isSelected ? "cycle-sheet__column-group--selected" : ""
+              } ${isBlurred ? "cycle-sheet__column-group--blurred" : ""}`}
+            >
+              {isSelected && (
+                <div
+                  className="cycle-sheet__buffer-area"
+                  style={{ "--buffer-count": bufferColumns.length }}
+                >
+                  <div className="cycle-sheet__top-left-header" />
 
-        return (
-          <div
-            key={column.piece}
-            className={`cycle-sheet__column-group ${
-              isSelected ? "cycle-sheet__column-group--selected" : ""
-            } ${isBlurred ? "cycle-sheet__column-group--blurred" : ""}`}
-          >
-            {isSelected && (
-              <div
-                className="cycle-sheet__buffer-area"
-                style={{ "--buffer-count": bufferColumns.length }}
-              >
-                <div className="cycle-sheet__top-left-header" />
-
-                <div className="cycle-sheet__buffer-columns">
-                  {renderBufferColumns(bufferColumns, letterScheme, true)}
+                  <div className="cycle-sheet__buffer-columns">
+                    {renderBufferColumns(bufferColumns, letterScheme, true)}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <Column
-              column={column}
-              type={sheet.type}
-              letterScheme={letterScheme}
-              isSelected={isSelected}
-              onHeaderClick={toggleSelectedColumn}
-            />
-          </div>
-        );
-      })}
-    </div>
+              <Column
+                column={column}
+                type={sheet.type}
+                letterScheme={letterScheme}
+                isSelected={isSelected}
+                onHeaderClick={toggleSelectedColumn}
+                onCellClick={openAlgModal}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      {selectedCell && (
+        <AlgModal
+          cell={selectedCell}
+          type={sheet.type}
+          onClose={closeAlgModal}
+        />
+      )}
+    </>
   );
 }
