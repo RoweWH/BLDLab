@@ -124,7 +124,6 @@ async function buildLTCTColumn(
 }
 
 async function buildLTCTData({
-  headerInfo,
   edgeSwap,
   buffer,
   exclude,
@@ -148,14 +147,12 @@ async function buildLTCTData({
   );
 
   return {
-    headerInfo,
     bufferColumns: [rowTargets],
     columns,
   };
 }
 
 export async function buildLTCTSheet(newSheet, user) {
-  const headerInfo = newSheet.options?.headerInfo ?? [];
   const edgeSwap = newSheet.options?.edgeSwap ?? [];
   const buffer = newSheet.options?.buffer;
   const exclude = newSheet.options?.exclude ?? [];
@@ -163,7 +160,6 @@ export async function buildLTCTSheet(newSheet, user) {
   const letterScheme = user.letterScheme.corners;
 
   const data = await buildLTCTData({
-    headerInfo,
     edgeSwap,
     buffer,
     exclude,

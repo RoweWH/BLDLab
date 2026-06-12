@@ -180,7 +180,6 @@ async function buildT2CColumn(
 }
 
 async function buildT2CData({
-  headerInfo,
   edgeSwap,
   twistedCorner,
   bufferOrder,
@@ -192,7 +191,6 @@ async function buildT2CData({
 
   if (!firstColumnPiece || !twistedCorner) {
     return {
-      headerInfo,
       bufferColumns: [],
       columns: [],
     };
@@ -220,14 +218,12 @@ async function buildT2CData({
   );
 
   return {
-    headerInfo,
     bufferColumns: [firstBufferTargets, twistTargets],
     columns,
   };
 }
 
 export async function buildT2CSheet(newSheet, user) {
-  const headerInfo = newSheet.options?.headerInfo ?? [];
   const edgeSwap = newSheet.options?.edgeSwap ?? [];
   const twistedCorner = newSheet.options?.twistedCorner;
   const bufferOrder = newSheet.options?.bufferOrder ?? [];
@@ -236,7 +232,6 @@ export async function buildT2CSheet(newSheet, user) {
   const letterScheme = user.letterScheme.corners;
 
   const data = await buildT2CData({
-    headerInfo,
     edgeSwap,
     twistedCorner,
     bufferOrder,

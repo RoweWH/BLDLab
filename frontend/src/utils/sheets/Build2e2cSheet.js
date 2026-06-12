@@ -117,7 +117,6 @@ async function build2E2CColumn(
 }
 
 async function build2E2CData({
-  headerInfo,
   edgeSwap,
   bufferOrder,
   blankSheet,
@@ -144,21 +143,18 @@ async function build2E2CData({
   );
 
   return {
-    headerInfo,
     bufferColumns: [rowTargets],
     columns,
   };
 }
 
 export async function build2e2cSheet(newSheet, user) {
-  const headerInfo = newSheet.options?.headerInfo ?? [];
   const edgeSwap = newSheet.options?.edgeSwap ?? [];
   const bufferOrder = newSheet.options?.bufferOrder ?? [];
   const blankSheet = newSheet.options?.blankSheet ?? false;
   const letterScheme = user.letterScheme.corners;
 
   const data = await build2E2CData({
-    headerInfo,
     edgeSwap,
     bufferOrder,
     blankSheet,

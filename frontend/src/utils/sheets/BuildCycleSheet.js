@@ -92,7 +92,6 @@ async function buildColumn(type, buffer, columnPiece, rowTargets, blankSheet) {
 async function buildSheetData({
   type,
   pieces,
-  headerInfo,
   buffer,
   exclude,
   blankSheet,
@@ -110,7 +109,6 @@ async function buildSheetData({
   );
 
   return {
-    headerInfo,
     bufferColumns: [targets],
     columns,
   };
@@ -124,7 +122,6 @@ export async function buildCycleSheet(newSheet, user) {
       ? user.letterScheme.edges
       : user.letterScheme.corners;
 
-  const headerInfo = newSheet.options?.headerInfo ?? [];
   const buffer = newSheet.options?.buffer;
   const exclude = newSheet.options?.exclude ?? [];
   const blankSheet = newSheet.options?.blankSheet ?? false;
@@ -132,7 +129,6 @@ export async function buildCycleSheet(newSheet, user) {
   const data = await buildSheetData({
     type: newSheet.type,
     pieces,
-    headerInfo,
     buffer,
     exclude,
     blankSheet,
