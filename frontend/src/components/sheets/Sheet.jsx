@@ -72,8 +72,12 @@ export function Sheet({ sheet }) {
     setSelectedColumnPiece((current) => (current === piece ? null : piece));
   }
 
-  function openAlgModal(cell) {
-    setSelectedCell(cell);
+  function openAlgModal(cell, column) {
+    setSelectedCell({
+      cell,
+      columnPiece: column.piece,
+      options: sheet.options,
+    });
   }
 
   function closeAlgModal() {
@@ -140,7 +144,9 @@ export function Sheet({ sheet }) {
 
       {selectedCell && (
         <AlgModal
-          cell={selectedCell}
+          cell={selectedCell.cell}
+          columnPiece={selectedCell.columnPiece}
+          options={selectedCell.options}
           type={sheet.type}
           onClose={closeAlgModal}
         />
