@@ -40,7 +40,7 @@ function renderBufferColumns(bufferColumns, letterScheme, selected = false) {
   });
 }
 
-export function Sheet({ sheet }) {
+export function Sheet({ sheet, onUpdate }) {
   const [selectedColumnPiece, setSelectedColumnPiece] = useState(null);
   const [selectedCell, setSelectedCell] = useState(null);
   const [user, setUser] = useState(null);
@@ -149,6 +149,13 @@ export function Sheet({ sheet }) {
           options={selectedCell.options}
           type={sheet.type}
           onClose={closeAlgModal}
+          onSave={(algorithms) =>
+            onUpdate(
+              selectedCell.columnPiece,
+              selectedCell.cell.piece,
+              algorithms,
+            )
+          }
         />
       )}
     </>

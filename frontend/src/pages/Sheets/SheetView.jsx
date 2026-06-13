@@ -22,6 +22,34 @@ export function SheetView() {
     loadSheet();
   }, [id]);
 
+  function updateCellAlgorithms(columnPiece, rowPiece, algorithms) {
+    setSheet((current) => ({
+      ...current,
+      data: {
+        ...current.data,
+        columns: current.data.columns.map((column) => {
+          if (column.piece !== columnPiece) {
+            return column;
+          }
+
+          return {
+            ...column,
+            rows: column.rows.map((row) => {
+              if (row.piece !== rowPiece) {
+                return row;
+              }
+
+              return {
+                ...row,
+                algorithms,
+              };
+            }),
+          };
+        }),
+      },
+    }));
+  }
+
   if (!sheet) {
     return <div className="page">Loading sheet...</div>;
   }
@@ -30,7 +58,7 @@ export function SheetView() {
     <div className="page">
       <h1>{sheet.name}</h1>
 
-      <Sheet sheet={sheet} />
+      <Sheet sheet={sheet} onUpdate={updateCellAlgorithms} />
     </div>
   );
 }

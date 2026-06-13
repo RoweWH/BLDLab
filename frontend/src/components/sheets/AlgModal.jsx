@@ -8,14 +8,19 @@ import {
 } from "../../api/algApi";
 import "./AlgModal.css";
 
-export function AlgModal({ cell, columnPiece, options, type, onClose }) {
+export function AlgModal({
+  cell,
+  columnPiece,
+  options,
+  type,
+  onClose,
+  onSave,
+}) {
   const [databaseAlgs, setDatabaseAlgs] = useState([]);
   const [sheetAlgs, setSheetAlgs] = useState([]);
   const [primaryId, setPrimaryId] = useState(null);
 
-  if (!cell) return null;
-
-  const buffer = options?.buffer ?? options?.headerInfo?.[0];
+  const buffer = options?.buffer;
   const firstTarget = columnPiece;
   const secondTarget = cell.piece;
 
@@ -91,23 +96,27 @@ export function AlgModal({ cell, columnPiece, options, type, onClose }) {
     loadSheetAlgs();
   }, [cell, type]);
 
-  function toggleAlg(alg) {
-    const alreadyAdded = sheetAlgs.some((sheetAlg) => sheetAlg.id === alg.id);
+  function algIsSelected(algId) {
+    return sheetAlgs.some((sheetAlg) => sheetAlg.id === algId);
+  }
 
-    if (alreadyAdded) {
+  function toggleAlg(alg) {
+    if (algIsSelected(alg.id)) {
       removeAlg(alg.id);
       return;
     }
 
+    const shouldBePrimary = sheetAlgs.length === 0;
+
     const newAlg = {
       id: alg.id,
       text: alg.algorithm,
-      primary: sheetAlgs.length === 0,
+      primary: shouldBePrimary,
     };
 
     setSheetAlgs((current) => [...current, newAlg]);
 
-    if (sheetAlgs.length === 0) {
+    if (shouldBePrimary) {
       setPrimaryId(alg.id);
     }
   }
@@ -130,15 +139,48 @@ export function AlgModal({ cell, columnPiece, options, type, onClose }) {
     });
   }
 
-  function selectPrimary(algId) {
-    setPrimaryId(algId);
+  function selectPrimary(alg) {
+    setPrimaryId(alg.id);
 
-    setSheetAlgs((current) =>
-      current.map((alg) => ({
-        ...alg,
-        primary: alg.id === algId,
-      })),
-    );
+    setSheetAlgs((current) => {
+      const alreadySelected = current.some(
+        (sheetAlg) => sheetAlg.id === alg.id,
+      );
+
+      const updated = current.map((sheetAlg) => ({
+        ...sheetAlg,
+        primary: sheetAlg.id === alg.id,
+      }));
+
+      if (alreadySelected) {
+        return updated;
+      }
+
+      return [
+        ...updated,
+        {
+          id: alg.id,
+          text: alg.algorithm,
+          primary: true,
+        },
+      ];
+    });
+  }
+
+  function saveAlgs() {
+    const sortedAlgs = [...sheetAlgs].sort((a, b) => {
+      if (a.id === primaryId) return -1;
+      if (b.id === primaryId) return 1;
+      return 0;
+    });
+
+    const algorithms = sortedAlgs.map((alg) => ({
+      algorithm: alg.id,
+      primary: alg.id === primaryId,
+    }));
+
+    onSave(algorithms);
+    onClose();
   }
 
   return (
@@ -154,60 +196,49 @@ export function AlgModal({ cell, columnPiece, options, type, onClose }) {
           </button>
         </div>
 
-        <div className="alg-modal__content">
-          <div className="alg-modal__box">
-            <h3>Database</h3>
+        <div className="alg-modal__body">
+          <p className="alg-modal__description">
+            Save algorithms to your sheet
+          </p>
 
+          <div className="alg-modal__section-title">
+            <div className="alg-modal__section-name">
+              <span>BLDLab Algorithms</span>
+              <strong>{databaseAlgs.length}</strong>
+            </div>
+
+            <span className="alg-modal__primary-label">Primary</span>
+          </div>
+
+          <div className="alg-modal__list">
             {databaseAlgs.map((alg) => {
-              const isAdded = sheetAlgs.some(
-                (sheetAlg) => sheetAlg.id === alg.id,
-              );
+              const isSelected = algIsSelected(alg.id);
+              const isPrimary = primaryId === alg.id;
 
               return (
-                <div className="alg-modal__row" key={alg.id}>
+                <div className="alg-modal__list-row" key={alg.id}>
                   <button
                     type="button"
-                    className={isAdded ? "alg-modal__added" : ""}
+                    className={`alg-modal__check ${
+                      isSelected ? "alg-modal__check--selected" : ""
+                    }`}
                     onClick={() => toggleAlg(alg)}
                   >
-                    {isAdded ? "✓" : "+"}
+                    {isSelected ? "✓" : ""}
                   </button>
 
-                  <span>{alg.algorithm}</span>
+                  <span className="alg-modal__alg-text">{alg.algorithm}</span>
+
+                  <input
+                    className="alg-modal__primary"
+                    type="radio"
+                    name="primaryAlg"
+                    checked={isPrimary}
+                    onChange={() => selectPrimary(alg)}
+                  />
                 </div>
               );
             })}
-          </div>
-
-          <div className="alg-modal__box">
-            <div className="alg-modal__box-header">
-              <h3>Sheet</h3>
-              <span>Primary</span>
-            </div>
-
-            {sheetAlgs.length === 0 ? (
-              <p className="alg-modal__empty">No algorithms selected.</p>
-            ) : (
-              sheetAlgs.map((alg) => (
-                <div
-                  className="alg-modal__row alg-modal__row--sheet"
-                  key={alg.id}
-                >
-                  <button type="button" onClick={() => removeAlg(alg.id)}>
-                    -
-                  </button>
-
-                  <span>{alg.text}</span>
-
-                  <input
-                    type="radio"
-                    name="primaryAlg"
-                    checked={primaryId === alg.id}
-                    onChange={() => selectPrimary(alg.id)}
-                  />
-                </div>
-              ))
-            )}
           </div>
         </div>
 
@@ -216,7 +247,7 @@ export function AlgModal({ cell, columnPiece, options, type, onClose }) {
             Cancel
           </button>
 
-          <button type="button" className="button-style">
+          <button type="button" className="button-style" onClick={saveAlgs}>
             Save
           </button>
         </div>
