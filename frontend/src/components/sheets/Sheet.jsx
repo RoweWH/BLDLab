@@ -150,11 +150,7 @@ export function Sheet({ sheet, onUpdate }) {
           type={sheet.type}
           onClose={closeAlgModal}
           onSave={(algorithms) =>
-            onUpdate(
-              selectedCell.columnPiece,
-              selectedCell.cell.piece,
-              algorithms,
-            )
+            onUpdate(selectedCell.columnPiece, selectedCell.cell.id, algorithms)
           }
         />
       )}

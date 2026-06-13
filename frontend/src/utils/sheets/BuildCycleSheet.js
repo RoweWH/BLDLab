@@ -49,8 +49,11 @@ async function loadDefaults(type, buffer, first, second, blankSheet) {
 
     return [
       {
-        algorithm: firstAlgorithm.id,
+        algorithmId: firstAlgorithm.id,
+        displayText: firstAlgorithm.algorithm,
         primary: true,
+        source: "bldlab",
+        status: "public"
       },
     ];
   } catch (error) {
@@ -66,11 +69,13 @@ async function buildColumn(type, buffer, columnPiece, rowTargets, blankSheet) {
 
       if (invalid) {
         return {
+          id: rowPiece,
           piece: rowPiece,
         };
       }
 
       return {
+        id: rowPiece,
         piece: rowPiece,
         algorithms: await loadDefaults(
           type,

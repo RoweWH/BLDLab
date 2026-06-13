@@ -76,11 +76,10 @@ function sortPiecesByLetter(pieces = [], letterScheme = {}) {
 function buildRowTargets(firstBufferTargets, twistTargets) {
   return twistTargets.map((twistPiece, index) => {
     const firstBufferIndex = Math.floor(index / 2);
-    const secondPiece = firstBufferTargets[firstBufferIndex];
+    const piece = firstBufferTargets[firstBufferIndex];
 
     return {
-      piece: twistPiece,
-      secondPiece,
+      piece,
       twistPiece,
     };
   });
@@ -120,8 +119,11 @@ async function loadT2CDefault(
 
     return [
       {
-        algorithm: firstAlgorithm.id,
+        algorithmId: firstAlgorithm.id,
+        displayText: firstAlgorithm.algorithm,
         primary: true,
+        source: "bldlab",
+        status: "public"
       },
     ];
   } catch (error) {
@@ -147,25 +149,25 @@ async function buildT2CColumn(
       const invalid = isBlockedT2CCell(
         bufferOrder,
         columnIndex,
-        rowTarget.secondPiece
+        rowTarget.piece
       );
 
       if (invalid) {
         return {
+          id: `${rowTarget.piece}-${rowTarget.twistPiece}`,
           piece: rowTarget.piece,
-          secondPiece: rowTarget.secondPiece,
           twistPiece: rowTarget.twistPiece,
         };
       }
 
       return {
+        id: `${rowTarget.piece}-${rowTarget.twistPiece}`,
         piece: rowTarget.piece,
-        secondPiece: rowTarget.secondPiece,
         twistPiece: rowTarget.twistPiece,
         algorithms: await loadT2CDefault(
           edgeSwap,
           columnPiece,
-          rowTarget.secondPiece,
+          rowTarget.piece,
           rowTarget.twistPiece,
           blankSheet
         ),

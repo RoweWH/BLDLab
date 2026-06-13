@@ -51,3 +51,35 @@ sheetRoutes.route("/sheets").post(verifyToken, async (request, response) => {
 });
 
 module.exports = sheetRoutes
+
+//#4 - Update one
+sheetRoutes.route("/sheets/:id").put(verifyToken, async (request, response) => {
+  let db = database.getDb();
+
+  const { _id, userId, createdDate, ...updatedSheet } = request.body;
+
+  const result = await db.collection("sheets").updateOne(
+    {
+      _id: new ObjectId(request.params.id),
+      userId: request.user.id,
+    },
+    {
+      $set: {
+        ...updatedSheet,
+        updatedDate: new Date(),
+      },
+    },
+  );
+
+  if (result.matchedCount === 0) {
+    return response.status(404).json({
+      success: false,
+      message: "Sheet not found",
+    });
+  }
+
+  response.json({
+    success: true,
+    modifiedCount: result.modifiedCount,
+  });
+});

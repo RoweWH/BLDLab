@@ -59,8 +59,11 @@ async function load2E2CDefault(edgeSwap, columnPiece, rowPiece, blankSheet) {
 
     return [
       {
-        algorithm: firstAlgorithm.id,
+        algorithmId: firstAlgorithm.id,
+        displayText: firstAlgorithm.algorithm,
         primary: true,
+        source: "bldlab",
+        status: "public"
       },
     ];
   } catch (error) {
@@ -99,6 +102,7 @@ async function build2E2CColumn(
       }
 
       return {
+        id: rowPiece,
         piece: rowPiece,
         algorithms: await load2E2CDefault(
           edgeSwap,

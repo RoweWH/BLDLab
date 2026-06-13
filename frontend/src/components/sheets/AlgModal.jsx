@@ -1,11 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  getEdgeAlgs,
-  getCornerAlgs,
-  getEdgeAlgById,
-  getCornerAlgById,
-  getParityAlgById,
-} from "../../api/algApi";
+import { getEdgeAlgs, getCornerAlgs, getParityAlgs } from "../../api/algApi";
 import "./AlgModal.css";
 
 export function AlgModal({
@@ -21,6 +15,9 @@ export function AlgModal({
   const [primaryId, setPrimaryId] = useState(null);
 
   const buffer = options?.buffer;
+  const firstEdge = options?.edgeSwap?.[0];
+  const secondEdge = options?.edgeSwap?.[1];
+  const twist = cell.twistPiece;
   const firstTarget = columnPiece;
   const secondTarget = cell.piece;
 
@@ -33,6 +30,30 @@ export function AlgModal({
           response = await getEdgeAlgs(buffer, firstTarget, secondTarget);
         } else if (type === "corners") {
           response = await getCornerAlgs(buffer, firstTarget, secondTarget);
+        } else if (type === "2e2c") {
+          response = await getParityAlgs(
+            firstEdge,
+            secondEdge,
+            firstTarget,
+            secondTarget,
+            null,
+          );
+        } else if (type === "ltct") {
+          response = await getParityAlgs(
+            firstEdge,
+            secondEdge,
+            buffer,
+            firstTarget,
+            secondTarget,
+          );
+        } else if (type === "t2c") {
+          response = await getParityAlgs(
+            firstEdge,
+            secondEdge,
+            firstTarget,
+            secondTarget,
+            twist,
+          );
         } else {
           setDatabaseAlgs([]);
           return;
@@ -46,58 +67,37 @@ export function AlgModal({
     }
 
     loadDatabaseAlgs();
-  }, [type, buffer, firstTarget, secondTarget]);
+  }, [type, buffer, firstTarget, secondTarget, firstEdge, secondEdge, twist]);
 
   useEffect(() => {
-    async function loadSheetAlgs() {
-      const storedAlgs = cell.algorithms ?? [];
+    const storedAlgs = cell.algorithms ?? [];
 
-      if (storedAlgs.length === 0) {
-        setSheetAlgs([]);
-        setPrimaryId(null);
-        return;
-      }
+    const loadedAlgs = storedAlgs.map((storedAlg) => ({
+      id: storedAlg.algorithmId,
+      text: storedAlg.displayText,
+      primary: storedAlg.primary,
+      source: storedAlg.source,
+      status: storedAlg.status,
+    }));
 
-      try {
-        const loadedAlgs = await Promise.all(
-          storedAlgs.map(async (storedAlg) => {
-            let response;
+    setSheetAlgs(loadedAlgs);
 
-            if (type === "edges") {
-              response = await getEdgeAlgById(storedAlg.algorithm);
-            } else if (type === "corners") {
-              response = await getCornerAlgById(storedAlg.algorithm);
-            } else {
-              response = await getParityAlgById(storedAlg.algorithm);
-            }
-
-            return {
-              id: storedAlg.algorithm,
-              text:
-                response.data.algorithm ??
-                response.data.Algorithm ??
-                response.data,
-              primary: storedAlg.primary,
-            };
-          }),
-        );
-
-        setSheetAlgs(loadedAlgs);
-
-        const primary = loadedAlgs.find((alg) => alg.primary);
-        setPrimaryId(primary?.id ?? null);
-      } catch (error) {
-        console.error("Failed to load sheet algs:", error);
-        setSheetAlgs([]);
-        setPrimaryId(null);
-      }
-    }
-
-    loadSheetAlgs();
-  }, [cell, type]);
+    const primary = loadedAlgs.find((alg) => alg.primary);
+    setPrimaryId(primary?.id ?? null);
+  }, [cell]);
 
   function algIsSelected(algId) {
     return sheetAlgs.some((sheetAlg) => sheetAlg.id === algId);
+  }
+
+  function makeBldlabAlg(alg, primary = false) {
+    return {
+      id: alg.id,
+      text: alg.algorithm,
+      primary,
+      source: "bldlab",
+      status: "public",
+    };
   }
 
   function toggleAlg(alg) {
@@ -106,19 +106,17 @@ export function AlgModal({
       return;
     }
 
-    const shouldBePrimary = sheetAlgs.length === 0;
+    const newAlg = makeBldlabAlg(alg, true);
 
-    const newAlg = {
-      id: alg.id,
-      text: alg.algorithm,
-      primary: shouldBePrimary,
-    };
+    setSheetAlgs((current) => [
+      ...current.map((sheetAlg) => ({
+        ...sheetAlg,
+        primary: false,
+      })),
+      newAlg,
+    ]);
 
-    setSheetAlgs((current) => [...current, newAlg]);
-
-    if (shouldBePrimary) {
-      setPrimaryId(alg.id);
-    }
+    setPrimaryId(alg.id);
   }
 
   function removeAlg(algId) {
@@ -156,14 +154,7 @@ export function AlgModal({
         return updated;
       }
 
-      return [
-        ...updated,
-        {
-          id: alg.id,
-          text: alg.algorithm,
-          primary: true,
-        },
-      ];
+      return [...updated, makeBldlabAlg(alg, true)];
     });
   }
 
@@ -175,8 +166,11 @@ export function AlgModal({
     });
 
     const algorithms = sortedAlgs.map((alg) => ({
-      algorithm: alg.id,
+      algorithmId: alg.id,
+      displayText: alg.text,
       primary: alg.id === primaryId,
+      source: alg.source,
+      status: alg.status,
     }));
 
     onSave(algorithms);
@@ -187,9 +181,24 @@ export function AlgModal({
     <div className="modal-backdrop">
       <div className="alg-modal">
         <div className="alg-modal__header">
-          <h2>
-            {buffer} → {firstTarget} → {secondTarget}
-          </h2>
+          {type === "edges" || type === "corners" ? (
+            <h2>
+              {buffer} → {firstTarget} → {secondTarget}
+            </h2>
+          ) : type === "2e2c" ? (
+            <h2>
+              {firstEdge}/{secondEdge} + {firstTarget} → {secondTarget}
+            </h2>
+          ) : type === "ltct" ? (
+            <h2>
+              {firstEdge}/{secondEdge} + {buffer} → {firstTarget}({secondTarget}
+              )
+            </h2>
+          ) : type === "t2c" ? (
+            <h2>
+              {firstEdge}/{secondEdge} + {firstTarget} → {secondTarget}({twist})
+            </h2>
+          ) : null}
 
           <button type="button" className="alg-modal__close" onClick={onClose}>
             ×

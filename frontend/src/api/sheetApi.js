@@ -30,3 +30,11 @@ export async function getSheet(id) {
    const response = await axios.get(`${server}/sheets/${id}`);
    return response;
 }
+
+export async function updateSheet(id, sheet) {
+  return axios.put(`${server}/sheets/${id}`, sheet, {
+    headers: {
+      Authorization: `Bearer ${sessionStorage.getItem("User")}`,
+    },
+  });
+}
