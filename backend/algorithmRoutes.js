@@ -37,7 +37,7 @@ algorithmRoutes.route("/algorithms/:id").get(verifyToken, async (request, respon
   }
 });
 
-//#3 - Create one
+ //#3 - Create one
 algorithmRoutes.route("/algorithms").post(verifyToken, async (request, response) => {
   let db = database.getDb();
 
@@ -49,12 +49,9 @@ algorithmRoutes.route("/algorithms").post(verifyToken, async (request, response)
 
   const result = await db.collection("algorithms").insertOne(newAlgorithm);
 
-  response.json({
-    success: true,
-    algorithm: {
-      ...newAlgorithm,
-      _id: result.insertedId,
-    },
+  response.status(201).json({
+    ...newAlgorithm,
+    _id: result.insertedId,
   });
 });
 

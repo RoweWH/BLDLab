@@ -195,8 +195,8 @@ export async function importAlgs(algorithms) {
 // POST /api/{type}/algorithms/verify
 export async function verifyAlg(submission, type) {
   const apiType =
-    type.toLowerCase() === "t2c"
-      ? "ltct"
+    (type.toLowerCase() === "t2c" || type.toLowerCase() === "ltct" || type.toLowerCase() === "2e2c")
+      ? "parity"
       : type.toLowerCase();
 
   const response = await axios.post(

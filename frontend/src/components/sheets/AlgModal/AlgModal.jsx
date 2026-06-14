@@ -8,6 +8,7 @@ import {
 import { getCustomAlgs, createNewCustomAlg } from "../../../api/customAlgApi";
 import { AlgList } from "./AlgList";
 import "./AlgModal.css";
+import { CustomAlgModal } from "./CustomAlgModal";
 
 function getDatabaseLoader(type) {
   if (type === "edges") return getEdgeAlgsByCaseId;
@@ -26,9 +27,10 @@ export function AlgModal({ cell, type, onClose, onSave }) {
   const [primaryId, setPrimaryId] = useState(
     cell.algorithms?.find((alg) => alg.primary)?.id ?? null,
   );
+  const [showCustomAlgModal, setShowCustomAlgModal] = useState(false);
 
- const caseId = cell.id;
- const caseInfo = cell.caseInfo ?? `Case #${caseId}`;
+  const caseId = cell.id;
+  const caseInfo = cell.caseInfo ?? `Case #${caseId}`;
 
   useEffect(() => {
     async function loadDatabaseAlgs() {
@@ -71,6 +73,28 @@ export function AlgModal({ cell, type, onClose, onSave }) {
     }
   }, [caseId, type]);
 
+  function handleCustomAlgCreated(newAlg) {
+    setCustomAlgs((current) => [...current, newAlg]);
+
+    const newSheetAlg = {
+      id: newAlg._id,
+      displayText: newAlg.algorithm,
+      primary: true,
+      source: "custom",
+    };
+
+    setPrimaryId(newAlg._id);
+
+    setSheetAlgs((current) => [
+      ...current.map((alg) => ({
+        ...alg,
+        primary: false,
+      })),
+      newSheetAlg,
+    ]);
+
+    setShowCustomAlgModal(false);
+  }
   function saveAlgs() {
     const sortedAlgs = [...sheetAlgs].sort((a, b) => {
       if (String(a.id) === String(primaryId)) return -1;
@@ -160,6 +184,14 @@ export function AlgModal({ cell, type, onClose, onSave }) {
         </div>
 
         <div className="alg-modal__actions">
+          <button
+            type="button"
+            className="inverse-button"
+            onClick={() => setShowCustomAlgModal(true)}
+          >
+            Add Algorithm
+          </button>
+
           <button type="button" className="inverse-button" onClick={onClose}>
             Cancel
           </button>
@@ -168,6 +200,17 @@ export function AlgModal({ cell, type, onClose, onSave }) {
             Save
           </button>
         </div>
+
+        {showCustomAlgModal && (
+          <CustomAlgModal
+            caseId={caseId}
+            type={type}
+            verifyAlg={verifyAlg}
+            createNewCustomAlg={createNewCustomAlg}
+            onClose={() => setShowCustomAlgModal(false)}
+            onAlgCreated={handleCustomAlgCreated}
+          />
+        )}
       </div>
     </div>
   );
