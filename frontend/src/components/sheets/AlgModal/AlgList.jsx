@@ -9,6 +9,7 @@ export function AlgList({
   makeSheetAlg,
   getAlgId,
   renderStatus,
+  onCustomMenuClick,
 }) {
   function sameId(a, b) {
     return String(a) === String(b);
@@ -119,7 +120,15 @@ export function AlgList({
             <span className="alg-modal__alg-text">{alg.algorithm}</span>
 
             {renderStatus && renderStatus(alg)}
-
+            {onCustomMenuClick && (
+              <button
+                type="button"
+                className="alg-modal__menu-button"
+                onClick={() => onCustomMenuClick(alg)}
+              >
+                ⋮
+              </button>
+            )}
             <input
               className="alg-modal__primary"
               type="radio"

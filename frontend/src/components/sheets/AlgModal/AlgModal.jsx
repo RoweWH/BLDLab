@@ -180,6 +180,9 @@ export function AlgModal({ cell, type, onClose, onSave }) {
                 {alg.status}
               </span>
             )}
+            onCustomMenuClick={(alg) => {
+              console.log("open custom menu", alg);
+            }}
           />
         </div>
 
