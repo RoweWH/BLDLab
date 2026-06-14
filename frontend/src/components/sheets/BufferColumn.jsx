@@ -1,7 +1,7 @@
 export function BufferColumn({
   pieces = [],
   multiplier = 1,
-  selected = false
+  selected = false,
 }) {
   const baseHeight = selected
     ? "var(--sheet-selected-cell-height)"

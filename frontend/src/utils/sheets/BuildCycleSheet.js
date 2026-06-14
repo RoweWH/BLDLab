@@ -2,6 +2,11 @@ import { edgePieces } from "../../data/pieces/EdgePieces";
 import { cornerPieces } from "../../data/pieces/CornerPieces";
 import { getEdgeAlgs, getCornerAlgs } from "../../api/algApi";
 
+
+function buildCycleCaseInfo(buffer, columnPiece, rowPiece) {
+  return `${buffer} → ${columnPiece} → ${rowPiece}`;
+}
+
 function normalizePiece(piece = "") {
   return piece.replace(/[()]/g, "").split("").sort().join("");
 }
@@ -32,10 +37,20 @@ function sortPiecesByLetter(pieces = [], letterScheme = {}) {
   });
 }
 
-async function loadDefaults(type, buffer, first, second, blankSheet) {
-  if (blankSheet) return [];
-  if (!buffer) return [];
-  if (normalizePiece(first) === normalizePiece(second)) return [];
+async function loadCase(type, buffer, first, second, blankSheet) {
+  if (!buffer) {
+    return {
+      id: null,
+      algorithms: [],
+    };
+  }
+
+  if (normalizePiece(first) === normalizePiece(second)) {
+    return {
+      id: null,
+      algorithms: [],
+    };
+  }
 
   try {
     const response =
@@ -43,22 +58,30 @@ async function loadDefaults(type, buffer, first, second, blankSheet) {
         ? await getEdgeAlgs(buffer, first, second)
         : await getCornerAlgs(buffer, first, second);
 
-    const firstAlgorithm = response.data?.algorithms?.[0];
+    const loadedCase = response.data;
+    const firstAlgorithm = loadedCase?.algorithms?.[0];
 
-    if (!firstAlgorithm) return [];
-
-    return [
-      {
-        algorithmId: firstAlgorithm.id,
-        displayText: firstAlgorithm.algorithm,
-        primary: true,
-        source: "bldlab",
-        status: "public"
-      },
-    ];
+    return {
+      id: loadedCase?.id ?? null,
+      algorithms:
+        blankSheet || !firstAlgorithm
+          ? []
+          : [
+              {
+                id: firstAlgorithm.id,
+                displayText: firstAlgorithm.algorithm,
+                primary: true,
+                source: "bldlab",
+              },
+            ],
+    };
   } catch (error) {
     console.error(`Failed to load ${buffer}-${first}-${second}:`, error);
-    return [];
+
+    return {
+      id: null,
+      algorithms: [],
+    };
   }
 }
 
@@ -66,24 +89,30 @@ async function buildColumn(type, buffer, columnPiece, rowTargets, blankSheet) {
   const rows = await Promise.all(
     rowTargets.map(async (rowPiece) => {
       const invalid = normalizePiece(columnPiece) === normalizePiece(rowPiece);
+      const caseInfo = buildCycleCaseInfo(buffer, columnPiece, rowPiece);
 
       if (invalid) {
         return {
-          id: rowPiece,
+          id: null,
           piece: rowPiece,
+          caseInfo,
+          algorithms: [],
         };
       }
 
+      const loadedCase = await loadCase(
+        type,
+        buffer,
+        columnPiece,
+        rowPiece,
+        blankSheet
+      );
+
       return {
-        id: rowPiece,
+        id: loadedCase.id,
         piece: rowPiece,
-        algorithms: await loadDefaults(
-          type,
-          buffer,
-          columnPiece,
-          rowPiece,
-          blankSheet
-        ),
+        caseInfo,
+        algorithms: loadedCase.algorithms,
       };
     })
   );

@@ -1,6 +1,10 @@
 import { cornerPieces } from "../../data/pieces/CornerPieces";
 import { getParityAlgs } from "../../api/algApi";
 
+function buildT2CCaseInfo(edgeSwap, columnPiece, rowPiece, twist) {
+  return `${edgeSwap[0]}/${edgeSwap[1]}\n${columnPiece} → ${rowPiece}\n(${twist})`;
+}
+
 function normalizePiece(piece = "") {
   return piece.replace(/[()]/g, "").split("").sort().join("");
 }
@@ -93,16 +97,26 @@ function isBlockedT2CCell(bufferOrder, columnIndex, secondPiece) {
   );
 }
 
-async function loadT2CDefault(
+async function loadT2CCase(
   edgeSwap,
   firstPiece,
   secondPiece,
   twistPiece,
   blankSheet
 ) {
-  if (blankSheet) return [];
-  if (!edgeSwap[0] || !edgeSwap[1]) return [];
-  if (!firstPiece || !secondPiece || !twistPiece) return [];
+  if (!edgeSwap[0] || !edgeSwap[1]) {
+    return {
+      id: null,
+      algorithms: [],
+    };
+  }
+
+  if (!firstPiece || !secondPiece || !twistPiece) {
+    return {
+      id: null,
+      algorithms: [],
+    };
+  }
 
   try {
     const response = await getParityAlgs(
@@ -113,26 +127,33 @@ async function loadT2CDefault(
       twistPiece
     );
 
-    const firstAlgorithm = response.data?.algorithms?.[0];
+    const parityCase = response.data;
+    const firstAlgorithm = parityCase?.algorithms?.[0];
 
-    if (!firstAlgorithm) return [];
-
-    return [
-      {
-        algorithmId: firstAlgorithm.id,
-        displayText: firstAlgorithm.algorithm,
-        primary: true,
-        source: "bldlab",
-        status: "public"
-      },
-    ];
+    return {
+      id: parityCase?.id ?? null,
+      algorithms:
+        blankSheet || !firstAlgorithm
+          ? []
+          : [
+              {
+                id: firstAlgorithm.id,
+                displayText: firstAlgorithm.algorithm,
+                primary: true,
+                source: "bldlab",
+              },
+            ],
+    };
   } catch (error) {
     console.error(
       `Failed to load T2C ${edgeSwap[0]}-${edgeSwap[1]}-${firstPiece}-${secondPiece}-${twistPiece}:`,
       error
     );
 
-    return [];
+    return {
+      id: null,
+      algorithms: [],
+    };
   }
 }
 
@@ -151,26 +172,31 @@ async function buildT2CColumn(
         columnIndex,
         rowTarget.piece
       );
+      const caseInfo = buildT2CCaseInfo(edgeSwap, columnPiece, rowTarget.piece, rowTarget.twistPiece);
 
       if (invalid) {
         return {
-          id: `${rowTarget.piece}-${rowTarget.twistPiece}`,
+          id: null,
           piece: rowTarget.piece,
           twistPiece: rowTarget.twistPiece,
+          algorithms: [],
         };
       }
 
+      const loadedCase = await loadT2CCase(
+        edgeSwap,
+        columnPiece,
+        rowTarget.piece,
+        rowTarget.twistPiece,
+        blankSheet
+      );
+
       return {
-        id: `${rowTarget.piece}-${rowTarget.twistPiece}`,
+        id: loadedCase.id,
         piece: rowTarget.piece,
         twistPiece: rowTarget.twistPiece,
-        algorithms: await loadT2CDefault(
-          edgeSwap,
-          columnPiece,
-          rowTarget.piece,
-          rowTarget.twistPiece,
-          blankSheet
-        ),
+        caseInfo,
+        algorithms: loadedCase.algorithms,
       };
     })
   );

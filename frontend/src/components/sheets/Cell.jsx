@@ -1,9 +1,9 @@
 export function Cell({ cell, onClick }) {
-  if (!cell.algorithms) {
+  if (!cell.id) {
     return <div className="cycle-sheet-cell cycle-sheet-cell--invalid" />;
   }
 
-  const primaryAlg = cell.algorithms.find((alg) => alg.primary);
+  const primaryAlg = cell.algorithms?.find((alg) => alg.primary);
   const displayText = primaryAlg?.displayText ?? "";
 
   return (

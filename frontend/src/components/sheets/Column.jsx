@@ -6,7 +6,6 @@ const MIN_WIDTH = 200;
 
 export function Column({
   column,
-  type,
   letterScheme,
   isSelected,
   onHeaderClick,
@@ -34,7 +33,6 @@ export function Column({
     function resize(e) {
       const newWidth = startWidth + e.clientX - startX;
       const clampedWidth = Math.min(maxWidth, Math.max(MIN_WIDTH, newWidth));
-
       setWidth(clampedWidth);
     }
 
@@ -52,9 +50,7 @@ export function Column({
     : "cycle-sheet-column";
 
   const selectedStyle = isSelected
-    ? {
-        "--selected-column-width": `${width}px`,
-      }
+    ? { "--selected-column-width": `${width}px` }
     : undefined;
 
   return (
@@ -70,10 +66,9 @@ export function Column({
 
       {column.rows.map((row, index) => (
         <Cell
-          key={`${column.piece}-${row.piece ?? index}`}
+          key={`${column.piece}-${row.id ?? row.piece ?? index}`}
           cell={row}
-          type={type}
-          onClick={() => onCellClick(row, column)}
+          onClick={() => onCellClick(row)}
         />
       ))}
 

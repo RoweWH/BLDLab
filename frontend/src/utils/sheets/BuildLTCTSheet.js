@@ -1,6 +1,11 @@
 import { cornerPieces } from "../../data/pieces/CornerPieces";
 import { getParityAlgs } from "../../api/algApi";
 
+
+function buildLTCTCaseInfo(edgeSwap, buffer, columnPiece, rowPiece) {
+  return `${edgeSwap[0]}/${edgeSwap[1]}\n${buffer} → ${columnPiece}\n(${rowPiece})`;
+}
+
 function normalizePiece(piece = "") {
   return piece.replace(/[()]/g, "").split("").sort().join("");
 }
@@ -46,17 +51,33 @@ function sortPiecesByLetter(pieces = [], letterScheme = {}) {
   });
 }
 
-async function loadLTCTDefault(
+async function loadLTCTCase(
   edgeSwap,
   buffer,
   columnPiece,
   rowPiece,
   blankSheet
 ) {
-  if (blankSheet) return [];
-  if (!edgeSwap[0] || !edgeSwap[1]) return [];
-  if (!buffer) return [];
-  if (normalizePiece(columnPiece) === normalizePiece(rowPiece)) return [];
+  if (!edgeSwap[0] || !edgeSwap[1]) {
+    return {
+      id: null,
+      algorithms: [],
+    };
+  }
+
+  if (!buffer) {
+    return {
+      id: null,
+      algorithms: [],
+    };
+  }
+
+  if (normalizePiece(columnPiece) === normalizePiece(rowPiece)) {
+    return {
+      id: null,
+      algorithms: [],
+    };
+  }
 
   try {
     const response = await getParityAlgs(
@@ -67,26 +88,33 @@ async function loadLTCTDefault(
       rowPiece.replace(/[()]/g, "")
     );
 
-    const firstAlgorithm = response.data?.algorithms?.[0];
+    const parityCase = response.data;
+    const firstAlgorithm = parityCase?.algorithms?.[0];
 
-    if (!firstAlgorithm) return [];
-
-    return [
-      {
-        algorithmId: firstAlgorithm.id,
-        displayText: firstAlgorithm.algorithm,
-        primary: true,
-        source: "bldlab",
-        status: "public"
-      },
-    ];
+    return {
+      id: parityCase?.id ?? null,
+      algorithms:
+        blankSheet || !firstAlgorithm
+          ? []
+          : [
+              {
+                id: firstAlgorithm.id,
+                displayText: firstAlgorithm.algorithm,
+                primary: true,
+                source: "bldlab",
+              },
+            ],
+    };
   } catch (error) {
     console.error(
       `Failed to load LTCT ${edgeSwap[0]}-${edgeSwap[1]}-${buffer}-${columnPiece}-${rowPiece}:`,
       error
     );
 
-    return [];
+    return {
+      id: null,
+      algorithms: [],
+    };
   }
 }
 
@@ -100,24 +128,29 @@ async function buildLTCTColumn(
   const rows = await Promise.all(
     rowTargets.map(async (rowPiece) => {
       const invalid = normalizePiece(columnPiece) === normalizePiece(rowPiece);
+      const caseInfo = buildLTCTCaseInfo(edgeSwap, buffer, columnPiece, rowPiece);
 
       if (invalid) {
         return {
-          id: rowPiece,
+          id: null,
           piece: rowPiece,
+          algorithms: [],
         };
       }
 
+      const loadedCase = await loadLTCTCase(
+        edgeSwap,
+        buffer,
+        columnPiece,
+        rowPiece,
+        blankSheet
+      );
+
       return {
-        id: rowPiece,
+        id: loadedCase.id,
         piece: rowPiece,
-        algorithms: await loadLTCTDefault(
-          edgeSwap,
-          buffer,
-          columnPiece,
-          rowPiece,
-          blankSheet
-        ),
+        caseInfo,
+        algorithms: loadedCase.algorithms,
       };
     })
   );

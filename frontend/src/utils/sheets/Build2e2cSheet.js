@@ -1,6 +1,11 @@
 import { cornerPieces } from "../../data/pieces/CornerPieces";
 import { getParityAlgs } from "../../api/algApi";
 
+
+function build2e2cCaseInfo(edgeSwap, columnPiece, rowPiece) {
+  return `${edgeSwap[0]}/${edgeSwap[1]}\n${columnPiece} → ${rowPiece}`;
+}
+
 function normalizePiece(piece = "") {
   return piece.replace(/[()]/g, "").split("").sort().join("");
 }
@@ -40,9 +45,13 @@ function sortPiecesByLetter(pieces = [], letterScheme = {}) {
   });
 }
 
-async function load2E2CDefault(edgeSwap, columnPiece, rowPiece, blankSheet) {
-  if (blankSheet) return [];
-  if (!edgeSwap[0] || !edgeSwap[1]) return [];
+async function load2E2CCase(edgeSwap, columnPiece, rowPiece, blankSheet) {
+  if (!edgeSwap[0] || !edgeSwap[1]) {
+    return {
+      id: null,
+      algorithms: [],
+    };
+  }
 
   try {
     const response = await getParityAlgs(
@@ -53,25 +62,33 @@ async function load2E2CDefault(edgeSwap, columnPiece, rowPiece, blankSheet) {
       ""
     );
 
-    const firstAlgorithm = response.data?.algorithms?.[0];
+    const parityCase = response.data;
+    const firstAlgorithm = parityCase?.algorithms?.[0];
 
-    if (!firstAlgorithm) return [];
-
-    return [
-      {
-        algorithmId: firstAlgorithm.id,
-        displayText: firstAlgorithm.algorithm,
-        primary: true,
-        source: "bldlab",
-        status: "public"
-      },
-    ];
+    return {
+      id: parityCase?.id ?? null,
+      algorithms:
+        blankSheet || !firstAlgorithm
+          ? []
+          : [
+              {
+                id: firstAlgorithm.id,
+                displayText: firstAlgorithm.algorithm,
+                primary: true,
+                source: "bldlab",
+              },
+            ],
+    };
   } catch (error) {
     console.error(
       `Failed to load 2E2C ${edgeSwap[0]}-${edgeSwap[1]}-${columnPiece}-${rowPiece}:`,
       error
     );
-    return [];
+
+    return {
+      id: null,
+      algorithms: [],
+    };
   }
 }
 
@@ -94,22 +111,28 @@ async function build2E2CColumn(
   const rows = await Promise.all(
     rowTargets.map(async (rowPiece) => {
       const invalid = isBlocked2E2CCell(bufferOrder, columnIndex, rowPiece);
+      const caseInfo = build2e2cCaseInfo(edgeSwap, columnPiece, rowPiece);
 
       if (invalid) {
         return {
+          id: null,
           piece: rowPiece,
+          algorithms: [],
         };
       }
 
+      const loadedCase = await load2E2CCase(
+        edgeSwap,
+        columnPiece,
+        rowPiece,
+        blankSheet
+      );
+
       return {
-        id: rowPiece,
+        id: loadedCase.id,
         piece: rowPiece,
-        algorithms: await load2E2CDefault(
-          edgeSwap,
-          columnPiece,
-          rowPiece,
-          blankSheet
-        ),
+        caseInfo,
+        algorithms: loadedCase.algorithms,
       };
     })
   );

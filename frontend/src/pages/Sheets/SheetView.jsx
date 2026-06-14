@@ -3,18 +3,18 @@ import { useParams } from "react-router-dom";
 import { Sheet } from "../../components/sheets/Sheet";
 import { getSheet, updateSheet } from "../../api/sheetApi";
 
-function getUpdatedSheet(current, columnPiece, rowId, algorithms) {
+function updateSheetCellAlgorithms(sheet, columnPiece, caseId, algorithms) {
   return {
-    ...current,
+    ...sheet,
     data: {
-      ...current.data,
-      columns: current.data.columns.map((column) => {
+      ...sheet.data,
+      columns: sheet.data.columns.map((column) => {
         if (column.piece !== columnPiece) return column;
 
         return {
           ...column,
           rows: column.rows.map((row) => {
-            if (row.id !== rowId) return row;
+            if (String(row.id) !== String(caseId)) return row;
 
             return {
               ...row,
@@ -30,6 +30,7 @@ function getUpdatedSheet(current, columnPiece, rowId, algorithms) {
 export function SheetView() {
   const { id } = useParams();
   const [sheet, setSheet] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     async function loadSheet() {
@@ -44,17 +45,26 @@ export function SheetView() {
     loadSheet();
   }, [id]);
 
-  async function updateCellAlgorithms(columnPiece, rowId, algorithms) {
+  async function handleUpdateCellAlgorithms(columnPiece, caseId, algorithms) {
     if (!sheet) return;
 
-    const updatedSheet = getUpdatedSheet(sheet, columnPiece, rowId, algorithms);
+    const updatedSheet = updateSheetCellAlgorithms(
+      sheet,
+      columnPiece,
+      caseId,
+      algorithms,
+    );
 
     setSheet(updatedSheet);
+    setIsSaving(true);
 
     try {
       await updateSheet(id, updatedSheet);
     } catch (error) {
       console.error("Failed to save sheet:", error);
+      setSheet(sheet);
+    } finally {
+      setIsSaving(false);
     }
   }
 
@@ -66,7 +76,9 @@ export function SheetView() {
     <div className="page">
       <h1>{sheet.name}</h1>
 
-      <Sheet sheet={sheet} onUpdate={updateCellAlgorithms} />
+      {isSaving && <p>Saving...</p>}
+
+      <Sheet sheet={sheet} onUpdate={handleUpdateCellAlgorithms} />
     </div>
   );
 }

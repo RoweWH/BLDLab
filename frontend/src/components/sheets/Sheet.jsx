@@ -3,21 +3,19 @@ import { BufferColumn } from "./BufferColumn";
 import { Column } from "./Column";
 import { getCurrentUser } from "../../api/userApi";
 import { formatPiecesWithLetters } from "../../utils/sheets/FormatPiecesWithLetters";
-import { AlgModal } from "./AlgModal";
+import { AlgModal } from "./AlgModal/AlgModal";
 
 function countAlgorithms(columns = []) {
   return columns.reduce((total, column) => {
     return (
-      total +
-      column.rows.filter((row) => row.algorithms && row.algorithms.length > 0)
-        .length
+      total + column.rows.filter((row) => row.algorithms?.length > 0).length
     );
   }, 0);
 }
 
 function countCases(columns = []) {
   return columns.reduce((total, column) => {
-    return total + column.rows.filter((row) => row.algorithms).length;
+    return total + column.rows.filter((row) => row.id).length;
   }, 0);
 }
 
@@ -72,16 +70,26 @@ export function Sheet({ sheet, onUpdate }) {
     setSelectedColumnPiece((current) => (current === piece ? null : piece));
   }
 
-  function openAlgModal(cell, column) {
+  function openAlgModal(columnPiece, cell) {
+    if (!cell?.id) return;
+
     setSelectedCell({
-      cell,
-      columnPiece: column.piece,
-      options: sheet.options,
+      ...cell,
+      columnPiece,
+      buffer: sheet.options?.buffer,
+      edgeSwap: sheet.options?.edgeSwap,
+      twist: sheet.options?.twistedCorner,
     });
   }
 
   function closeAlgModal() {
     setSelectedCell(null);
+  }
+
+  function saveAlgorithms(algorithms) {
+    if (!selectedCell?.id || !selectedCell?.columnPiece) return;
+
+    onUpdate(selectedCell.columnPiece, selectedCell.id, algorithms);
   }
 
   return (
@@ -131,11 +139,10 @@ export function Sheet({ sheet, onUpdate }) {
 
               <Column
                 column={column}
-                type={sheet.type}
                 letterScheme={letterScheme}
                 isSelected={isSelected}
                 onHeaderClick={toggleSelectedColumn}
-                onCellClick={openAlgModal}
+                onCellClick={(cell) => openAlgModal(column.piece, cell)}
               />
             </div>
           );
@@ -144,14 +151,10 @@ export function Sheet({ sheet, onUpdate }) {
 
       {selectedCell && (
         <AlgModal
-          cell={selectedCell.cell}
-          columnPiece={selectedCell.columnPiece}
-          options={selectedCell.options}
+          cell={selectedCell}
           type={sheet.type}
           onClose={closeAlgModal}
-          onSave={(algorithms) =>
-            onUpdate(selectedCell.columnPiece, selectedCell.cell.id, algorithms)
-          }
+          onSave={saveAlgorithms}
         />
       )}
     </>
