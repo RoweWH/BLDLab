@@ -87,4 +87,27 @@ algorithmRoutes.route("/algorithms/:id").put(verifyToken, async (request, respon
   });
 });
 
+//#5 - Delete one
+algorithmRoutes.route("/algorithms/:id").delete(verifyToken, async (request, response) => {
+  let db = database.getDb();
+
+  const result = await db.collection("algorithms").deleteOne({
+    _id: new ObjectId(request.params.id),
+    userId: request.user.id,
+  });
+
+  if (result.deletedCount === 0) {
+    return response.status(404).json({
+      success: false,
+      message: "Algorithm not found",
+    });
+  }
+
+  response.json({
+    success: true,
+    deletedCount: result.deletedCount,
+  });
+});
+
+
 module.exports = algorithmRoutes

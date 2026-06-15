@@ -5,7 +5,12 @@ import {
   getParityAlgsByCaseId,
   verifyAlg,
 } from "../../../api/algApi";
-import { getCustomAlgs, createNewCustomAlg } from "../../../api/customAlgApi";
+import {
+  getCustomAlgs,
+  createNewCustomAlg,
+  updateCustomAlg,
+  deleteCustomAlg,
+} from "../../../api/customAlgApi";
 import { AlgList } from "./AlgList";
 import "./AlgModal.css";
 import { CustomAlgModal } from "./CustomAlgModal";
@@ -27,7 +32,9 @@ export function AlgModal({ cell, type, onClose, onSave }) {
   const [primaryId, setPrimaryId] = useState(
     cell.algorithms?.find((alg) => alg.primary)?.id ?? null,
   );
+
   const [showCustomAlgModal, setShowCustomAlgModal] = useState(false);
+  const [editingCustomAlg, setEditingCustomAlg] = useState(null);
 
   const caseId = cell.id;
   const caseInfo = cell.caseInfo ?? `Case #${caseId}`;
@@ -37,7 +44,6 @@ export function AlgModal({ cell, type, onClose, onSave }) {
       try {
         const loadAlgs = getDatabaseLoader(type);
         const response = await loadAlgs(caseId);
-
         setDatabaseAlgs(response.data ?? []);
       } catch (error) {
         console.error("Failed to load database algs:", error);
@@ -45,9 +51,7 @@ export function AlgModal({ cell, type, onClose, onSave }) {
       }
     }
 
-    if (caseId) {
-      loadDatabaseAlgs();
-    }
+    if (caseId) loadDatabaseAlgs();
   }, [caseId, type]);
 
   useEffect(() => {
@@ -68,9 +72,7 @@ export function AlgModal({ cell, type, onClose, onSave }) {
       }
     }
 
-    if (caseId) {
-      loadCustomAlgs();
-    }
+    if (caseId) loadCustomAlgs();
   }, [caseId, type]);
 
   function handleCustomAlgCreated(newAlg) {
@@ -95,6 +97,65 @@ export function AlgModal({ cell, type, onClose, onSave }) {
 
     setShowCustomAlgModal(false);
   }
+
+  function handleCustomAlgDeleted(deletedAlgId) {
+    setCustomAlgs((current) =>
+      current.filter((alg) => String(alg._id) !== String(deletedAlgId)),
+    );
+
+    setSheetAlgs((current) => {
+      const updated = current.filter(
+        (alg) => String(alg.id) !== String(deletedAlgId),
+      );
+
+      const deletedWasPrimary = String(primaryId) === String(deletedAlgId);
+      const newPrimaryId = deletedWasPrimary
+        ? (updated[0]?.id ?? null)
+        : primaryId;
+
+      setPrimaryId(newPrimaryId);
+
+      const updatedWithPrimary = updated.map((alg) => ({
+        ...alg,
+        primary: String(alg.id) === String(newPrimaryId),
+      }));
+
+      onSave(updatedWithPrimary);
+
+      return updatedWithPrimary;
+    });
+
+    setEditingCustomAlg(null);
+    setShowCustomAlgModal(false);
+  }
+
+  function handleCustomAlgUpdated(updatedAlg) {
+    setCustomAlgs((current) =>
+      current.map((alg) =>
+        String(alg._id) === String(updatedAlg._id) ? updatedAlg : alg,
+      ),
+    );
+
+    setSheetAlgs((current) =>
+      current.map((alg) =>
+        String(alg.id) === String(updatedAlg._id)
+          ? {
+              ...alg,
+              displayText: updatedAlg.algorithm,
+            }
+          : alg,
+      ),
+    );
+
+    setEditingCustomAlg(null);
+    setShowCustomAlgModal(false);
+  }
+
+  function closeCustomAlgModal() {
+    setShowCustomAlgModal(false);
+    setEditingCustomAlg(null);
+  }
+
   function saveAlgs() {
     const sortedAlgs = [...sheetAlgs].sort((a, b) => {
       if (String(a.id) === String(primaryId)) return -1;
@@ -181,7 +242,8 @@ export function AlgModal({ cell, type, onClose, onSave }) {
               </span>
             )}
             onCustomMenuClick={(alg) => {
-              console.log("open custom menu", alg);
+              setEditingCustomAlg(alg);
+              setShowCustomAlgModal(true);
             }}
           />
         </div>
@@ -208,10 +270,15 @@ export function AlgModal({ cell, type, onClose, onSave }) {
           <CustomAlgModal
             caseId={caseId}
             type={type}
+            editingAlg={editingCustomAlg}
             verifyAlg={verifyAlg}
             createNewCustomAlg={createNewCustomAlg}
-            onClose={() => setShowCustomAlgModal(false)}
+            updateCustomAlg={updateCustomAlg}
+            deleteCustomAlg={deleteCustomAlg}
+            onClose={closeCustomAlgModal}
             onAlgCreated={handleCustomAlgCreated}
+            onAlgUpdated={handleCustomAlgUpdated}
+            onAlgDeleted={handleCustomAlgDeleted}
           />
         )}
       </div>
