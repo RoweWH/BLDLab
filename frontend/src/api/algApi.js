@@ -49,16 +49,6 @@ export async function getEdgeAlgById(id) {
   return response;
 }
 
-// POST /api/edges/algorithms
-export async function insertEdgeAlg(algObject) {
-  const response = await axios.post(
-    `${BLDDB}/edges/algorithms`,
-    algObject
-  );
-
-  return response.data;
-}
-
 
 // ==========================
 // CORNERS
@@ -106,15 +96,7 @@ export async function getCornerAlgById(id) {
   return response;
 }
 
-// POST /api/corners/algorithms
-export async function insertCornerAlg(algObject) {
-  const response = await axios.post(
-    `${BLDDB}/corners/algorithms`,
-    algObject
-  );
 
-  return response.data;
-}
 
 
 // ==========================
@@ -166,16 +148,6 @@ export async function getParityAlgById(id) {
   return response;
 }
 
-// POST /api/parity/algorithms
-export async function insertParityAlg(algObject) {
-  const response = await axios.post(
-    `${BLDDB}/parity/algorithms`,
-    algObject
-  );
-
-  return response.data;
-}
-
 
 // ==========================
 // SHARED
@@ -205,4 +177,31 @@ export async function verifyAlg(submission, type) {
   );
 
   return response?.data;
+}
+
+export async function insertEdgeAlg(submission) {
+  // const response = await axios.post(
+  //   `${BLDDB}/edges/algorithms`,
+  //   submission
+  // );
+
+  // return response?.data;
+}
+
+export async function insertCornerAlg(submission) {
+  // const response = await axios.post(
+  //   `${BLDDB}/corners/algorithms`,
+  //   submission
+  // );
+
+  // return response?.data;
+}
+
+export async function insertParityAlg(submission) {
+  // const response = await axios.post(
+  //   `${BLDDB}/parity/algorithms`,
+  //   submission
+  // );
+
+  // return response?.data;
 }

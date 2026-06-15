@@ -9,6 +9,7 @@ import { TwoE2C } from "./pages/algs/TwoE2C";
 import { LTCT } from "./pages/algs/LTCT";
 import { SheetsHome } from "./pages/sheets/SheetsHome";
 import { SheetView } from "./pages/sheets/SheetView";
+import {AdminAlgorithms} from "./pages/admin/AdminAlgorithms";
 import "./App.css";
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/sheets/:id" element={<SheetView />} />
           <Route path="/sheets" element={<SheetsHome />} />
+          <Route path="/admin/algorithms" element={<AdminAlgorithms />} />
           <Route element={<Layout />}>
             <Route path="/home" element={<Home />} />
             <Route path="/import" element={<Import />} />

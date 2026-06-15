@@ -10,6 +10,7 @@ export function AlgList({
   getAlgId,
   renderStatus,
   onCustomMenuClick,
+  isDisabled = () => false,
 }) {
   function sameId(a, b) {
     return String(a) === String(b);
@@ -27,9 +28,7 @@ export function AlgList({
     setSheetAlgs((current) => {
       const updated = current.filter((alg) => !sameId(alg.id, algId));
 
-      if (!sameId(primaryId, algId)) {
-        return updated;
-      }
+      if (!sameId(primaryId, algId)) return updated;
 
       const newPrimaryId = updated[0]?.id ?? null;
       setPrimaryId(newPrimaryId);
@@ -57,19 +56,16 @@ export function AlgList({
 
   function toggleAlg(alg) {
     const algId = getSafeAlgId(alg);
+    if (!algId || isDisabled(alg)) return;
 
-    if (!algId) return;
-
-    if (algIsSelected(algId)) {
-      removeAlg(algId);
-    } else {
-      addAlg(alg);
-    }
+    if (algIsSelected(algId)) removeAlg(algId);
+    else addAlg(alg);
   }
 
   function selectPrimary(alg) {
-    const newPrimaryAlg = makeSheetAlg(alg, true);
+    if (isDisabled(alg)) return;
 
+    const newPrimaryAlg = makeSheetAlg(alg, true);
     if (!newPrimaryAlg.id) return;
 
     setPrimaryId(newPrimaryAlg.id);
@@ -92,6 +88,8 @@ export function AlgList({
     <div className="alg-modal__list">
       {listAlgs.map((alg, index) => {
         const algId = getSafeAlgId(alg);
+        const disabled = !algId || isDisabled(alg);
+
         const rowKey = `${alg.source ?? alg.caseType ?? "alg"}-${
           algId ?? index
         }`;
@@ -103,16 +101,16 @@ export function AlgList({
           <div
             className={`alg-modal__list-row ${
               renderStatus ? "alg-modal__list-row--custom" : ""
-            }`}
+            } ${disabled ? "alg-modal__list-row--disabled" : ""}`}
             key={rowKey}
           >
             <button
               type="button"
+              disabled={disabled}
               className={`alg-modal__check ${
                 isSelected ? "alg-modal__check--selected" : ""
               }`}
               onClick={() => toggleAlg(alg)}
-              disabled={!algId}
             >
               {isSelected ? "✓" : "+"}
             </button>
@@ -120,6 +118,7 @@ export function AlgList({
             <span className="alg-modal__alg-text">{alg.algorithm}</span>
 
             {renderStatus && renderStatus(alg)}
+
             {onCustomMenuClick && (
               <button
                 type="button"
@@ -129,13 +128,14 @@ export function AlgList({
                 ⋮
               </button>
             )}
+
             <input
               className="alg-modal__primary"
               type="radio"
               name="primaryAlg"
               checked={isPrimary}
+              disabled={disabled}
               onChange={() => selectPrimary(alg)}
-              disabled={!algId}
             />
           </div>
         );

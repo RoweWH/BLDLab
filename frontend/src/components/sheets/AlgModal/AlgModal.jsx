@@ -12,8 +12,8 @@ import {
   deleteCustomAlg,
 } from "../../../api/customAlgApi";
 import { AlgList } from "./AlgList";
-import "./AlgModal.css";
 import { CustomAlgModal } from "./CustomAlgModal";
+import "./AlgModal.css";
 
 function getDatabaseLoader(type) {
   if (type === "edges") return getEdgeAlgsByCaseId;
@@ -23,6 +23,32 @@ function getDatabaseLoader(type) {
 
 function getCustomCaseId(alg) {
   return alg.caseId ?? alg.case?.id ?? null;
+}
+
+function normalizeAlgorithm(algorithm = "") {
+  return algorithm.replace(/\s+/g, " ").trim();
+}
+
+function isPublicCustomAlg(alg) {
+  return alg.status === "public";
+}
+
+function userHasPublicCopy(databaseAlg, customAlgs) {
+  const databaseText = normalizeAlgorithm(databaseAlg.algorithm);
+
+  return customAlgs.some(
+    (customAlg) =>
+      isPublicCustomAlg(customAlg) &&
+      normalizeAlgorithm(customAlg.algorithm) === databaseText,
+  );
+}
+
+function getRedundantDatabaseAlgIds(databaseAlgs, customAlgs) {
+  return new Set(
+    databaseAlgs
+      .filter((databaseAlg) => userHasPublicCopy(databaseAlg, customAlgs))
+      .map((databaseAlg) => String(databaseAlg.id)),
+  );
 }
 
 export function AlgModal({ cell, type, onClose, onSave }) {
@@ -44,6 +70,7 @@ export function AlgModal({ cell, type, onClose, onSave }) {
       try {
         const loadAlgs = getDatabaseLoader(type);
         const response = await loadAlgs(caseId);
+
         setDatabaseAlgs(response.data ?? []);
       } catch (error) {
         console.error("Failed to load database algs:", error);
@@ -75,6 +102,46 @@ export function AlgModal({ cell, type, onClose, onSave }) {
     if (caseId) loadCustomAlgs();
   }, [caseId, type]);
 
+  useEffect(() => {
+    if (!databaseAlgs.length || !customAlgs.length) return;
+
+    const redundantDatabaseAlgIds = getRedundantDatabaseAlgIds(
+      databaseAlgs,
+      customAlgs,
+    );
+
+    if (redundantDatabaseAlgIds.size === 0) return;
+
+    setSheetAlgs((current) => {
+      const updated = current.filter((alg) => {
+        if (alg.source !== "bldlab") return true;
+
+        return !redundantDatabaseAlgIds.has(String(alg.id));
+      });
+
+      if (updated.length === current.length) return current;
+
+      const currentPrimaryStillExists = updated.some(
+        (alg) => String(alg.id) === String(primaryId),
+      );
+
+      const newPrimaryId = currentPrimaryStillExists
+        ? primaryId
+        : (updated[0]?.id ?? null);
+
+      setPrimaryId(newPrimaryId);
+
+      const updatedWithPrimary = updated.map((alg) => ({
+        ...alg,
+        primary: String(alg.id) === String(newPrimaryId),
+      }));
+
+      onSave(updatedWithPrimary);
+
+      return updatedWithPrimary;
+    });
+  }, [databaseAlgs, customAlgs, primaryId, onSave]);
+
   function handleCustomAlgCreated(newAlg) {
     setCustomAlgs((current) => [...current, newAlg]);
 
@@ -95,6 +162,28 @@ export function AlgModal({ cell, type, onClose, onSave }) {
       newSheetAlg,
     ]);
 
+    setShowCustomAlgModal(false);
+  }
+
+  function handleCustomAlgUpdated(updatedAlg) {
+    setCustomAlgs((current) =>
+      current.map((alg) =>
+        String(alg._id) === String(updatedAlg._id) ? updatedAlg : alg,
+      ),
+    );
+
+    setSheetAlgs((current) =>
+      current.map((alg) =>
+        String(alg.id) === String(updatedAlg._id)
+          ? {
+              ...alg,
+              displayText: updatedAlg.algorithm,
+            }
+          : alg,
+      ),
+    );
+
+    setEditingCustomAlg(null);
     setShowCustomAlgModal(false);
   }
 
@@ -129,31 +218,19 @@ export function AlgModal({ cell, type, onClose, onSave }) {
     setShowCustomAlgModal(false);
   }
 
-  function handleCustomAlgUpdated(updatedAlg) {
-    setCustomAlgs((current) =>
-      current.map((alg) =>
-        String(alg._id) === String(updatedAlg._id) ? updatedAlg : alg,
-      ),
-    );
-
-    setSheetAlgs((current) =>
-      current.map((alg) =>
-        String(alg.id) === String(updatedAlg._id)
-          ? {
-              ...alg,
-              displayText: updatedAlg.algorithm,
-            }
-          : alg,
-      ),
-    );
-
-    setEditingCustomAlg(null);
-    setShowCustomAlgModal(false);
-  }
-
   function closeCustomAlgModal() {
     setShowCustomAlgModal(false);
     setEditingCustomAlg(null);
+  }
+
+  function openNewCustomAlgModal() {
+    setEditingCustomAlg(null);
+    setShowCustomAlgModal(true);
+  }
+
+  function openEditCustomAlgModal(alg) {
+    setEditingCustomAlg(alg);
+    setShowCustomAlgModal(true);
   }
 
   function saveAlgs() {
@@ -210,6 +287,7 @@ export function AlgModal({ cell, type, onClose, onSave }) {
               source: "bldlab",
             })}
             getAlgId={(alg) => alg.id}
+            isDisabled={(alg) => userHasPublicCopy(alg, customAlgs)}
           />
         </div>
 
@@ -241,10 +319,7 @@ export function AlgModal({ cell, type, onClose, onSave }) {
                 {alg.status}
               </span>
             )}
-            onCustomMenuClick={(alg) => {
-              setEditingCustomAlg(alg);
-              setShowCustomAlgModal(true);
-            }}
+            onCustomMenuClick={openEditCustomAlgModal}
           />
         </div>
 
@@ -252,7 +327,7 @@ export function AlgModal({ cell, type, onClose, onSave }) {
           <button
             type="button"
             className="inverse-button"
-            onClick={() => setShowCustomAlgModal(true)}
+            onClick={openNewCustomAlgModal}
           >
             Add Algorithm
           </button>
