@@ -196,12 +196,13 @@ userRoutes.route("/users/login").post(async (request, response) => {
   }
 
   const token = jwt.sign(
-    {
-      id: user._id.toString(),
-    },
-    process.env.SECRETKEY,
-    { expiresIn: "1h" }
-  );
+  {
+    id: user._id.toString(),
+    isAdmin: user.isAdmin ?? false,
+  },
+  process.env.SECRETKEY,
+  { expiresIn: "1h" }
+);
 
   response.json({
     success: true,
