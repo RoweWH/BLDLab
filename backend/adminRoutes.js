@@ -20,18 +20,26 @@ adminRoutes
     response.json(algorithms);
   });
 
-  adminRoutes
+ adminRoutes
   .route("/admin/algorithms/:id/status")
   .put(verifyToken, verifyAdmin, async (request, response) => {
     let db = database.getDb();
 
+    const { status, BLDLabId } = request.body;
+
+    const update = {
+      status,
+      reviewedDate: new Date(),
+    };
+
+    if (BLDLabId != null) {
+      update.BLDLabId = BLDLabId;
+    }
+
     const result = await db.collection("algorithms").updateOne(
       { _id: new ObjectId(request.params.id) },
       {
-        $set: {
-          status: request.body.status,
-          reviewedDate: new Date(),
-        },
+        $set: update,
       },
     );
 
@@ -44,7 +52,8 @@ adminRoutes
 
     response.json({
       success: true,
-      status: request.body.status,
+      status,
+      BLDLabId,
     });
   });
 

@@ -13,8 +13,27 @@ import "./Admin.css";
 function getAlgorithmCreator(type) {
   if (type === "edges") return insertEdgeAlg;
   if (type === "corners") return insertCornerAlg;
+  if (
+    type === "parity" ||
+    type === "2e2c" ||
+    type === "ltct" ||
+    type === "t2c"
+  ) {
+    return insertParityAlg;
+  }
 
-  return insertParityAlg;
+  throw new Error(`Unknown algorithm type: ${type}`);
+}
+
+function buildSubmission(alg) {
+  return {
+    id: alg.caseId,
+    algorithms: [
+      {
+        algorithm: alg.algorithm,
+      },
+    ],
+  };
 }
 
 export function AdminAlgorithms() {
@@ -27,6 +46,7 @@ export function AdminAlgorithms() {
 
   async function loadPendingAlgorithms() {
     try {
+      setError("");
       const response = await getPendingAlgorithms();
       setPendingAlgs(response.data ?? []);
     } catch (error) {
@@ -36,35 +56,39 @@ export function AdminAlgorithms() {
   }
 
   async function approveAlgorithm(alg) {
-    try {
-      const insertAlgorithm = getAlgorithmCreator(alg.caseType);
+  try {
+    setError("");
 
-      try {
-        await insertAlgorithm({
-          id: alg.caseId,
-          algorithms: [
-            {
-              algorithm: alg.algorithm,
-            },
-          ],
-        });
-      } catch (error) {
-        console.warn(
-          "Failed adding to public database. Probably duplicate:",
-          error,
-        );
-      }
+    const insertAlgorithm = getAlgorithmCreator(alg.caseType);
+    const submission = buildSubmission(alg);
 
-      await updateAdminAlgorithmStatus(alg._id, "public");
-      removeFromPending(alg._id);
-    } catch (error) {
-      console.error("Failed to approve algorithm:", error);
-      setError("Failed to approve algorithm");
+    const result = await insertAlgorithm(submission);
+
+    const databaseAlgorithmId = result?.id ?? result?.Id;
+
+    if (!databaseAlgorithmId) {
+      throw new Error("Database insert did not return a new algorithm id.");
     }
+
+    await updateAdminAlgorithmStatus(alg._id, "public", result.id);
+
+    removeFromPending(alg._id);
+  } catch (error) {
+    console.error("Failed to approve algorithm:", error);
+
+    const message =
+      error.response?.data?.message ??
+      error.response?.data?.Message ??
+      error.message ??
+      "Failed to approve algorithm";
+
+    setError(message);
   }
+}
 
   async function rejectAlgorithm(alg) {
     try {
+      setError("");
       await updateAdminAlgorithmStatus(alg._id, "rejected");
       removeFromPending(alg._id);
     } catch (error) {
@@ -100,7 +124,6 @@ export function AdminAlgorithms() {
           <div className="admin-alg-card" key={alg._id}>
             <div className="admin-alg-card__top">
               <span className="admin-alg-card__type">{alg.caseType}</span>
-
               <span className="admin-alg-card__case">Case #{alg.caseId}</span>
 
               <span className="admin-status admin-status--pending">

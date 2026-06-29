@@ -25,8 +25,8 @@ function getCustomCaseId(alg) {
   return alg.caseId ?? alg.case?.id ?? null;
 }
 
-function normalizeAlgorithm(algorithm = "") {
-  return algorithm.replace(/\s+/g, " ").trim();
+function getCustomBLDLabId(alg) {
+  return alg.BLDLabId ?? null;
 }
 
 export function AlgModal({ cell, type, onClose, onSave }) {
@@ -48,7 +48,6 @@ export function AlgModal({ cell, type, onClose, onSave }) {
       try {
         const loadAlgs = getDatabaseLoader(type);
         const response = await loadAlgs(caseId);
-
         setDatabaseAlgs(response.data ?? []);
       } catch (error) {
         console.error("Failed to load database algs:", error);
@@ -79,6 +78,17 @@ export function AlgModal({ cell, type, onClose, onSave }) {
 
     if (caseId) loadCustomAlgs();
   }, [caseId, type]);
+
+  const customBLDLabIds = new Set(
+    customAlgs
+      .map(getCustomBLDLabId)
+      .filter((id) => id != null)
+      .map(String),
+  );
+
+  const visibleDatabaseAlgs = databaseAlgs.filter(
+    (alg) => !customBLDLabIds.has(String(alg.id)),
+  );
 
   function handleCustomAlgCreated(newAlg) {
     setCustomAlgs((current) => [...current, newAlg]);
@@ -206,14 +216,16 @@ export function AlgModal({ cell, type, onClose, onSave }) {
           <div className="alg-modal__section-title">
             <div className="alg-modal__section-name">
               <span>BLDLab Algorithms</span>
-              <strong>{databaseAlgs.length}</strong>
+              <strong>{visibleDatabaseAlgs.length}</strong>
             </div>
 
-            <span className="alg-modal__primary-label">Primary</span>
+            {visibleDatabaseAlgs.length !== 0 && (
+              <span className="alg-modal__primary-label">Primary</span>
+            )}
           </div>
 
           <AlgList
-            listAlgs={databaseAlgs}
+            listAlgs={visibleDatabaseAlgs}
             sheetAlgs={sheetAlgs}
             setSheetAlgs={setSheetAlgs}
             primaryId={primaryId}
@@ -228,37 +240,39 @@ export function AlgModal({ cell, type, onClose, onSave }) {
           />
         </div>
 
-        <div className="alg-modal__body">
-          <div className="alg-modal__section-title">
-            <div className="alg-modal__section-name">
-              <span>Your Algorithms</span>
-              <strong>{customAlgs.length}</strong>
+        {customAlgs.length !== 0 && (
+          <div className="alg-modal__body">
+            <div className="alg-modal__section-title">
+              <div className="alg-modal__section-name">
+                <span>Your Algorithms</span>
+                <strong>{customAlgs.length}</strong>
+              </div>
+
+              <span className="alg-modal__primary-label">Primary</span>
             </div>
 
-            <span className="alg-modal__primary-label">Primary</span>
+            <AlgList
+              listAlgs={customAlgs}
+              sheetAlgs={sheetAlgs}
+              setSheetAlgs={setSheetAlgs}
+              primaryId={primaryId}
+              setPrimaryId={setPrimaryId}
+              makeSheetAlg={(alg, primary) => ({
+                id: alg._id,
+                displayText: alg.algorithm,
+                primary,
+                source: "custom",
+              })}
+              getAlgId={(alg) => alg._id}
+              renderStatus={(alg) => (
+                <span className={`alg-status alg-status--${alg.status}`}>
+                  {alg.status}
+                </span>
+              )}
+              onCustomMenuClick={openEditCustomAlgModal}
+            />
           </div>
-
-          <AlgList
-            listAlgs={customAlgs}
-            sheetAlgs={sheetAlgs}
-            setSheetAlgs={setSheetAlgs}
-            primaryId={primaryId}
-            setPrimaryId={setPrimaryId}
-            makeSheetAlg={(alg, primary) => ({
-              id: alg._id,
-              displayText: alg.algorithm,
-              primary,
-              source: "custom",
-            })}
-            getAlgId={(alg) => alg._id}
-            renderStatus={(alg) => (
-              <span className={`alg-status alg-status--${alg.status}`}>
-                {alg.status}
-              </span>
-            )}
-            onCustomMenuClick={openEditCustomAlgModal}
-          />
-        </div>
+        )}
 
         <div className="alg-modal__actions">
           <button

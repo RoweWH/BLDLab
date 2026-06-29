@@ -14,7 +14,11 @@ export async function getPendingAlgorithms() {
   });
 }
 
-export async function updateAdminAlgorithmStatus(id, status) {
+export async function updateAdminAlgorithmStatus(
+  id,
+  status,
+  BLDLabId = null,
+) {
   const algId =
     typeof id === "object"
       ? id.$oid ?? id.toString()
@@ -22,7 +26,10 @@ export async function updateAdminAlgorithmStatus(id, status) {
 
   const response = await axios.put(
     `${server}/admin/algorithms/${algId}/status`,
-    { status },
+    {
+      status,
+      BLDLabId,
+    },
     {
       headers: {
         Authorization: `Bearer ${sessionStorage.getItem("User")}`,

@@ -180,28 +180,28 @@ export async function verifyAlg(submission, type) {
 }
 
 export async function insertEdgeAlg(submission) {
-  // const response = await axios.post(
-  //   `${BLDDB}/edges/algorithms`,
-  //   submission
-  // );
+  const response = await axios.post(
+    `${BLDDB}/edges/algorithms`,
+    submission
+  );
 
-  // return response?.data;
+  return response.data;
 }
 
 export async function insertCornerAlg(submission) {
-  // const response = await axios.post(
-  //   `${BLDDB}/corners/algorithms`,
-  //   submission
-  // );
+  const response = await axios.post(
+    `${BLDDB}/corners/algorithms`,
+    submission
+  );
 
-  // return response?.data;
+  return response.data;
 }
 
 export async function insertParityAlg(submission) {
-  // const response = await axios.post(
-  //   `${BLDDB}/parity/algorithms`,
-  //   submission
-  // );
+  const response = await axios.post(
+    `${BLDDB}/parity/algorithms`,
+    submission
+  );
 
-  // return response?.data;
+  return response.data;
 }
