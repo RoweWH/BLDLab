@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Sheet } from "../../components/sheets/Sheet";
+import { SheetHeader } from "../../components/sheets/SheetHeader";
 import { getSheet, updateSheet } from "../../api/sheetApi";
 
 function updateSheetCellAlgorithms(sheet, columnPiece, caseId, algorithms) {
@@ -13,14 +14,9 @@ function updateSheetCellAlgorithms(sheet, columnPiece, caseId, algorithms) {
 
         return {
           ...column,
-          rows: column.rows.map((row) => {
-            if (String(row.id) !== String(caseId)) return row;
-
-            return {
-              ...row,
-              algorithms,
-            };
-          }),
+          rows: column.rows.map((row) =>
+            String(row.id) === String(caseId) ? { ...row, algorithms } : row,
+          ),
         };
       }),
     },
@@ -73,12 +69,11 @@ export function SheetView() {
   }
 
   return (
-    <div className="page">
-      <h1>{sheet.name}</h1>
-
-      {isSaving && <p>Saving...</p>}
-
-      <Sheet sheet={sheet} onUpdate={handleUpdateCellAlgorithms} />
+    <div className="page sheet-view-page">
+      <div className="sheet-view">
+        <SheetHeader sheet={sheet} isSaving={isSaving} />
+        <Sheet sheet={sheet} onUpdate={handleUpdateCellAlgorithms} />
+      </div>
     </div>
   );
 }
