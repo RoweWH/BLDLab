@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { BufferColumn } from "./BufferColumn";
 import { Column } from "./Column";
+import { TrainingCheckbox } from "./TrainingCheckbox";
 import { getCurrentUser } from "../../api/userApi";
 import { formatPiecesWithLetters } from "../../utils/sheets/FormatPiecesWithLetters";
 import { AlgModal } from "./AlgModal/AlgModal";
@@ -38,7 +39,13 @@ function renderBufferColumns(bufferColumns, letterScheme, selected = false) {
   });
 }
 
-export function Sheet({ sheet, onUpdate }) {
+export function Sheet({
+  sheet,
+  onUpdate,
+  onToggleCellTraining,
+  onToggleColumnTraining,
+  onToggleWholeSheetTraining,
+}) {
   const [selectedColumnPiece, setSelectedColumnPiece] = useState(null);
   const [selectedCell, setSelectedCell] = useState(null);
   const [user, setUser] = useState(null);
@@ -64,7 +71,12 @@ export function Sheet({ sheet, onUpdate }) {
   const algorithmCount = countAlgorithms(columns);
   const caseCount = countCases(columns);
 
-  if (!columns.length) return null;
+  const validRows = columns.flatMap((column) =>
+    column.rows.filter((row) => row.id),
+  );
+
+  const wholeSheetTraining =
+    validRows.length > 0 && validRows.every((row) => row.training === true);
 
   function toggleSelectedColumn(piece) {
     setSelectedColumnPiece((current) => (current === piece ? null : piece));
@@ -92,6 +104,18 @@ export function Sheet({ sheet, onUpdate }) {
     onUpdate(selectedCell.columnPiece, selectedCell.id, algorithms);
   }
 
+  function toggleModalTraining(columnPiece, caseId, checked) {
+    onToggleCellTraining(columnPiece, caseId, checked);
+
+    setSelectedCell((current) =>
+      current && String(current.id) === String(caseId)
+        ? { ...current, training: checked }
+        : current,
+    );
+  }
+
+  if (!columns.length) return null;
+
   return (
     <>
       <div className="cycle-sheet">
@@ -102,9 +126,20 @@ export function Sheet({ sheet, onUpdate }) {
           >
             <div className="cycle-sheet__top-left-header">
               <div>{headerInfo.join(" ")}</div>
+
               <div>
                 ({algorithmCount}/{caseCount})
               </div>
+
+              <label className="training-control training-control--sheet">
+
+                <TrainingCheckbox
+                  checked={wholeSheetTraining}
+                  title="Train whole sheet"
+                  onChange={onToggleWholeSheetTraining}
+                  showAll={true}
+                />
+              </label>
             </div>
 
             <div className="cycle-sheet__buffer-columns">
@@ -143,6 +178,8 @@ export function Sheet({ sheet, onUpdate }) {
                 isSelected={isSelected}
                 onHeaderClick={toggleSelectedColumn}
                 onCellClick={(cell) => openAlgModal(column.piece, cell)}
+                onToggleCellTraining={onToggleCellTraining}
+                onToggleColumnTraining={onToggleColumnTraining}
               />
             </div>
           );
@@ -155,6 +192,7 @@ export function Sheet({ sheet, onUpdate }) {
           type={sheet.type}
           onClose={closeAlgModal}
           onSave={saveAlgorithms}
+          onToggleTraining={toggleModalTraining}
         />
       )}
     </>

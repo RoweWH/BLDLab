@@ -72,6 +72,7 @@ async function loadCase(type, buffer, first, second, blankSheet) {
                 displayText: firstAlgorithm.algorithm,
                 primary: true,
                 source: "bldlab",
+                last50: [],
               },
             ],
     };
@@ -95,8 +96,6 @@ async function buildColumn(type, buffer, columnPiece, rowTargets, blankSheet) {
         return {
           id: null,
           piece: rowPiece,
-          caseInfo,
-          algorithms: [],
         };
       }
 
@@ -113,6 +112,8 @@ async function buildColumn(type, buffer, columnPiece, rowTargets, blankSheet) {
         piece: rowPiece,
         caseInfo,
         algorithms: loadedCase.algorithms,
+        training: false,
+        startedTraining: null,
       };
     })
   );

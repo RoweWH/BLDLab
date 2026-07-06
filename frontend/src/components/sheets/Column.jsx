@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Cell } from "./Cell";
+import { TrainingCheckbox } from "./TrainingCheckbox";
 
 const DEFAULT_WIDTH = 360;
 const MIN_WIDTH = 200;
@@ -10,6 +11,8 @@ export function Column({
   isSelected,
   onHeaderClick,
   onCellClick,
+  onToggleCellTraining,
+  onToggleColumnTraining,
 }) {
   const [width, setWidth] = useState(DEFAULT_WIDTH);
 
@@ -18,6 +21,10 @@ export function Column({
       setWidth(DEFAULT_WIDTH);
     }
   }, [isSelected]);
+
+  const validRows = column.rows.filter((row) => row.id);
+  const allRowsTraining =
+    validRows.length > 0 && validRows.every((row) => row.training === true);
 
   function getMaxWidth() {
     return Math.max(MIN_WIDTH, window.innerWidth - 260);
@@ -60,15 +67,37 @@ export function Column({
         className="cycle-sheet-column__header"
         onClick={() => onHeaderClick(column.piece)}
       >
-        {column.piece}
-        {letterScheme?.[column.piece] ? ` (${letterScheme[column.piece]})` : ""}
+        <span>
+          {column.piece}
+          {letterScheme?.[column.piece]
+            ? ` (${letterScheme[column.piece]})`
+            : ""}
+        </span>
+
+        {isSelected && (
+          <label className="training-control training-control--header">
+
+            <TrainingCheckbox
+              checked={allRowsTraining}
+              stopPropagation
+              title="Train this column"
+              onChange={(checked) =>
+                onToggleColumnTraining(column.piece, checked)
+              }
+            />
+          </label>
+        )}
       </button>
 
       {column.rows.map((row, index) => (
         <Cell
           key={`${column.piece}-${row.id ?? row.piece ?? index}`}
           cell={row}
+          isSelected={isSelected}
           onClick={() => onCellClick(row)}
+          onToggleTraining={(rowId, checked) =>
+            onToggleCellTraining(column.piece, rowId, checked)
+          }
         />
       ))}
 

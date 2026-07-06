@@ -1,7 +1,6 @@
 import { cornerPieces } from "../../data/pieces/CornerPieces";
 import { getParityAlgs } from "../../api/algApi";
 
-
 function build2e2cCaseInfo(edgeSwap, columnPiece, rowPiece) {
   return `${edgeSwap[0]}/${edgeSwap[1]}\n${columnPiece} → ${rowPiece}`;
 }
@@ -76,6 +75,7 @@ async function load2E2CCase(edgeSwap, columnPiece, rowPiece, blankSheet) {
                 displayText: firstAlgorithm.algorithm,
                 primary: true,
                 source: "bldlab",
+                last50: [],
               },
             ],
     };
@@ -117,7 +117,6 @@ async function build2E2CColumn(
         return {
           id: null,
           piece: rowPiece,
-          algorithms: [],
         };
       }
 
@@ -133,6 +132,8 @@ async function build2E2CColumn(
         piece: rowPiece,
         caseInfo,
         algorithms: loadedCase.algorithms,
+        training: false,
+        startedTraining: null,
       };
     })
   );
@@ -151,10 +152,7 @@ async function build2E2CData({
 }) {
   const firstBuffer = bufferOrder[0];
 
-  const rowTargets = sortPiecesByLetter(
-    getTargets(firstBuffer),
-    letterScheme
-  );
+  const rowTargets = sortPiecesByLetter(getTargets(firstBuffer), letterScheme);
 
   const columns = await Promise.all(
     bufferOrder.map((columnPiece, columnIndex) =>

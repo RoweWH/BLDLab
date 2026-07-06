@@ -1257,6 +1257,8 @@ input[type='file'] {
 
 .cycle-sheet-column__header {
   cursor: pointer;
+  position: relative;
+  overflow: visible;
 }
 
 .buffer-column {
@@ -1286,6 +1288,7 @@ input[type='file'] {
 }
 
 .cycle-sheet-cell {
+  position: relative;
   height: var(--sheet-cell-height);
   background: var(--surface);
   color: var(--text);
@@ -1338,6 +1341,66 @@ input[type='file'] {
 .cycle-sheet-column__resize-handle:hover::after {
   background: var(--accent);
 }
+
+
+/* ---------- Training controls ---------- */
+
+.training-checkbox-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  line-height: 1;
+  font-size: 0.75rem;
+  font-weight: 700;
+  opacity: 0.85;
+  cursor: pointer;
+  user-select: none;
+}
+
+.training-checkbox-wrapper>span {
+  display: inline-block;
+  line-height: 1;
+}
+
+.training-control--cell {
+  position: absolute;
+  right: 0.4rem;
+  bottom: 0.3rem;
+  z-index: 2;
+}
+
+.training-control--header {
+  position: absolute;
+  right: 0.4rem;
+  bottom: 0.35rem;
+  z-index: 2;
+  color: white;
+}
+
+.training-control--sheet {
+  margin-top: 0.35rem;
+}
+
+.training-control--header,
+.training-checkbox-wrapper.training-control--header {
+  position: absolute;
+  right: 0.4rem;
+  bottom: 0.3rem;
+  z-index: 5;
+}
+
+.cycle-sheet-cell__alg {
+  display: block;
+  width: 100%;
+  padding: 0 0.25rem;
+  text-align: center;
+}
+
+.cycle-sheet-column__header>span:first-child {
+  text-align: center;
+}
+
 
 /* ---------- Responsive ---------- */
 

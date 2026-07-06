@@ -1,0 +1,32 @@
+.training-checkbox-wrapper {
+   display: inline-flex;
+   align-items: center;
+   gap: 0.4rem;
+
+   margin: 0;
+   padding: 0;
+
+   line-height: 1;
+   cursor: pointer;
+}
+
+.training-checkbox-label {
+   display: inline-flex;
+   align-items: center;
+
+   line-height: 1;
+   font-size: 0.75rem;
+}
+
+.training-checkbox {
+   width: 0.8rem;
+   height: 0.8rem;
+
+   margin: 0;
+   padding: 0;
+
+   cursor: pointer;
+   accent-color: var(--ink);
+
+   flex-shrink: 0;
+}

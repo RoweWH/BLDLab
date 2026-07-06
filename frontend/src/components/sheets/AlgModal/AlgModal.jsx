@@ -14,6 +14,7 @@ import {
 import { AlgList } from "./AlgList";
 import { CustomAlgModal } from "./CustomAlgModal";
 import "./AlgModal.css";
+import { TrainingCheckbox } from "../TrainingCheckbox";
 
 function getDatabaseLoader(type) {
   if (type === "edges") return getEdgeAlgsByCaseId;
@@ -29,7 +30,7 @@ function getCustomBLDLabId(alg) {
   return alg.BLDLabId ?? null;
 }
 
-export function AlgModal({ cell, type, onClose, onSave }) {
+export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
   const [databaseAlgs, setDatabaseAlgs] = useState([]);
   const [customAlgs, setCustomAlgs] = useState([]);
   const [sheetAlgs, setSheetAlgs] = useState(cell.algorithms ?? []);
@@ -98,6 +99,7 @@ export function AlgModal({ cell, type, onClose, onSave }) {
       displayText: newAlg.algorithm,
       primary: true,
       source: "custom",
+      last50: [],
     };
 
     setPrimaryId(newAlg._id);
@@ -201,7 +203,18 @@ export function AlgModal({ cell, type, onClose, onSave }) {
     <div className="modal-backdrop">
       <div className="alg-modal">
         <div className="alg-modal__header">
-          <h2>{caseInfo}</h2>
+          <div className="alg-modal__case-heading">
+            <h2>{caseInfo}</h2>
+
+            <TrainingCheckbox
+              checked={cell.training === true}
+              title="Train this case"
+              className="alg-modal__training-toggle"
+              onChange={(checked) =>
+                onToggleTraining(cell.columnPiece, cell.id, checked)
+              }
+            />
+          </div>
 
           <button type="button" className="alg-modal__close" onClick={onClose}>
             ×

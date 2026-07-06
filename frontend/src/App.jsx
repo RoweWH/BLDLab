@@ -10,6 +10,7 @@ import { LTCT } from "./pages/algs/LTCT";
 import { SheetsHome } from "./pages/sheets/SheetsHome";
 import { SheetView } from "./pages/sheets/SheetView";
 import {AdminAlgorithms} from "./pages/admin/AdminAlgorithms";
+import {Trainer} from "./pages/trainer/Trainer";
 import "./App.css";
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/sheets/:id" element={<SheetView />} />
           <Route path="/sheets" element={<SheetsHome />} />
+          <Route path="/trainer" element={<Trainer />} />
           <Route path="/admin/algorithms" element={<AdminAlgorithms />} />
           <Route element={<Layout />}>
             <Route path="/home" element={<Home />} />

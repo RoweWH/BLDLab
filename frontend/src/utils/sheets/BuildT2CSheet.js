@@ -141,6 +141,7 @@ async function loadT2CCase(
                 displayText: firstAlgorithm.algorithm,
                 primary: true,
                 source: "bldlab",
+                last50: [],
               },
             ],
     };
@@ -179,7 +180,6 @@ async function buildT2CColumn(
           id: null,
           piece: rowTarget.piece,
           twistPiece: rowTarget.twistPiece,
-          algorithms: [],
         };
       }
 
@@ -197,6 +197,8 @@ async function buildT2CColumn(
         twistPiece: rowTarget.twistPiece,
         caseInfo,
         algorithms: loadedCase.algorithms,
+        training: false,
+        startedTraining: null,
       };
     })
   );

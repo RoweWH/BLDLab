@@ -102,6 +102,7 @@ async function loadLTCTCase(
                 displayText: firstAlgorithm.algorithm,
                 primary: true,
                 source: "bldlab",
+                last50: [],
               },
             ],
     };
@@ -134,7 +135,6 @@ async function buildLTCTColumn(
         return {
           id: null,
           piece: rowPiece,
-          algorithms: [],
         };
       }
 
@@ -151,6 +151,8 @@ async function buildLTCTColumn(
         piece: rowPiece,
         caseInfo,
         algorithms: loadedCase.algorithms,
+        training: false,
+        startedTraining: null,
       };
     })
   );

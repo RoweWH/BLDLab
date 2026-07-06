@@ -23,6 +23,83 @@ function updateSheetCellAlgorithms(sheet, columnPiece, caseId, algorithms) {
   };
 }
 
+function updateSheetCellTraining(sheet, columnPiece, caseId, checked) {
+  const startedTraining = new Date().toISOString();
+
+  return {
+    ...sheet,
+    data: {
+      ...sheet.data,
+      columns: sheet.data.columns.map((column) => {
+        if (column.piece !== columnPiece) return column;
+
+        return {
+          ...column,
+          rows: column.rows.map((row) => {
+            if (String(row.id) !== String(caseId)) return row;
+
+            return {
+              ...row,
+              training: checked,
+              ...(checked ? { startedTraining } : {}),
+            };
+          }),
+        };
+      }),
+    },
+  };
+}
+
+function updateSheetColumnTraining(sheet, columnPiece, checked) {
+  const startedTraining = new Date().toISOString();
+
+  return {
+    ...sheet,
+    data: {
+      ...sheet.data,
+      columns: sheet.data.columns.map((column) => {
+        if (column.piece !== columnPiece) return column;
+
+        return {
+          ...column,
+          rows: column.rows.map((row) => {
+            if (!row.id) return row;
+
+            return {
+              ...row,
+              training: checked,
+              ...(checked ? { startedTraining } : {}),
+            };
+          }),
+        };
+      }),
+    },
+  };
+}
+
+function updateWholeSheetTraining(sheet, checked) {
+  const startedTraining = new Date().toISOString();
+
+  return {
+    ...sheet,
+    data: {
+      ...sheet.data,
+      columns: sheet.data.columns.map((column) => ({
+        ...column,
+        rows: column.rows.map((row) => {
+          if (!row.id) return row;
+
+          return {
+            ...row,
+            training: checked,
+            ...(checked ? { startedTraining } : {}),
+          };
+        }),
+      })),
+    },
+  };
+}
+
 export function SheetView() {
   const { id } = useParams();
   const [sheet, setSheet] = useState(null);
@@ -41,27 +118,79 @@ export function SheetView() {
     loadSheet();
   }, [id]);
 
-  async function handleUpdateCellAlgorithms(columnPiece, caseId, algorithms) {
-    if (!sheet) return;
-
-    const updatedSheet = updateSheetCellAlgorithms(
-      sheet,
-      columnPiece,
-      caseId,
-      algorithms,
-    );
-
-    setSheet(updatedSheet);
+  async function saveSheetVersion(updatedSheet, previousSheet) {
     setIsSaving(true);
 
     try {
       await updateSheet(id, updatedSheet);
     } catch (error) {
       console.error("Failed to save sheet:", error);
-      setSheet(sheet);
+      setSheet(previousSheet);
     } finally {
       setIsSaving(false);
     }
+  }
+
+  function handleUpdateCellAlgorithms(columnPiece, caseId, algorithms) {
+    setSheet((currentSheet) => {
+      if (!currentSheet) return currentSheet;
+
+      const updatedSheet = updateSheetCellAlgorithms(
+        currentSheet,
+        columnPiece,
+        caseId,
+        algorithms,
+      );
+
+      saveSheetVersion(updatedSheet, currentSheet);
+
+      return updatedSheet;
+    });
+  }
+
+  function handleToggleCellTraining(columnPiece, caseId, checked) {
+    setSheet((currentSheet) => {
+      if (!currentSheet) return currentSheet;
+
+      const updatedSheet = updateSheetCellTraining(
+        currentSheet,
+        columnPiece,
+        caseId,
+        checked,
+      );
+
+      saveSheetVersion(updatedSheet, currentSheet);
+
+      return updatedSheet;
+    });
+  }
+
+  function handleToggleColumnTraining(columnPiece, checked) {
+    setSheet((currentSheet) => {
+      if (!currentSheet) return currentSheet;
+
+      const updatedSheet = updateSheetColumnTraining(
+        currentSheet,
+        columnPiece,
+        checked,
+      );
+
+      saveSheetVersion(updatedSheet, currentSheet);
+
+      return updatedSheet;
+    });
+  }
+
+  function handleToggleWholeSheetTraining(checked) {
+    setSheet((currentSheet) => {
+      if (!currentSheet) return currentSheet;
+
+      const updatedSheet = updateWholeSheetTraining(currentSheet, checked);
+
+      saveSheetVersion(updatedSheet, currentSheet);
+
+      return updatedSheet;
+    });
   }
 
   if (!sheet) {
@@ -72,7 +201,14 @@ export function SheetView() {
     <div className="page sheet-view-page">
       <div className="sheet-view">
         <SheetHeader sheet={sheet} isSaving={isSaving} />
-        <Sheet sheet={sheet} onUpdate={handleUpdateCellAlgorithms} />
+
+        <Sheet
+          sheet={sheet}
+          onUpdate={handleUpdateCellAlgorithms}
+          onToggleCellTraining={handleToggleCellTraining}
+          onToggleColumnTraining={handleToggleColumnTraining}
+          onToggleWholeSheetTraining={handleToggleWholeSheetTraining}
+        />
       </div>
     </div>
   );

@@ -25,12 +25,19 @@
    position: relative;
 
    display: flex;
-   align-items: center;
+   align-items: flex-start;
    justify-content: center;
 
-   padding: 0.9rem 1rem;
+   padding: 0.9rem 3rem 0.8rem;
 
    border-bottom: 1px solid var(--border);
+}
+
+.alg-modal__case-heading {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   gap: 0.45rem;
 }
 
 .alg-modal__header h2 {
@@ -40,10 +47,17 @@
 
    font-size: 2rem;
    white-space: pre-line;
+   text-align: center;
+}
+
+.alg-modal__training-toggle {
+   font-size: 0.85rem;
+   opacity: 0.85;
 }
 
 .alg-modal__close {
    position: absolute;
+   top: 0.9rem;
    right: 0.8rem;
 
    border: none;
