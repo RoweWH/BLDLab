@@ -34,6 +34,13 @@ export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
   const [databaseAlgs, setDatabaseAlgs] = useState([]);
   const [customAlgs, setCustomAlgs] = useState([]);
   const [sheetAlgs, setSheetAlgs] = useState(cell.algorithms ?? []);
+  const [memoryData, setMemoryData] = useState(
+    cell.memoryData ?? {
+      letters: "",
+      word: "",
+    },
+  );
+
   const [primaryId, setPrimaryId] = useState(
     cell.algorithms?.find((alg) => alg.primary)?.id ?? null,
   );
@@ -90,6 +97,13 @@ export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
   const visibleDatabaseAlgs = databaseAlgs.filter(
     (alg) => !customBLDLabIds.has(String(alg.id)),
   );
+
+  function updateMemoryField(field, value) {
+    setMemoryData((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }
 
   function handleCustomAlgCreated(newAlg) {
     setCustomAlgs((current) => [...current, newAlg]);
@@ -159,7 +173,7 @@ export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
         primary: String(alg.id) === String(newPrimaryId),
       }));
 
-      onSave(updatedWithPrimary);
+      onSave(updatedWithPrimary, memoryData);
 
       return updatedWithPrimary;
     });
@@ -195,7 +209,7 @@ export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
       primary: String(alg.id) === String(primaryId),
     }));
 
-    onSave(algorithms);
+    onSave(algorithms, memoryData);
     onClose();
   }
 
@@ -205,6 +219,33 @@ export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
         <div className="alg-modal__header">
           <div className="alg-modal__case-heading">
             <h2>{caseInfo}</h2>
+
+            <div className="alg-modal__memory-fields">
+              <label className="alg-modal__memory-field">
+                <span>Letters</span>
+
+                <input
+                  value={memoryData.letters ?? ""}
+                  onChange={(event) =>
+                    updateMemoryField(
+                      "letters",
+                      event.target.value.toUpperCase(),
+                    )
+                  }
+                />
+              </label>
+
+              <label className="alg-modal__memory-field">
+                <span>Word</span>
+
+                <input
+                  value={memoryData.word ?? ""}
+                  onChange={(event) =>
+                    updateMemoryField("word", event.target.value)
+                  }
+                />
+              </label>
+            </div>
 
             <TrainingCheckbox
               checked={cell.training === true}

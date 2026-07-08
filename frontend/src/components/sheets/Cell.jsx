@@ -1,13 +1,23 @@
 import { TrainingCheckbox } from "./TrainingCheckbox";
 import "./Cell.css";
 
-export function Cell({ cell, isSelected, onClick, onToggleTraining }) {
+export function Cell({
+  cell,
+  cellDisplayMode,
+  isSelected,
+  onClick,
+  onToggleTraining,
+}) {
   if (!cell.id) {
     return <div className="cycle-sheet-cell cycle-sheet-cell--invalid" />;
   }
 
   const primaryAlg = cell.algorithms?.find((alg) => alg.primary);
-  const displayText = primaryAlg?.displayText ?? "";
+
+  const displayText =
+    cellDisplayMode === "words"
+      ? (cell.memoryData?.word ?? "")
+      : (primaryAlg?.displayText ?? "");
 
   return (
     <div className="cycle-sheet-cell" onClick={onClick}>

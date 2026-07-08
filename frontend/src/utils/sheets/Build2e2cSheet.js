@@ -44,6 +44,17 @@ function sortPiecesByLetter(pieces = [], letterScheme = {}) {
   });
 }
 
+function getPieceLetter(piece, letterScheme = {}) {
+  return letterScheme[piece] ?? "";
+}
+
+function buildMemoryData(pieces = [], letterScheme = {}) {
+  return {
+    letters: pieces.map((piece) => getPieceLetter(piece, letterScheme)).join(""),
+    word: "",
+  };
+}
+
 async function load2E2CCase(edgeSwap, columnPiece, rowPiece, blankSheet) {
   if (!edgeSwap[0] || !edgeSwap[1]) {
     return {
@@ -106,7 +117,8 @@ async function build2E2CColumn(
   columnPiece,
   columnIndex,
   rowTargets,
-  blankSheet
+  blankSheet,
+  letterScheme
 ) {
   const rows = await Promise.all(
     rowTargets.map(async (rowPiece) => {
@@ -134,6 +146,7 @@ async function build2E2CColumn(
         algorithms: loadedCase.algorithms,
         training: false,
         startedTraining: null,
+        memoryData: buildMemoryData([columnPiece, rowPiece], letterScheme),
       };
     })
   );
@@ -162,7 +175,8 @@ async function build2E2CData({
         columnPiece,
         columnIndex,
         rowTargets,
-        blankSheet
+        blankSheet,
+        letterScheme
       )
     )
   );

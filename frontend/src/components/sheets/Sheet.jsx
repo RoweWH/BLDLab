@@ -1,24 +1,34 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { BufferColumn } from "./BufferColumn";
 import "./Sheet.css";
 import { Column } from "./Column";
 import { TrainingCheckbox } from "./TrainingCheckbox";
-import { getCurrentUser } from "../../api/userApi";
 import { formatPiecesWithLetters } from "../../utils/sheets/FormatPiecesWithLetters";
 import { AlgModal } from "./AlgModal/AlgModal";
 
 function countAlgorithms(columns = []) {
-  return columns.reduce((total, column) => {
-    return (
-      total + column.rows.filter((row) => row.algorithms?.length > 0).length
-    );
-  }, 0);
+  return columns.reduce(
+    (total, column) =>
+      total + column.rows.filter((row) => row.algorithms?.length > 0).length,
+    0,
+  );
+}
+
+function countWords(columns = []) {
+  return columns.reduce(
+    (total, column) =>
+      total +
+      column.rows.filter((row) => row.id && row.memoryData?.word?.trim())
+        .length,
+    0,
+  );
 }
 
 function countCases(columns = []) {
-  return columns.reduce((total, column) => {
-    return total + column.rows.filter((row) => row.id).length;
-  }, 0);
+  return columns.reduce(
+    (total, column) => total + column.rows.filter((row) => row.id).length,
+    0,
+  );
 }
 
 function getBufferColumnMultiplier(bufferColumns = [], index) {
@@ -42,6 +52,8 @@ function renderBufferColumns(bufferColumns, letterScheme, selected = false) {
 
 export function Sheet({
   sheet,
+  letterScheme,
+  cellDisplayMode,
   onUpdate,
   onToggleCellTraining,
   onToggleColumnTraining,
@@ -49,27 +61,13 @@ export function Sheet({
 }) {
   const [selectedColumnPiece, setSelectedColumnPiece] = useState(null);
   const [selectedCell, setSelectedCell] = useState(null);
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    async function loadUser() {
-      const response = await getCurrentUser();
-      setUser(response.data);
-    }
-
-    loadUser();
-  }, []);
-
-  const letterScheme =
-    sheet.type === "edges"
-      ? user?.letterScheme?.edges
-      : user?.letterScheme?.corners;
 
   const headerInfo = sheet.options?.headerInfo ?? [];
   const bufferColumns = sheet.data?.bufferColumns ?? [];
   const columns = sheet.data?.columns ?? [];
 
   const algorithmCount = countAlgorithms(columns);
+  const wordCount = countWords(columns);
   const caseCount = countCases(columns);
 
   const validRows = columns.flatMap((column) =>
@@ -99,10 +97,20 @@ export function Sheet({
     setSelectedCell(null);
   }
 
-  function saveAlgorithms(algorithms) {
+  function saveAlgorithms(algorithms, memoryData) {
     if (!selectedCell?.id || !selectedCell?.columnPiece) return;
 
-    onUpdate(selectedCell.columnPiece, selectedCell.id, algorithms);
+    onUpdate(selectedCell.columnPiece, selectedCell.id, algorithms, memoryData);
+
+    setSelectedCell((current) =>
+      current
+        ? {
+            ...current,
+            algorithms,
+            memoryData,
+          }
+        : current,
+    );
   }
 
   function toggleModalTraining(columnPiece, caseId, checked) {
@@ -129,7 +137,8 @@ export function Sheet({
               <div>{headerInfo.join(" ")}</div>
 
               <div>
-                ({algorithmCount}/{caseCount})
+                ({cellDisplayMode === "algorithms" ? algorithmCount : wordCount}
+                /{caseCount})
               </div>
 
               <label className="training-control training-control--sheet">
@@ -175,6 +184,7 @@ export function Sheet({
               <Column
                 column={column}
                 letterScheme={letterScheme}
+                cellDisplayMode={cellDisplayMode}
                 isSelected={isSelected}
                 onHeaderClick={toggleSelectedColumn}
                 onCellClick={(cell) => openAlgModal(column.piece, cell)}

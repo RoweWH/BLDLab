@@ -9,6 +9,7 @@ const MIN_WIDTH = 200;
 export function Column({
   column,
   letterScheme,
+  cellDisplayMode,
   isSelected,
   onHeaderClick,
   onCellClick,
@@ -93,6 +94,7 @@ export function Column({
         <Cell
           key={`${column.piece}-${row.id ?? row.piece ?? index}`}
           cell={row}
+          cellDisplayMode={cellDisplayMode}
           isSelected={isSelected}
           onClick={() => onCellClick(row)}
           onToggleTraining={(rowId, checked) =>

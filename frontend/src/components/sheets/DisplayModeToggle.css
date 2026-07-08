@@ -1,0 +1,35 @@
+.display-mode-toggle {
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+
+   padding: 0.2rem;
+
+   border: 1px solid var(--border);
+   border-radius: 999px;
+
+   background: var(--surface);
+}
+
+.display-mode-toggle__option {
+   padding: 0.35rem 0.7rem;
+
+   border: none;
+   border-radius: 999px;
+
+   background: transparent;
+   color: var(--text-muted);
+
+   font-size: 0.8rem;
+   font-weight: 800;
+
+   cursor: pointer;
+}
+
+.display-mode-toggle__option--active {
+   background: var(--accent);
+   color: white;
+}
+
+.display-mode-toggle__option:not(.display-mode-toggle__option--active):hover {
+   color: var(--text);
+}

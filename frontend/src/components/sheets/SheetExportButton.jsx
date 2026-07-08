@@ -12,7 +12,19 @@ function escapeCsvValue(value) {
   return stringValue;
 }
 
-function getCellText(row) {
+function getHeaderText(piece, cellDisplayMode, letterScheme) {
+  if (cellDisplayMode === "words") {
+    return letterScheme?.[piece] ?? "";
+  }
+
+  return piece;
+}
+
+function getCellText(row, cellDisplayMode) {
+  if (cellDisplayMode === "words") {
+    return row.memoryData?.word ?? "";
+  }
+
   return row.algorithms?.map((alg) => alg.displayText).join("\n") ?? "";
 }
 
@@ -31,7 +43,7 @@ function expandBufferColumn(bufferColumn, targetLength) {
   return expanded.slice(0, targetLength);
 }
 
-function createSheetCsv(sheet) {
+function createSheetCsv(sheet, cellDisplayMode, letterScheme) {
   const rows = [];
   const bufferColumns = sheet.data.bufferColumns ?? [];
   const columns = sheet.data.columns ?? [];
@@ -48,17 +60,19 @@ function createSheetCsv(sheet) {
 
   rows.push([
     ...expandedBufferColumns.map(() => ""),
-    ...columns.map((column) => column.piece),
+    ...columns.map((column) =>
+      getHeaderText(column.piece, cellDisplayMode, letterScheme),
+    ),
   ]);
 
   for (let rowIndex = 0; rowIndex < maxRows; rowIndex++) {
     rows.push([
-      ...expandedBufferColumns.map(
-        (bufferColumn) => bufferColumn[rowIndex] ?? "",
+      ...expandedBufferColumns.map((bufferColumn) =>
+        getHeaderText(bufferColumn[rowIndex], cellDisplayMode, letterScheme),
       ),
       ...columns.map((column) => {
         const row = column.rows[rowIndex];
-        return row ? getCellText(row) : "";
+        return row ? getCellText(row, cellDisplayMode) : "";
       }),
     ]);
   }
@@ -90,10 +104,10 @@ function downloadCsv(filename, csv) {
   URL.revokeObjectURL(url);
 }
 
-export function SheetExportButton({ sheet }) {
+export function SheetExportButton({ sheet, letterScheme, cellDisplayMode }) {
   function exportSheetCsv() {
-    const csv = createSheetCsv(sheet);
-    const filename = `${getSafeFileName(sheet.name)}.csv`;
+    const csv = createSheetCsv(sheet, cellDisplayMode, letterScheme);
+    const filename = `${getSafeFileName(sheet.name)}-${cellDisplayMode}.csv`;
 
     downloadCsv(filename, csv);
   }

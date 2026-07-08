@@ -2,7 +2,6 @@ import { edgePieces } from "../../data/pieces/EdgePieces";
 import { cornerPieces } from "../../data/pieces/CornerPieces";
 import { getEdgeAlgs, getCornerAlgs } from "../../api/algApi";
 
-
 function buildCycleCaseInfo(buffer, columnPiece, rowPiece) {
   return `${buffer} → ${columnPiece} → ${rowPiece}`;
 }
@@ -21,10 +20,7 @@ function pieceIsInList(piece, list = []) {
 
 function getTargets(pieces, buffer, exclude = []) {
   return pieces.filter((piece) => {
-    return (
-      !pieceIsInList(piece, [buffer]) &&
-      !pieceIsInList(piece, exclude)
-    );
+    return !pieceIsInList(piece, [buffer]) && !pieceIsInList(piece, exclude);
   });
 }
 
@@ -35,6 +31,17 @@ function sortPiecesByLetter(pieces = [], letterScheme = {}) {
 
     return letterA.localeCompare(letterB);
   });
+}
+
+function getPieceLetter(piece, letterScheme = {}) {
+  return letterScheme[piece] ?? "";
+}
+
+function buildMemoryData(pieces = [], letterScheme = {}) {
+  return {
+    letters: pieces.map((piece) => getPieceLetter(piece, letterScheme)).join(""),
+    word: "",
+  };
 }
 
 async function loadCase(type, buffer, first, second, blankSheet) {
@@ -86,7 +93,14 @@ async function loadCase(type, buffer, first, second, blankSheet) {
   }
 }
 
-async function buildColumn(type, buffer, columnPiece, rowTargets, blankSheet) {
+async function buildColumn(
+  type,
+  buffer,
+  columnPiece,
+  rowTargets,
+  blankSheet,
+  letterScheme
+) {
   const rows = await Promise.all(
     rowTargets.map(async (rowPiece) => {
       const invalid = normalizePiece(columnPiece) === normalizePiece(rowPiece);
@@ -114,6 +128,7 @@ async function buildColumn(type, buffer, columnPiece, rowTargets, blankSheet) {
         algorithms: loadedCase.algorithms,
         training: false,
         startedTraining: null,
+        memoryData: buildMemoryData([columnPiece, rowPiece], letterScheme),
       };
     })
   );
@@ -139,7 +154,14 @@ async function buildSheetData({
 
   const columns = await Promise.all(
     targets.map((columnPiece) =>
-      buildColumn(type, buffer, columnPiece, targets, blankSheet)
+      buildColumn(
+        type,
+        buffer,
+        columnPiece,
+        targets,
+        blankSheet,
+        letterScheme
+      )
     )
   );
 

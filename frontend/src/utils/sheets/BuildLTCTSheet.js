@@ -1,7 +1,6 @@
 import { cornerPieces } from "../../data/pieces/CornerPieces";
 import { getParityAlgs } from "../../api/algApi";
 
-
 function buildLTCTCaseInfo(edgeSwap, buffer, columnPiece, rowPiece) {
   return `${edgeSwap[0]}/${edgeSwap[1]}\n${buffer} → ${columnPiece}\n(${rowPiece})`;
 }
@@ -25,10 +24,7 @@ function startsWithUOrD(piece = "") {
 
 function getColumnTargets(buffer, exclude = []) {
   return cornerPieces.filter((corner) => {
-    return (
-      !pieceIsInList(corner, [buffer]) &&
-      !pieceIsInList(corner, exclude)
-    );
+    return !pieceIsInList(corner, [buffer]) && !pieceIsInList(corner, exclude);
   });
 }
 
@@ -49,6 +45,17 @@ function sortPiecesByLetter(pieces = [], letterScheme = {}) {
 
     return letterA.localeCompare(letterB);
   });
+}
+
+function getPieceLetter(piece, letterScheme = {}) {
+  return letterScheme[piece] ?? "";
+}
+
+function buildMemoryData(pieces = [], letterScheme = {}) {
+  return {
+    letters: pieces.map((piece) => getPieceLetter(piece, letterScheme)).join(""),
+    word: "",
+  };
 }
 
 async function loadLTCTCase(
@@ -124,7 +131,8 @@ async function buildLTCTColumn(
   buffer,
   columnPiece,
   rowTargets,
-  blankSheet
+  blankSheet,
+  letterScheme
 ) {
   const rows = await Promise.all(
     rowTargets.map(async (rowPiece) => {
@@ -153,6 +161,7 @@ async function buildLTCTColumn(
         algorithms: loadedCase.algorithms,
         training: false,
         startedTraining: null,
+        memoryData: buildMemoryData([columnPiece, rowPiece], letterScheme),
       };
     })
   );
@@ -182,7 +191,14 @@ async function buildLTCTData({
 
   const columns = await Promise.all(
     columnTargets.map((columnPiece) =>
-      buildLTCTColumn(edgeSwap, buffer, columnPiece, rowTargets, blankSheet)
+      buildLTCTColumn(
+        edgeSwap,
+        buffer,
+        columnPiece,
+        rowTargets,
+        blankSheet,
+        letterScheme
+      )
     )
   );
 

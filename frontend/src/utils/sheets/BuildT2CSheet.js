@@ -77,6 +77,17 @@ function sortPiecesByLetter(pieces = [], letterScheme = {}) {
   });
 }
 
+function getPieceLetter(piece, letterScheme = {}) {
+  return letterScheme[piece] ?? "";
+}
+
+function buildMemoryData(pieces = [], letterScheme = {}) {
+  return {
+    letters: pieces.map((piece) => getPieceLetter(piece, letterScheme)).join(""),
+    word: "",
+  };
+}
+
 function buildRowTargets(firstBufferTargets, twistTargets) {
   return twistTargets.map((twistPiece, index) => {
     const firstBufferIndex = Math.floor(index / 2);
@@ -164,7 +175,8 @@ async function buildT2CColumn(
   columnPiece,
   columnIndex,
   rowTargets,
-  blankSheet
+  blankSheet,
+  letterScheme
 ) {
   const rows = await Promise.all(
     rowTargets.map(async (rowTarget) => {
@@ -173,7 +185,13 @@ async function buildT2CColumn(
         columnIndex,
         rowTarget.piece
       );
-      const caseInfo = buildT2CCaseInfo(edgeSwap, columnPiece, rowTarget.piece, rowTarget.twistPiece);
+
+      const caseInfo = buildT2CCaseInfo(
+        edgeSwap,
+        columnPiece,
+        rowTarget.piece,
+        rowTarget.twistPiece
+      );
 
       if (invalid) {
         return {
@@ -199,6 +217,10 @@ async function buildT2CColumn(
         algorithms: loadedCase.algorithms,
         training: false,
         startedTraining: null,
+        memoryData: buildMemoryData(
+          [columnPiece, rowTarget.piece, rowTarget.twistPiece],
+          letterScheme
+        ),
       };
     })
   );
@@ -242,7 +264,8 @@ async function buildT2CData({
         columnPiece,
         columnIndex,
         rowTargets,
-        blankSheet
+        blankSheet,
+        letterScheme
       )
     )
   );

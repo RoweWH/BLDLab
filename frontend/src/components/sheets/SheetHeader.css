@@ -50,3 +50,28 @@
     justify-content: flex-start;
   }
 }
+
+.sheet-header__left {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.sheet-header__display-toggle {
+  padding: 0.45rem 0.75rem;
+
+  border: 1px solid var(--border);
+  border-radius: 999px;
+
+  background: var(--surface);
+  color: var(--text);
+
+  font-size: 0.85rem;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.sheet-header__display-toggle:hover {
+  border-color: var(--accent);
+}
