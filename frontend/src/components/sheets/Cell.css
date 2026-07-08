@@ -4,21 +4,27 @@
 
 .cycle-sheet-cell {
   position: relative;
+
   width: var(--sheet-cell-width);
   height: var(--sheet-cell-height);
-  box-sizing: border-box;
-  border: 1px solid var(--border);
+
   display: flex;
   align-items: center;
   justify-content: center;
+
+  box-sizing: border-box;
   padding: 5px;
-  text-align: center;
+
+  border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
+
+  text-align: center;
   font-size: 0.68rem;
   line-height: 1.15;
-  overflow: hidden;
   word-break: break-word;
+
+  overflow: hidden;
 }
 
 .cycle-sheet-cell:hover {
@@ -35,6 +41,7 @@
       rgba(100, 100, 100, 0.14) 8px,
       rgba(100, 100, 100, 0.14) 16px),
     var(--surface);
+
   opacity: 0.55;
   pointer-events: none;
 }

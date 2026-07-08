@@ -10,7 +10,6 @@
   --sheet-selected-column-width: 360px;
 
   position: relative;
-  inset: auto;
   z-index: 1;
 
   flex: 1;
@@ -32,28 +31,24 @@
 
 .cycle-sheet__buffer-area,
 .cycle-sheet__column-group,
-.cycle-sheet__buffer-columns,
-.buffer-column,
-.cycle-sheet-column {
+.cycle-sheet__buffer-columns {
   display: flex;
   flex: 0 0 auto;
 }
 
-.cycle-sheet__buffer-area,
-.buffer-column,
-.cycle-sheet-column {
+.cycle-sheet__buffer-area {
+  position: sticky;
+  left: 0;
+  z-index: 70;
+
   flex-direction: column;
+
+  background: var(--surface-elevated);
 }
 
 .cycle-sheet__buffer-columns,
 .cycle-sheet__column-group {
   align-items: flex-start;
-}
-
-.cycle-sheet__buffer-area,
-.buffer-column,
-.cycle-sheet-column {
-  background: var(--surface-elevated);
 }
 
 .cycle-sheet__column-group--blurred {
@@ -67,18 +62,27 @@
 }
 
 .cycle-sheet__top-left-header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 120;
+
   width: calc(var(--sheet-cell-width) * var(--buffer-count));
-  flex-direction: column;
   height: var(--sheet-header-height);
-  box-sizing: border-box;
-  border: 1px solid var(--border);
+
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+
+  box-sizing: border-box;
   padding: 5px;
-  text-align: center;
+
+  border: 1px solid var(--border);
   background: var(--accent);
   color: white;
+
+  text-align: center;
   font-weight: 800;
   font-size: 0.85rem;
   line-height: 1.15;

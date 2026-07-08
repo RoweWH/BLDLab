@@ -4,14 +4,17 @@
 
 .cycle-sheet-column {
   position: relative;
+
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
+
   background: var(--surface-elevated);
 }
 
 .cycle-sheet-column--selected {
   position: relative;
+
   background: var(--surface-elevated);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
 }
@@ -27,32 +30,46 @@
 }
 
 .cycle-sheet-column__header {
-  position: relative;
-  overflow: visible;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+
   width: var(--sheet-cell-width);
   height: var(--sheet-header-height);
-  box-sizing: border-box;
-  border: 1px solid var(--border);
+
   display: flex;
   align-items: center;
   justify-content: center;
+
+  box-sizing: border-box;
   padding: 5px;
-  text-align: center;
+
+  border: 1px solid var(--border);
   background: var(--accent);
   color: white;
+
+  text-align: center;
   font-weight: 800;
   font-size: 0.85rem;
   line-height: 1.15;
   white-space: pre-line;
+
   cursor: pointer;
+}
+
+.cycle-sheet-column__header>span:first-child {
+  text-align: center;
 }
 
 .cycle-sheet-column__resize-handle {
   position: absolute;
   top: 0;
   right: -6px;
+  z-index: 90;
+
   width: 12px;
   height: 100%;
+
   cursor: ew-resize;
 }
 
@@ -62,17 +79,15 @@
 
 .cycle-sheet-column__resize-handle::after {
   content: '';
+
   position: absolute;
   top: 0;
   right: 5px;
+
   width: 2px;
   height: 100%;
 }
 
 .cycle-sheet-column__resize-handle:hover::after {
   background: var(--accent);
-}
-
-.cycle-sheet-column__header > span:first-child {
-  text-align: center;
 }
