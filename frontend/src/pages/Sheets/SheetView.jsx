@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { Sheet } from "../../components/sheets/Sheet";
 import { SheetHeader } from "../../components/sheets/SheetHeader";
 import { getSheet, updateSheet } from "../../api/sheetApi";
+import "./SheetView.css";
 
 function updateSheetCellAlgorithms(sheet, columnPiece, caseId, algorithms) {
   return {

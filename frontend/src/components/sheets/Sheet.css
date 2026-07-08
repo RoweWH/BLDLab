@@ -1,0 +1,86 @@
+/* =========================
+   BLDLab Sheet.css
+   ========================= */
+
+.cycle-sheet {
+  --sheet-cell-width: 115px;
+  --sheet-cell-height: 42px;
+  --sheet-header-height: 64px;
+  --sheet-selected-cell-height: 60px;
+  --sheet-selected-column-width: 360px;
+
+  position: relative;
+  inset: auto;
+  z-index: 1;
+
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+
+  overflow: auto;
+
+  border: 1px solid var(--border);
+  border-radius: 14px;
+
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow);
+}
+
+.cycle-sheet__buffer-area,
+.cycle-sheet__column-group,
+.cycle-sheet__buffer-columns,
+.buffer-column,
+.cycle-sheet-column {
+  display: flex;
+  flex: 0 0 auto;
+}
+
+.cycle-sheet__buffer-area,
+.buffer-column,
+.cycle-sheet-column {
+  flex-direction: column;
+}
+
+.cycle-sheet__buffer-columns,
+.cycle-sheet__column-group {
+  align-items: flex-start;
+}
+
+.cycle-sheet__buffer-area,
+.buffer-column,
+.cycle-sheet-column {
+  background: var(--surface-elevated);
+}
+
+.cycle-sheet__column-group--blurred {
+  filter: blur(2px);
+  opacity: 0.35;
+}
+
+.cycle-sheet__column-group--selected {
+  position: relative;
+  z-index: 80;
+}
+
+.cycle-sheet__top-left-header {
+  width: calc(var(--sheet-cell-width) * var(--buffer-count));
+  flex-direction: column;
+  height: var(--sheet-header-height);
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  text-align: center;
+  background: var(--accent);
+  color: white;
+  font-weight: 800;
+  font-size: 0.85rem;
+  line-height: 1.15;
+  white-space: pre-line;
+}

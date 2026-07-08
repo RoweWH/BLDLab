@@ -1,4 +1,5 @@
 import { useCallback, useSyncExternalStore } from "react";
+import "./ThemeToggle.css";
 
 function getSnapshot() {
   return document.documentElement.dataset.theme === "dark";

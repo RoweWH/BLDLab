@@ -1,0 +1,55 @@
+#center {
+  max-width: 30rem;
+  margin-inline: auto;
+}
+
+.import-section {
+  max-width: 800px;
+  margin: 2rem auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.upload-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.results-section {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.result-dropdown {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-elevated);
+}
+
+.result-dropdown summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.result-content {
+  max-height: 250px;
+  margin-top: 0.75rem;
+  overflow-y: auto;
+  font-family: var(--mono);
+  white-space: pre-wrap;
+}
+
+@media (max-width: 700px) {
+  .upload-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

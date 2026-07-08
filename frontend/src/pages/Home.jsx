@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import "./Home.css";
 
 export function Home() {
   return (
@@ -7,7 +8,8 @@ export function Home() {
         <h1>BLDLAB</h1>
 
         <p>
-          A Rubik's Cube blindfolded solving algorithm database. More features coming soon!
+          A Rubik's Cube blindfolded solving algorithm database. More features
+          coming soon!
         </p>
       </section>
     </div>

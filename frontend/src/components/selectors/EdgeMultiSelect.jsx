@@ -1,4 +1,5 @@
 import { edgePieces } from "../../data/pieces/EdgePieces";
+import "./Selectors.css";
 
 function normalizePiece(piece) {
   return piece.split("").sort().join("");

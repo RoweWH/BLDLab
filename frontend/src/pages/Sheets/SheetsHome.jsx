@@ -7,6 +7,7 @@ import { build2e2cSheet } from "../../utils/sheets/Build2e2cSheet";
 import { buildLTCTSheet } from "../../utils/sheets/BuildLTCTSheet";
 import { buildT2CSheet } from "../../utils/sheets/BuildT2CSheet";
 import { getCurrentUser } from "../../api/userApi";
+import "./SheetsHome.css";
 
 export function SheetsHome() {
   const [sheets, setSheets] = useState([]);

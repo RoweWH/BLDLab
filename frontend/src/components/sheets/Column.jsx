@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Cell } from "./Cell";
 import { TrainingCheckbox } from "./TrainingCheckbox";
+import "./Column.css";
 
 const DEFAULT_WIDTH = 360;
 const MIN_WIDTH = 200;
@@ -76,7 +77,6 @@ export function Column({
 
         {isSelected && (
           <label className="training-control training-control--header">
-
             <TrainingCheckbox
               checked={allRowsTraining}
               stopPropagation

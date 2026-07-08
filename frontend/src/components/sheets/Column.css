@@ -1,0 +1,78 @@
+/* =========================
+   BLDLab Column.css
+   ========================= */
+
+.cycle-sheet-column {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  background: var(--surface-elevated);
+}
+
+.cycle-sheet-column--selected {
+  position: relative;
+  background: var(--surface-elevated);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+}
+
+.cycle-sheet-column--selected .cycle-sheet-column__header,
+.cycle-sheet-column--selected .cycle-sheet-cell {
+  width: var(--selected-column-width);
+  font-size: 0.85rem;
+}
+
+.cycle-sheet-column--selected .cycle-sheet-cell {
+  height: var(--sheet-selected-cell-height);
+}
+
+.cycle-sheet-column__header {
+  position: relative;
+  overflow: visible;
+  width: var(--sheet-cell-width);
+  height: var(--sheet-header-height);
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  text-align: center;
+  background: var(--accent);
+  color: white;
+  font-weight: 800;
+  font-size: 0.85rem;
+  line-height: 1.15;
+  white-space: pre-line;
+  cursor: pointer;
+}
+
+.cycle-sheet-column__resize-handle {
+  position: absolute;
+  top: 0;
+  right: -6px;
+  width: 12px;
+  height: 100%;
+  cursor: ew-resize;
+}
+
+.cycle-sheet-column__resize-handle:hover {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.cycle-sheet-column__resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 5px;
+  width: 2px;
+  height: 100%;
+}
+
+.cycle-sheet-column__resize-handle:hover::after {
+  background: var(--accent);
+}
+
+.cycle-sheet-column__header > span:first-child {
+  text-align: center;
+}

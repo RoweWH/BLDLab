@@ -1,3 +1,5 @@
+import "./BufferColumn.css";
+
 export function BufferColumn({
   pieces = [],
   multiplier = 1,

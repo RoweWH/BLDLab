@@ -1,32 +1,48 @@
+/* =========================
+   BLDLab TrainingCheckbox.css
+   ========================= */
+
 .training-checkbox-wrapper {
-   display: inline-flex;
-   align-items: center;
-   gap: 0.4rem;
-
-   margin: 0;
-   padding: 0;
-
-   line-height: 1;
-   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  line-height: 1;
+  font-size: 0.75rem;
+  font-weight: 700;
+  opacity: 0.85;
+  cursor: pointer;
+  user-select: none;
 }
 
-.training-checkbox-label {
-   display: inline-flex;
-   align-items: center;
-
-   line-height: 1;
-   font-size: 0.75rem;
+.training-checkbox-wrapper > span {
+  display: inline-block;
+  line-height: 1;
 }
 
-.training-checkbox {
-   width: 0.8rem;
-   height: 0.8rem;
+.training-control--cell {
+  position: absolute;
+  right: 0.4rem;
+  bottom: 0.3rem;
+  z-index: 2;
+}
 
-   margin: 0;
-   padding: 0;
+.training-control--header {
+  position: absolute;
+  right: 0.4rem;
+  bottom: 0.35rem;
+  z-index: 2;
+  color: white;
+}
 
-   cursor: pointer;
-   accent-color: var(--ink);
+.training-control--sheet {
+  margin-top: 0.35rem;
+}
 
-   flex-shrink: 0;
+.training-control--header,
+.training-checkbox-wrapper.training-control--header {
+  position: absolute;
+  right: 0.4rem;
+  bottom: 0.3rem;
+  z-index: 5;
 }

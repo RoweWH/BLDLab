@@ -1,5 +1,5 @@
 import { cornerPieces } from "../../data/pieces/CornerPieces";
-
+import "./Selectors.css";
 function normalizePiece(piece) {
   return piece.split("").sort().join("");
 }

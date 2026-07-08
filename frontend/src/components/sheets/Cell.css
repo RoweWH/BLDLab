@@ -1,0 +1,47 @@
+/* =========================
+   BLDLab Cell.css
+   ========================= */
+
+.cycle-sheet-cell {
+  position: relative;
+  width: var(--sheet-cell-width);
+  height: var(--sheet-cell-height);
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  text-align: center;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.68rem;
+  line-height: 1.15;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.cycle-sheet-cell:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.cycle-sheet-cell--invalid {
+  background:
+    repeating-linear-gradient(45deg,
+      rgba(100, 100, 100, 0.08),
+      rgba(100, 100, 100, 0.08) 8px,
+      rgba(100, 100, 100, 0.14) 8px,
+      rgba(100, 100, 100, 0.14) 16px),
+    var(--surface);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.cycle-sheet-cell__alg {
+  display: block;
+  width: 100%;
+  padding: 0 0.25rem;
+  text-align: center;
+}

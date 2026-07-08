@@ -1,4 +1,5 @@
 import { TrainingCheckbox } from "./TrainingCheckbox";
+import "./Cell.css";
 
 export function Cell({ cell, isSelected, onClick, onToggleTraining }) {
   if (!cell.id) {
@@ -14,7 +15,6 @@ export function Cell({ cell, isSelected, onClick, onToggleTraining }) {
 
       {isSelected && (
         <label className="training-control training-control--cell">
-
           <TrainingCheckbox
             checked={cell.training === true}
             stopPropagation

@@ -1,0 +1,52 @@
+/* =========================
+   BLDLab SheetHeader.css
+   ========================= */
+
+.sheet-header {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+  min-height: 56px;
+}
+
+.sheet-header__left {
+  min-height: 1px;
+}
+
+.sheet-header__center {
+  text-align: center;
+}
+
+.sheet-header__center h1 {
+  margin: 0;
+  color: var(--text-h);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.sheet-header__center span {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.sheet-header__right {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+@media (max-width: 700px) {
+  .sheet-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sheet-header__actions {
+    justify-content: flex-start;
+  }
+}

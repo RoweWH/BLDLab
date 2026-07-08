@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { EdgeDropdown } from "../selectors/EdgeDropdown";
+import "./CreateSheetModal.css";
 import { CornerDropdown } from "../selectors/CornerDropdown";
 import { EdgeMultiSelect } from "../selectors/EdgeMultiSelect";
 import { CornerMultiSelect } from "../selectors/CornerMultiSelect";
@@ -82,7 +83,10 @@ export function CreateSheetModal({ onClose, onCreate }) {
 
     if (isT2C) {
       return {
-        headerInfo: [`${form.edgeSwap[0]}/${form.edgeSwap[1]}`, form.twistedCorner],
+        headerInfo: [
+          `${form.edgeSwap[0]}/${form.edgeSwap[1]}`,
+          form.twistedCorner,
+        ],
         edgeSwap: form.edgeSwap,
         twistedCorner: form.twistedCorner,
         bufferOrder: form.bufferOrder,

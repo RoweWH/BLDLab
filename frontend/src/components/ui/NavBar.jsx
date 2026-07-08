@@ -4,6 +4,7 @@ import { ThemeToggle } from "../layout/ThemeToggle";
 import { AuthStatus } from "../auth/AuthStatus";
 import logoDark from "../../assets/BLDLabLogoDark.png";
 import logoLight from "../../assets/BLDLabLogoLight.png";
+import "./NavBar.css";
 
 const linkClass = ({ isActive }) =>
   "nav-bar__link" + (isActive ? " nav-bar__link--active" : "");

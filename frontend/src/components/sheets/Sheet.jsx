@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { BufferColumn } from "./BufferColumn";
+import "./Sheet.css";
 import { Column } from "./Column";
 import { TrainingCheckbox } from "./TrainingCheckbox";
 import { getCurrentUser } from "../../api/userApi";
@@ -132,7 +133,6 @@ export function Sheet({
               </div>
 
               <label className="training-control training-control--sheet">
-
                 <TrainingCheckbox
                   checked={wholeSheetTraining}
                   title="Train whole sheet"

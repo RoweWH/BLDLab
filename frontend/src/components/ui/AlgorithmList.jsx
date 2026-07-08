@@ -1,3 +1,5 @@
+import "./AlgorithmList.css";
+
 export function AlgorithmList({ data }) {
     return (
       <div className="algorithms-container">

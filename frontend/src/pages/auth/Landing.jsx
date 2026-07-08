@@ -1,6 +1,7 @@
 import logoDark from "../../assets/BLDLabLogoDark.png";
 import logoLight from "../../assets/BLDLabLogoLight.png";
 import { ThemeToggle } from "../../components/layout/ThemeToggle";
+import "./Landing.css";
 import { useLocation } from "react-router-dom";
 import { useSyncExternalStore, useState } from "react";
 import { Login } from "../../components/auth/Login";
