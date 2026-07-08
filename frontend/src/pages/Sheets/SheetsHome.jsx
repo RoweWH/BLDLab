@@ -64,7 +64,6 @@ export function SheetsHome() {
   if (loading) {
     return (
       <div className="page">
-        <h1>My Sheets</h1>
         <p>Loading sheets...</p>
       </div>
     );
@@ -72,7 +71,6 @@ export function SheetsHome() {
 
   return (
     <div className="page">
-      <h1>My Sheets</h1>
 
       <div className="sheet-grid">
         <button

@@ -77,11 +77,6 @@ export function NavBar() {
               </NavLink>
             </li>
             <li>
-              <NavLink to="/import" className={linkClass}>
-                Import
-              </NavLink>
-            </li>
-            <li>
               <NavLink to="/edges" className={linkClass}>
                 Edges
               </NavLink>
@@ -135,6 +130,11 @@ export function NavBar() {
                   </li>
                 </ul>
               )}
+            </li>
+            <li>
+              <NavLink to="/sheets" className={linkClass}>
+                My Sheets
+              </NavLink>
             </li>
           </ul>
         </nav>
