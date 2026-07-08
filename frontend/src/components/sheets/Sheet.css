@@ -3,7 +3,7 @@
    ========================= */
 
 .cycle-sheet {
-  --sheet-cell-width: 115px;
+  --sheet-cell-width: 120px;
   --sheet-cell-height: 42px;
   --sheet-header-height: 64px;
   --sheet-selected-cell-height: 60px;
