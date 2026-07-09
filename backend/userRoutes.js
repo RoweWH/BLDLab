@@ -110,11 +110,12 @@ userRoutes.route("/users/me").get(verifyToken, async (request, response) => {
       }
 
       response.json({
-         name: user.name,
-         email: user.email,
-         letterScheme: normalizeLetterScheme(user.letterScheme),
-         orientation: user.orientation,
-      });
+   name: user.name,
+   email: user.email,
+   isAdmin: user.isAdmin ?? false,
+   letterScheme: normalizeLetterScheme(user.letterScheme),
+   orientation: user.orientation,
+});
    } catch (error) {
       console.log("USERS ME ERROR:", error);
 

@@ -76,7 +76,7 @@ export function Home() {
         <p>
           BLDLab is currently in beta. This release focuses on providing a
           shared algorithm database and practical sheet organization tools. More
-          features are actively being developed. Please note: some data created during this testing period may not be preserved when
+          features are actively being developed, as well as a cleaner UI. Please note: some data created during this testing period may not be preserved when
           BLDLab is officially released. 
         </p>
       </section>

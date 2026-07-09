@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { NavLink } from "react-router-dom";
-import { ThemeToggle } from "../layout/ThemeToggle";
 import { AuthStatus } from "../auth/AuthStatus";
+import { SettingsButton } from "../settings/SettingsButton";
+import { getCurrentUser } from "../../api/userApi";
 import logoDark from "../../assets/BLDLabLogoDark.png";
 import logoLight from "../../assets/BLDLabLogoLight.png";
 import "./NavBar.css";
-import { SettingsButton } from "../settings/SettingsButton";
 
 const linkClass = ({ isActive }) =>
   "nav-bar__link" + (isActive ? " nav-bar__link--active" : "");
@@ -29,7 +29,21 @@ function subscribeToTheme(callback) {
 
 export function NavBar() {
   const [showParityDropdown, setShowParityDropdown] = useState(false);
+  const [user, setUser] = useState(null);
   const parityCloseTimer = useRef(null);
+
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const response = await getCurrentUser();
+        setUser(response.data);
+      } catch {
+        setUser(null);
+      }
+    }
+
+    loadUser();
+  }, []);
 
   const clearParityCloseTimer = () => {
     if (parityCloseTimer.current != null) {
@@ -70,6 +84,7 @@ export function NavBar() {
             width="auto"
           />
         </NavLink>
+
         <nav className="nav-bar__nav" aria-label="Primary">
           <ul className="nav-bar__list">
             <li>
@@ -77,16 +92,19 @@ export function NavBar() {
                 Home
               </NavLink>
             </li>
+
             <li>
               <NavLink to="/edges" className={linkClass}>
                 Edges
               </NavLink>
             </li>
+
             <li>
               <NavLink to="/corners" className={linkClass}>
                 Corners
               </NavLink>
             </li>
+
             <li
               className={
                 "nav-bar__parity" +
@@ -107,6 +125,7 @@ export function NavBar() {
                   ▾
                 </span>
               </button>
+
               {showParityDropdown && (
                 <ul className="nav-bar__dropdown" role="menu">
                   <li role="none">
@@ -119,6 +138,7 @@ export function NavBar() {
                       2E2C
                     </NavLink>
                   </li>
+
                   <li role="none">
                     <NavLink
                       to="/LTCT"
@@ -132,16 +152,33 @@ export function NavBar() {
                 </ul>
               )}
             </li>
+
             <li>
               <NavLink to="/sheets" className={linkClass}>
-                My Sheets
+                Sheets
               </NavLink>
             </li>
+
+            {user?.isAdmin && (
+              <>
+                <li>
+                  <NavLink to="admin/import" className={linkClass}>
+                    Import
+                  </NavLink>
+                </li>
+
+                <li>
+                  <NavLink to="/admin/algorithms" className={linkClass}>
+                    Review
+                  </NavLink>
+                </li>
+              </>
+            )}
           </ul>
         </nav>
+
         <AuthStatus />
         <SettingsButton />
-        
       </div>
     </header>
   );
