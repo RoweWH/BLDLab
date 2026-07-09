@@ -16,7 +16,7 @@ const COLOR_THEMES = [
 ];
 
 function getSnapshot() {
-  return document.documentElement.dataset.colorTheme || "orange";
+  return document.documentElement.dataset.colorTheme || "blue";
 }
 
 function subscribe(callback) {
@@ -34,7 +34,7 @@ export function ThemeColorPicker() {
   const selectedTheme = useSyncExternalStore(
     subscribe,
     getSnapshot,
-    () => "orange",
+    () => "blue",
   );
 
   const selectTheme = useCallback((themeId) => {

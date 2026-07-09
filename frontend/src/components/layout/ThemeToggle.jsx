@@ -17,7 +17,7 @@ function subscribe(callback) {
 }
 
 export function ThemeToggle({ className = "" }) {
-  const dark = useSyncExternalStore(subscribe, getSnapshot, () => false);
+  const dark = useSyncExternalStore(subscribe, getSnapshot, () => true);
 
   const toggle = useCallback(() => {
     const root = document.documentElement;

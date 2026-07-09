@@ -7,18 +7,11 @@ function initDisplaySettings() {
   const root = document.documentElement;
 
   const storedTheme = localStorage.getItem("bldlab-theme");
-
-  if (storedTheme === "light" || storedTheme === "dark") {
-    root.dataset.theme = storedTheme;
-  } else {
-    root.dataset.theme = window.matchMedia("(prefers-color-scheme: dark)")
-      .matches
-      ? "dark"
-      : "light";
-  }
+  root.dataset.theme =
+    storedTheme === "light" || storedTheme === "dark" ? storedTheme : "dark";
 
   const storedColorTheme = localStorage.getItem("bldlab-color-theme");
-  root.dataset.colorTheme = storedColorTheme || "orange";
+  root.dataset.colorTheme = storedColorTheme || "blue";
 }
 
 initDisplaySettings();
