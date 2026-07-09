@@ -1,0 +1,93 @@
+.theme-color-picker {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.theme-color-picker__label {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.theme-color-picker__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.theme-color-picker__button {
+  width: 2rem;
+  height: 2rem;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 999px;
+
+  cursor: pointer;
+}
+
+.theme-color-picker__button:hover {
+  border-color: var(--accent-border);
+}
+
+.theme-color-picker__button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.theme-color-picker__swatch {
+  width: 1.2rem;
+  height: 1.2rem;
+
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+}
+
+.theme-color-picker__button--orange .theme-color-picker__swatch {
+  background: #e76f1f;
+}
+
+.theme-color-picker__button--blue .theme-color-picker__swatch {
+  background: #2563eb;
+}
+
+.theme-color-picker__button--green .theme-color-picker__swatch {
+  background: #16a34a;
+}
+
+.theme-color-picker__button--purple .theme-color-picker__swatch {
+  background: #7c3aed;
+}
+
+.theme-color-picker__button--red .theme-color-picker__swatch {
+  background: #dc2626;
+}
+
+.theme-color-picker__button--grey .theme-color-picker__swatch {
+  background: #64748b;
+}
+
+.theme-color-picker__button--pink .theme-color-picker__swatch {
+  background: #db2777;
+}
+
+.theme-color-picker__button--cream .theme-color-picker__swatch {
+  background: #f5d08a;
+}
+
+.theme-color-picker__button--light-blue .theme-color-picker__swatch {
+  background: #7dd3fc;
+}
+
+.theme-color-picker__button--light-purple .theme-color-picker__swatch {
+  background: #c084fc;
+}
+
+.theme-color-picker__button--light-green .theme-color-picker__swatch {
+  background: #86efac;
+}

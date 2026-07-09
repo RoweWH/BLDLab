@@ -1,207 +1,121 @@
 import axios from "axios";
+import { BLDDB_API_URL } from "./apiConfig";
 
-const BLDDB = "https://rowewh.com/api";
-
-
-// ==========================
-// EDGES
-// ==========================
-
-// GET /api/edges/cases
 export async function getAllEdgeCases() {
-  const response = await axios.get(`${BLDDB}/edges/cases`);
-  return response;
+   return axios.get(`${BLDDB_API_URL}/edges/cases`);
 }
 
-// GET /api/edges/cases?buffer=UF
 export async function getEdgeCasesByBuffer(buffer) {
-  const response = await axios.get(
-    `${BLDDB}/edges/cases?buffer=${buffer}`
-  );
-
-  return response;
+   return axios.get(`${BLDDB_API_URL}/edges/cases?buffer=${buffer}`);
 }
 
-// GET /api/edges/cases?buffer=UF&first=UR&second=UB
 export async function getEdgeAlgs(buffer, first, second) {
-  const response = await axios.get(
-    `${BLDDB}/edges/cases?buffer=${buffer}&first=${first}&second=${second}`
-  );
-
-  return response;
+   return axios.get(
+      `${BLDDB_API_URL}/edges/cases?buffer=${buffer}&first=${first}&second=${second}`,
+   );
 }
 
-// GET /api/edges/cases/{caseId}/algorithms
 export async function getEdgeAlgsByCaseId(caseId) {
-  const response = await axios.get(
-    `${BLDDB}/edges/cases/${caseId}/algorithms`
-  );
-
-  return response;
+   return axios.get(`${BLDDB_API_URL}/edges/cases/${caseId}/algorithms`);
 }
 
-// GET /api/edges/algorithms/{algorithmId}
 export async function getEdgeAlgById(id) {
-  const response = await axios.get(
-    `${BLDDB}/edges/algorithms/${id}`
-  );
-
-  return response;
+   return axios.get(`${BLDDB_API_URL}/edges/algorithms/${id}`);
 }
 
-
-// ==========================
-// CORNERS
-// ==========================
-
-// GET /api/corners/cases
 export async function getAllCornerCases() {
-  const response = await axios.get(`${BLDDB}/corners/cases`);
-  return response;
+   return axios.get(`${BLDDB_API_URL}/corners/cases`);
 }
 
-// GET /api/corners/cases?buffer=UFR
 export async function getCornerCasesByBuffer(buffer) {
-  const response = await axios.get(
-    `${BLDDB}/corners/cases?buffer=${buffer}`
-  );
-
-  return response;
+   return axios.get(`${BLDDB_API_URL}/corners/cases?buffer=${buffer}`);
 }
 
-// GET /api/corners/cases?buffer=UFR&first=UBR&second=UFL
 export async function getCornerAlgs(buffer, first, second) {
-  const response = await axios.get(
-    `${BLDDB}/corners/cases?buffer=${buffer}&first=${first}&second=${second}`
-  );
-
-  return response;
+   return axios.get(
+      `${BLDDB_API_URL}/corners/cases?buffer=${buffer}&first=${first}&second=${second}`,
+   );
 }
 
-// GET /api/corners/cases/{caseId}/algorithms
 export async function getCornerAlgsByCaseId(caseId) {
-  const response = await axios.get(
-    `${BLDDB}/corners/cases/${caseId}/algorithms`
-  );
-
-  return response;
+   return axios.get(`${BLDDB_API_URL}/corners/cases/${caseId}/algorithms`);
 }
 
-// GET /api/corners/algorithms/{algorithmId}
 export async function getCornerAlgById(id) {
-  const response = await axios.get(
-    `${BLDDB}/corners/algorithms/${id}`
-  );
-
-  return response;
+   return axios.get(`${BLDDB_API_URL}/corners/algorithms/${id}`);
 }
 
-
-
-
-// ==========================
-// PARITY
-// ==========================
-
-// GET /api/parity/cases
 export async function getAllParityCases() {
-  const response = await axios.get(`${BLDDB}/parity/cases`);
-  return response;
+   return axios.get(`${BLDDB_API_URL}/parity/cases`);
 }
 
-// GET /api/parity/cases?firstEdge=...
 export async function getParityAlgs(
-  firstEdge,
-  secondEdge,
-  firstCorner,
-  secondCorner,
-  twist
+   firstEdge,
+   secondEdge,
+   firstCorner,
+   secondCorner,
+   twist,
 ) {
-  const url =
-    `${BLDDB}/parity/cases` +
-    `?firstEdge=${firstEdge}` +
-    `&secondEdge=${secondEdge}` +
-    `&firstCorner=${firstCorner}` +
-    `&secondCorner=${secondCorner}` +
-    `&twist=${twist ?? ""}`;
+   const url =
+      `${BLDDB_API_URL}/parity/cases` +
+      `?firstEdge=${firstEdge}` +
+      `&secondEdge=${secondEdge}` +
+      `&firstCorner=${firstCorner}` +
+      `&secondCorner=${secondCorner}` +
+      `&twist=${twist ?? ""}`;
 
-  const response = await axios.get(url);
-
-  return response;
+   return axios.get(url);
 }
 
-// GET /api/parity/cases/{caseId}/algorithms
 export async function getParityAlgsByCaseId(caseId) {
-  const response = await axios.get(
-    `${BLDDB}/parity/cases/${caseId}/algorithms`
-  );
-
-  return response;
+   return axios.get(`${BLDDB_API_URL}/parity/cases/${caseId}/algorithms`);
 }
 
-// GET /api/parity/algorithms/{algorithmId}
 export async function getParityAlgById(id) {
-  const response = await axios.get(
-    `${BLDDB}/parity/algorithms/${id}`
-  );
-
-  return response;
+   return axios.get(`${BLDDB_API_URL}/parity/algorithms/${id}`);
 }
 
-
-// ==========================
-// SHARED
-// ==========================
-
-// POST /api/import
 export async function importAlgs(algorithms) {
-  const response = await axios.post(
-    `${BLDDB}/import`,
-    algorithms
-  );
-
-  return response?.data;
+   const response = await axios.post(`${BLDDB_API_URL}/import`, algorithms);
+   return response?.data;
 }
 
-
-// POST /api/{type}/algorithms/verify
 export async function verifyAlg(submission, type) {
-  const apiType =
-    (type.toLowerCase() === "t2c" || type.toLowerCase() === "ltct" || type.toLowerCase() === "2e2c")
+   const apiType = ["t2c", "ltct", "2e2c"].includes(type.toLowerCase())
       ? "parity"
       : type.toLowerCase();
 
-  const response = await axios.post(
-    `${BLDDB}/${apiType}/algorithms/verify`,
-    submission
-  );
+   const response = await axios.post(
+      `${BLDDB_API_URL}/${apiType}/algorithms/verify`,
+      submission,
+   );
 
-  return response?.data;
+   return response?.data;
 }
 
 export async function insertEdgeAlg(submission) {
-  const response = await axios.post(
-    `${BLDDB}/edges/algorithms`,
-    submission
-  );
+   const response = await axios.post(
+      `${BLDDB_API_URL}/edges/algorithms`,
+      submission,
+   );
 
-  return response.data;
+   return response.data;
 }
 
 export async function insertCornerAlg(submission) {
-  const response = await axios.post(
-    `${BLDDB}/corners/algorithms`,
-    submission
-  );
+   const response = await axios.post(
+      `${BLDDB_API_URL}/corners/algorithms`,
+      submission,
+   );
 
-  return response.data;
+   return response.data;
 }
 
 export async function insertParityAlg(submission) {
-  const response = await axios.post(
-    `${BLDDB}/parity/algorithms`,
-    submission
-  );
+   const response = await axios.post(
+      `${BLDDB_API_URL}/parity/algorithms`,
+      submission,
+   );
 
-  return response.data;
+   return response.data;
 }

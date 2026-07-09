@@ -1,50 +1,36 @@
-import axios from 'axios';
+import axios from "axios";
+import { NODE_API_URL } from "./apiConfig";
 
-const server = 'http://localhost:3000';
+function getAuthHeader() {
+   return {
+      Authorization: `Bearer ${sessionStorage.getItem("User")}`,
+   };
+}
 
 export async function getSheets() {
-  const token = sessionStorage.getItem("User");
-
-  const response = await axios.get(`${server}/sheets`, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
-
-  return response;
+   return axios.get(`${NODE_API_URL}/sheets`, {
+      headers: getAuthHeader(),
+   });
 }
 
 export async function createNewSheet(sheet) {
-  const token = sessionStorage.getItem("User");
-
-  const response = await axios.post(`${server}/sheets`, sheet, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
-
-  return response;
+   return axios.post(`${NODE_API_URL}/sheets`, sheet, {
+      headers: getAuthHeader(),
+   });
 }
 
 export async function getSheet(id) {
-   const response = await axios.get(`${server}/sheets/${id}`);
-   return response;
+   return axios.get(`${NODE_API_URL}/sheets/${id}`);
 }
 
 export async function updateSheet(id, sheet) {
-  return axios.put(`${server}/sheets/${id}`, sheet, {
-    headers: {
-      Authorization: `Bearer ${sessionStorage.getItem("User")}`,
-    },
-  });
+   return axios.put(`${NODE_API_URL}/sheets/${id}`, sheet, {
+      headers: getAuthHeader(),
+   });
 }
 
 export async function deleteSheet(sheetId) {
-   const token = sessionStorage.getItem("User");
-
-   return axios.delete(`${server}/sheets/${sheetId}`, {
-      headers: {
-         Authorization: `Bearer ${token}`,
-      },
+   return axios.delete(`${NODE_API_URL}/sheets/${sheetId}`, {
+      headers: getAuthHeader(),
    });
 }

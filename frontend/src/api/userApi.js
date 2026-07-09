@@ -1,6 +1,5 @@
 import axios from "axios";
-
-const server = "http://localhost:3000";
+import { NODE_API_URL } from "./apiConfig";
 
 function getAuthHeaders() {
    const token = sessionStorage.getItem("User");
@@ -15,22 +14,22 @@ function getAuthHeaders() {
 }
 
 export async function createUser(user) {
-   return axios.post(`${server}/users`, user);
+   return axios.post(`${NODE_API_URL}/users`, user);
 }
 
 export async function verifyUser(user) {
-   return axios.post(`${server}/users/login`, user);
+   return axios.post(`${NODE_API_URL}/users/login`, user);
 }
 
 export async function getCurrentUser() {
-   return axios.get(`${server}/users/me`, {
+   return axios.get(`${NODE_API_URL}/users/me`, {
       headers: getAuthHeaders(),
    });
 }
 
 export async function updateCurrentUserLetterScheme(letterScheme) {
    return axios.patch(
-      `${server}/users/me/letter-scheme`,
+      `${NODE_API_URL}/users/me/letter-scheme`,
       { letterScheme },
       {
          headers: getAuthHeaders(),

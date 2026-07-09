@@ -1,69 +1,47 @@
-import axios from 'axios';
+import axios from "axios";
+import { NODE_API_URL } from "./apiConfig";
 
-const server = 'http://localhost:3000';
+function getAuthHeader() {
+   return {
+      Authorization: `Bearer ${sessionStorage.getItem("User")}`,
+   };
+}
 
 function toAlgId(id) {
-  if (id == null) return id;
-  if (typeof id === 'string') return id;
-  if (typeof id === 'object' && id.$oid) return id.$oid;
-  return String(id);
+   if (id == null) return id;
+   if (typeof id === "string") return id;
+   if (typeof id === "object" && id.$oid) return id.$oid;
+   return String(id);
 }
 
 export async function getCustomAlgs() {
-  const token = sessionStorage.getItem("User");
-
-  const response = await axios.get(`${server}/algorithms`, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
-
-  return response;
+   return axios.get(`${NODE_API_URL}/algorithms`, {
+      headers: getAuthHeader(),
+   });
 }
 
 export async function createNewCustomAlg(alg) {
-  const token = sessionStorage.getItem("User");
-
-  const response = await axios.post(`${server}/algorithms`, alg, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
-
-  return response;
+   return axios.post(`${NODE_API_URL}/algorithms`, alg, {
+      headers: getAuthHeader(),
+   });
 }
 
 export async function getCustomAlg(id) {
-  return axios.get(`${server}/algorithms/${id}`, {
-    headers: {
-      Authorization: `Bearer ${sessionStorage.getItem("User")}`,
-    },
-  });
+   return axios.get(`${NODE_API_URL}/algorithms/${id}`, {
+      headers: getAuthHeader(),
+   });
 }
 
 export async function updateCustomAlg(id, alg) {
-  return axios.put(`${server}/algorithms/${id}`, alg, {
-    headers: {
-      Authorization: `Bearer ${sessionStorage.getItem("User")}`,
-    },
-  });
+   return axios.put(`${NODE_API_URL}/algorithms/${id}`, alg, {
+      headers: getAuthHeader(),
+   });
 }
 
 export async function deleteCustomAlg(id) {
-  const token = sessionStorage.getItem("User");
-  const algId = toAlgId(id);
+   const algId = toAlgId(id);
 
-  try {
-    const response = await axios.delete(`${server}/algorithms/${algId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    return response;
-  } catch (error) {
-    console.error("DELETE ERROR STATUS:", error.response?.status);
-    console.error("DELETE ERROR DATA:", error.response?.data);
-    throw error;
-  }
+   return axios.delete(`${NODE_API_URL}/algorithms/${algId}`, {
+      headers: getAuthHeader(),
+   });
 }

@@ -48,7 +48,7 @@
    border: 1px solid var(--border);
    border-radius: 16px;
 
-   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+   box-shadow: var(--shadow);
 }
 
 .settings-modal__header {
@@ -77,21 +77,56 @@
    cursor: pointer;
 }
 
+.settings-modal__close:hover {
+   color: var(--accent);
+}
+
 .settings-modal__body {
+   display: grid;
+   gap: 1.5rem;
+
    padding: 1.5rem;
    overflow: auto;
 }
 
-.settings-modal__top {
-   display: flex;
-   justify-content: center;
-   margin-bottom: 1.5rem;
+.settings-section {
+   display: grid;
+   gap: 1rem;
+
+   padding: 1rem;
+
+   background: var(--surface);
+   border: 1px solid var(--border);
+   border-radius: 14px;
+}
+
+.settings-section__title {
+   margin: 0;
+
+   color: var(--text-h);
+
+   font-size: 1rem;
+   font-weight: 700;
+}
+
+.settings-display__row {
+   display: inline-flex;
+   align-items: center;
+   justify-content: flex-start;
+   gap: 0.85rem;
+   width: fit-content;
+}
+
+.settings-display__label {
+   color: var(--text-muted);
+   font-size: 0.9rem;
+   font-weight: 600;
 }
 
 .settings-modal__actions {
    display: flex;
    justify-content: center;
-   margin-top: 1.5rem;
+   margin-top: 0.25rem;
 }
 
 .settings-modal__save {
@@ -105,6 +140,12 @@
    font: inherit;
    font-weight: 700;
    cursor: pointer;
+}
+
+.settings-modal__save:hover:not(:disabled) {
+   border-color: var(--accent);
+   background: var(--accent);
+   color: white;
 }
 
 .settings-modal__save:disabled {

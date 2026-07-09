@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { ThemeToggle } from "../layout/ThemeToggle";
+import { ThemeColorPicker } from "../layout/ThemeColorPicker";
 import {
   getCurrentUser,
   updateCurrentUserLetterScheme,
@@ -89,18 +90,29 @@ export function SettingsModal({ onClose }) {
         </header>
 
         <div className="settings-modal__body">
-          <div className="settings-modal__top">
-            <ThemeToggle />
-          </div>
+          <section className="settings-section">
+            <h3 className="settings-section__title">Display</h3>
 
-          {letterScheme ? (
-            <LetterSchemeGrid
-              scheme={letterScheme}
-              onChange={handleLetterChange}
-            />
-          ) : (
-            <p>Loading settings...</p>
-          )}
+            <div className="settings-display__row">
+              <span className="settings-display__label">Light / Dark</span>
+              <ThemeToggle />
+            </div>
+
+            <ThemeColorPicker />
+          </section>
+
+          <section className="settings-section">
+            <h3 className="settings-section__title">Lettering Scheme</h3>
+
+            {letterScheme ? (
+              <LetterSchemeGrid
+                scheme={letterScheme}
+                onChange={handleLetterChange}
+              />
+            ) : (
+              <p>Loading settings...</p>
+            )}
+          </section>
 
           <div className="settings-modal__actions">
             <button

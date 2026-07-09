@@ -96,6 +96,17 @@
   text-align: center;
 }
 
+.landing-page a {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration-color: var(--accent-border);
+}
+
+.landing-page a:hover {
+  color: var(--accent-hover);
+  text-decoration-color: var(--accent);
+}
+
 @media (max-width: 700px) {
   .auth-panel {
     max-width: 100%;

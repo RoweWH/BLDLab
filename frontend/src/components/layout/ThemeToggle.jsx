@@ -7,10 +7,12 @@ function getSnapshot() {
 
 function subscribe(callback) {
   const obs = new MutationObserver(() => callback());
+
   obs.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ["data-theme"],
   });
+
   return () => obs.disconnect();
 }
 
@@ -20,6 +22,7 @@ export function ThemeToggle({ className = "" }) {
   const toggle = useCallback(() => {
     const root = document.documentElement;
     const next = root.dataset.theme === "dark" ? "light" : "dark";
+
     root.dataset.theme = next;
     localStorage.setItem("bldlab-theme", next);
   }, []);
