@@ -1,16 +1,25 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createNewSheet, getSheets } from "../../api/sheetApi";
+import { getCurrentUser } from "../../api/userApi";
 import { CreateSheetModal } from "../../components/sheets/CreateSheetModal";
 import { buildCycleSheet } from "../../utils/sheets/BuildCycleSheet";
 import { build2e2cSheet } from "../../utils/sheets/Build2e2cSheet";
 import { buildLTCTSheet } from "../../utils/sheets/BuildLTCTSheet";
 import { buildT2CSheet } from "../../utils/sheets/BuildT2CSheet";
-import { getCurrentUser } from "../../api/userApi";
+import { getLocalSheets, saveLocalSheet } from "../../storage/sheetStorage";
 import "./SheetsHome.css";
+
+const guestUser = {
+  letterScheme: {
+    edges: {},
+    corners: {},
+  },
+};
 
 export function SheetsHome() {
   const [sheets, setSheets] = useState([]);
+  const [user, setUser] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -19,10 +28,18 @@ export function SheetsHome() {
   useEffect(() => {
     async function loadSheets() {
       try {
-        const response = await getSheets();
-        setSheets(response.data);
-      } catch (error) {
-        console.error("Failed to load sheets:", error);
+        const userResponse = await getCurrentUser();
+        const currentUser = userResponse.data;
+
+        setUser(currentUser);
+
+        const sheetResponse = await getSheets();
+        setSheets(sheetResponse.data);
+      } catch {
+        setUser(null);
+
+        const localSheets = await getLocalSheets();
+        setSheets(localSheets);
       } finally {
         setLoading(false);
       }
@@ -31,26 +48,44 @@ export function SheetsHome() {
     loadSheets();
   }, []);
 
+  async function buildSheet(newSheet, activeUser) {
+    if (newSheet.type === "edges" || newSheet.type === "corners") {
+      return buildCycleSheet(newSheet, activeUser);
+    }
+
+    if (newSheet.type === "2e2c") {
+      return build2e2cSheet(newSheet, activeUser);
+    }
+
+    if (newSheet.type === "ltct") {
+      return buildLTCTSheet(newSheet, activeUser);
+    }
+
+    if (newSheet.type === "t2c") {
+      return buildT2CSheet(newSheet, activeUser);
+    }
+
+    return newSheet;
+  }
+
   async function createSheet(newSheet) {
     try {
-      let populatedSheet;
-      const response = await getCurrentUser();
-      const user = response.data;
-      if (newSheet.type === "edges" || newSheet.type === "corners") {
-        populatedSheet = await buildCycleSheet(newSheet, user);
-      } else if (newSheet.type === "2e2c") {
-        populatedSheet = await build2e2cSheet(newSheet, user);
-      } else if (newSheet.type === "ltct") {
-        populatedSheet = await buildLTCTSheet(newSheet, user);
-      } else if (newSheet.type === "t2c") {
-        populatedSheet = await buildT2CSheet(newSheet, user);
+      const activeUser = user ?? guestUser;
+      const populatedSheet = await buildSheet(newSheet, activeUser);
+
+      if (user) {
+        const sheetResponse = await createNewSheet(populatedSheet);
+
+        setSheets((currentSheets) => [
+          ...currentSheets,
+          sheetResponse.data.sheet,
+        ]);
       } else {
-        populatedSheet = newSheet;
+        const savedSheet = await saveLocalSheet(populatedSheet);
+
+        setSheets((currentSheets) => [savedSheet, ...currentSheets]);
       }
 
-      const sheetResponse = await createNewSheet(populatedSheet);
-
-      setSheets([...sheets, sheetResponse.data.sheet]);
       setShowCreateModal(false);
     } catch (error) {
       console.error("Failed to create sheet:", error);
@@ -71,7 +106,6 @@ export function SheetsHome() {
 
   return (
     <div className="page">
-
       <div className="sheet-grid">
         <button
           className="add-sheet-card"

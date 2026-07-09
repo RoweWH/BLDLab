@@ -4,7 +4,19 @@ import { Sheet } from "../../components/sheets/Sheet";
 import { SheetHeader } from "../../components/sheets/SheetHeader";
 import { getSheet, updateSheet } from "../../api/sheetApi";
 import { getCurrentUser } from "../../api/userApi";
+import {
+  getLocalSheetById,
+  isLocalSheetId,
+  saveLocalSheet,
+} from "../../storage/sheetStorage";
 import "./SheetView.css";
+
+const guestUser = {
+  letterScheme: {
+    edges: {},
+    corners: {},
+  },
+};
 
 function getLetterSchemeForSheet(sheet, user) {
   return sheet?.type === "edges"
@@ -130,6 +142,14 @@ export function SheetView() {
   useEffect(() => {
     async function loadSheetViewData() {
       try {
+        if (isLocalSheetId(id)) {
+          const localSheet = await getLocalSheetById(id);
+
+          setSheet(localSheet);
+          setUser(guestUser);
+          return;
+        }
+
         const [sheetResponse, userResponse] = await Promise.all([
           getSheet(id),
           getCurrentUser(),
@@ -151,7 +171,11 @@ export function SheetView() {
     setIsSaving(true);
 
     try {
-      await updateSheet(id, updatedSheet);
+      if (isLocalSheetId(id)) {
+        await saveLocalSheet(updatedSheet);
+      } else {
+        await updateSheet(id, updatedSheet);
+      }
     } catch (error) {
       console.error("Failed to save sheet:", error);
       setSheet(previousSheet);
