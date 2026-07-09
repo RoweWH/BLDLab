@@ -1,25 +1,39 @@
-import axios from 'axios';
+import axios from "axios";
 
-const server = 'http://localhost:3000';
+const server = "http://localhost:3000";
+
+function getAuthHeaders() {
+   const token = sessionStorage.getItem("User");
+
+   if (!token) {
+      throw new Error("No auth token found");
+   }
+
+   return {
+      Authorization: `Bearer ${token}`,
+   };
+}
 
 export async function createUser(user) {
-   const response = await axios.post(`${server}/users`, user)
-   return response;
+   return axios.post(`${server}/users`, user);
 }
 
 export async function verifyUser(user) {
-   const response = await axios.post(`${server}/users/login`, user)
-   return response;
+   return axios.post(`${server}/users/login`, user);
 }
 
 export async function getCurrentUser() {
-  const token = sessionStorage.getItem("User");
+   return axios.get(`${server}/users/me`, {
+      headers: getAuthHeaders(),
+   });
+}
 
-  const response = await axios.get(`${server}/users/me`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  return response;
+export async function updateCurrentUserLetterScheme(letterScheme) {
+   return axios.patch(
+      `${server}/users/me/letter-scheme`,
+      { letterScheme },
+      {
+         headers: getAuthHeaders(),
+      },
+   );
 }

@@ -38,3 +38,13 @@ export async function updateSheet(id, sheet) {
     },
   });
 }
+
+export async function deleteSheet(sheetId) {
+   const token = sessionStorage.getItem("User");
+
+   return axios.delete(`${server}/sheets/${sheetId}`, {
+      headers: {
+         Authorization: `Bearer ${token}`,
+      },
+   });
+}

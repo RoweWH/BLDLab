@@ -1,213 +1,279 @@
-const express = require("express")
-const database = require("./connect")
-const ObjectId = require("mongodb").ObjectId
-const bcrypt = require("bcrypt")
-const jwt = require("jsonwebtoken")
-require("dotenv").config({path: "./config.env"})
-let userRoutes = express.Router()
-const saltRounds = Number(process.env.SALT_ROUNDS);
+const express = require("express");
+const database = require("./connect");
+const ObjectId = require("mongodb").ObjectId;
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+require("dotenv").config({ path: "./config.env" });
+
 const verifyToken = require("./verifyToken");
 
+const userRoutes = express.Router();
+const saltRounds = Number(process.env.SALT_ROUNDS);
 
-//#1 - Retrieve All
+const defaultSpeffzLetterScheme = {
+   edges: {
+      UB: "A",
+      UR: "B",
+      UF: "C",
+      UL: "D",
+
+      LU: "E",
+      LF: "F",
+      LD: "G",
+      LB: "H",
+
+      FU: "I",
+      FR: "J",
+      FD: "K",
+      FL: "L",
+
+      RU: "M",
+      RB: "N",
+      RD: "O",
+      RF: "P",
+
+      BU: "Q",
+      BL: "R",
+      BD: "S",
+      BR: "T",
+
+      DF: "U",
+      DR: "V",
+      DB: "W",
+      DL: "X",
+   },
+
+   corners: {
+      UBL: "A",
+      UBR: "B",
+      UFR: "C",
+      UFL: "D",
+
+      LUB: "E",
+      LUF: "F",
+      LDF: "G",
+      LDB: "H",
+
+      FUL: "I",
+      FUR: "J",
+      FDR: "K",
+      FDL: "L",
+
+      RUF: "M",
+      RUB: "N",
+      RDB: "O",
+      RDF: "P",
+
+      BUR: "Q",
+      BUL: "R",
+      BDL: "S",
+      BDR: "T",
+
+      DFL: "U",
+      DFR: "V",
+      DBR: "W",
+      DBL: "X",
+   },
+};
+
+function normalizeLetterScheme(letterScheme) {
+   return {
+      edges: {
+         ...defaultSpeffzLetterScheme.edges,
+         ...(letterScheme?.edges ?? {}),
+      },
+      corners: {
+         ...defaultSpeffzLetterScheme.corners,
+         ...(letterScheme?.corners ?? {}),
+      },
+   };
+}
+
 userRoutes.route("/users").get(async (request, response) => {
-    let db = database.getDb()
-    let data = await db.collection("users").find({}).toArray()
-    if (data.length >0) {
-        response.json(data)
-    } else {
-        throw new Error("Data was not found :(")
-    }
-})
+   const db = database.getDb();
+   const data = await db.collection("users").find({}).toArray();
+   response.json(data);
+});
 
 userRoutes.route("/users/me").get(verifyToken, async (request, response) => {
-  try {
-    let db = database.getDb();
+   try {
+      const db = database.getDb();
 
-    console.log("TOKEN DATA:", request.user);
-    console.log("ID:", request.user.id);
-
-    const user = await db.collection("users").findOne({
-      _id: new ObjectId(request.user.id),
-    });
-
-    console.log("USER:", user);
-
-    if (!user) {
-      return response.status(404).json({
-        message: "User not found",
+      const user = await db.collection("users").findOne({
+         _id: new ObjectId(request.user.id),
       });
-    }
 
-    response.json({
-      name: user.name,
-      email: user.email,
-      letterScheme: user.letterScheme,
-      orientation: user.orientation,
-    });
-  } catch (error) {
-    console.log("USERS ME ERROR:", error);
+      if (!user) {
+         return response.status(404).json({
+            message: "User not found",
+         });
+      }
 
-    response.status(500).json({
-      message: "Server error",
-    });
-  }
+      response.json({
+         name: user.name,
+         email: user.email,
+         letterScheme: normalizeLetterScheme(user.letterScheme),
+         orientation: user.orientation,
+      });
+   } catch (error) {
+      console.log("USERS ME ERROR:", error);
+
+      response.status(500).json({
+         message: "Server error",
+      });
+   }
 });
 
-//#2 - Retrieve One
-userRoutes.route("/users/:id").get(async (request, response) => {
-    let db = database.getDb()
-    let data = await db.collection("users").findOne({_id: new ObjectId(request.params.id)})
-    if (Object.keys(data).length >0) {
-        response.json(data)
-    } else {
-        throw new Error("Data was not found :(")
-    }
-})
+userRoutes
+   .route("/users/me/letter-scheme")
+   .patch(verifyToken, async (request, response) => {
+      try {
+         const db = database.getDb();
+         const letterScheme = normalizeLetterScheme(request.body.letterScheme);
 
-//#3 - Create one
+         const result = await db.collection("users").updateOne(
+            { _id: new ObjectId(request.user.id) },
+            {
+               $set: {
+                  letterScheme,
+               },
+            },
+         );
+
+         response.json({
+            success: true,
+            modifiedCount: result.modifiedCount,
+            letterScheme,
+         });
+      } catch (error) {
+         console.log("LETTER SCHEME UPDATE ERROR:", error);
+
+         response.status(500).json({
+            success: false,
+            message: "Failed to update letter scheme",
+         });
+      }
+   });
+
 userRoutes.route("/users").post(async (request, response) => {
-    let db = database.getDb()
+   const db = database.getDb();
 
-    const takenEmail = await db.collection("users").findOne({email: request.body.email})
+   const takenEmail = await db.collection("users").findOne({
+      email: request.body.email,
+   });
 
-    if (takenEmail) {
-        response.json({message: "The email is taken"})
-    } else {
-        const hash = await bcrypt.hash(request.body.password, saltRounds)
+   if (takenEmail) {
+      return response.json({
+         success: false,
+         message: "The email is taken",
+      });
+   }
 
-        let mongoObject = {
-  name: request.body.name,
-  email: request.body.email,
-  password: hash,
-  joinDate: new Date(),
+   const hash = await bcrypt.hash(request.body.password, saltRounds);
 
-  letterScheme: {
-    edges: {
-      UF: "A",
-      UL: "B",
-      UB: "C",
-      UR: "D",
-      FD: "E",
-      FL: "F",
-      FU: "G",
-      FR: "H",
-      LD: "I",
-      LB: "J",
-      LU: "K",
-      LF: "L",
-      BD: "M",
-      BR: "N",
-      BU: "O",
-      BL: "P",
-      RD: "Q",
-      RF: "R",
-      RU: "S",
-      RB: "T",
-      DB: "U",
-      DL: "V",
-      DF: "W",
-      DR: "X"
-    },
+   const mongoObject = {
+      name: request.body.name,
+      email: request.body.email,
+      password: hash,
+      joinDate: new Date(),
+      letterScheme: defaultSpeffzLetterScheme,
+      orientation: ["W", "G"],
+   };
 
-    corners: {
-      UFL: "A",
-      UBL: "B",
-      UBR: "C",
-      UFR: "D",
-      FDL: "E",
-      FUL: "F",
-      FUR: "G",
-      FDR: "H",
-      LDB: "I",
-      LUB: "J",
-      LUF: "K",
-      LDF: "L",
-      BDR: "M",
-      BUR: "N",
-      BUL: "O",
-      BDL: "P",
-      RDF: "Q",
-      RUF: "R",
-      RUB: "S",
-      RDB: "T",
-      DBL: "U",
-      DFL: "V",
-      DFR: "W",
-      DBR: "X"
-    }
-  },
+   const data = await db.collection("users").insertOne(mongoObject);
 
-  orientation: ["W", "G"]
-};
-        let data = await db.collection("users").insertOne(mongoObject)
-        response.json(data)
-    }
-})
-
-//#4 - Update one
-userRoutes.route("/users/:id").put(async (request, response) => {
-    let db = database.getDb()
-    let mongoObject = {
-        $set: {
-            name: request.body.name,
-            email: request.body.email,
-            password: request.body.password,
-            joinDate: request.body.joinDate,
-            posts: request.body.posts
-        }
-    }
-    let data = await db.collection("users").updateOne({_id: new ObjectId(request.params.id)}, mongoObject)
-    response.json(data)
-})
-
-//#5 - Delete one
-userRoutes.route("/users/:id").delete(async (request, response) => {
-    let db = database.getDb()
-    let data = await db.collection("users").deleteOne({_id: new ObjectId(request.params.id)})
-    response.json(data)
-})
-
-//#6 - Login
-userRoutes.route("/users/login").post(async (request, response) => {
-  let db = database.getDb();
-
-  const user = await db.collection("users").findOne({
-    email: request.body.email,
-  });
-
-  if (!user) {
-    return response.json({
-      success: false,
-      message: "User not found",
-    });
-  }
-
-  const confirmation = await bcrypt.compare(
-    request.body.password,
-    user.password
-  );
-
-  if (!confirmation) {
-    return response.json({
-      success: false,
-      message: "Incorrect Password",
-    });
-  }
-
-  const token = jwt.sign(
-  {
-    id: user._id.toString(),
-    isAdmin: user.isAdmin ?? false,
-  },
-  process.env.SECRETKEY,
-  { expiresIn: "1h" }
-);
-
-  response.json({
-    success: true,
-    token,
-  });
+   response.json({
+      success: true,
+      insertedId: data.insertedId,
+   });
 });
 
-module.exports = userRoutes
+userRoutes.route("/users/login").post(async (request, response) => {
+   const db = database.getDb();
+
+   const user = await db.collection("users").findOne({
+      email: request.body.email,
+   });
+
+   if (!user) {
+      return response.json({
+         success: false,
+         message: "User not found",
+      });
+   }
+
+   const confirmation = await bcrypt.compare(
+      request.body.password,
+      user.password,
+   );
+
+   if (!confirmation) {
+      return response.json({
+         success: false,
+         message: "Incorrect Password",
+      });
+   }
+
+   const token = jwt.sign(
+      {
+         id: user._id.toString(),
+         isAdmin: user.isAdmin ?? false,
+      },
+      process.env.SECRETKEY,
+      { expiresIn: "1h" },
+   );
+
+   response.json({
+      success: true,
+      token,
+   });
+});
+
+userRoutes.route("/users/:id").get(async (request, response) => {
+   const db = database.getDb();
+
+   const data = await db.collection("users").findOne({
+      _id: new ObjectId(request.params.id),
+   });
+
+   if (!data) {
+      return response.status(404).json({
+         message: "User not found",
+      });
+   }
+
+   response.json(data);
+});
+
+userRoutes.route("/users/:id").put(async (request, response) => {
+   const db = database.getDb();
+
+   const mongoObject = {
+      $set: {
+         name: request.body.name,
+         email: request.body.email,
+         password: request.body.password,
+         joinDate: request.body.joinDate,
+         posts: request.body.posts,
+      },
+   };
+
+   const data = await db.collection("users").updateOne(
+      { _id: new ObjectId(request.params.id) },
+      mongoObject,
+   );
+
+   response.json(data);
+});
+
+userRoutes.route("/users/:id").delete(async (request, response) => {
+   const db = database.getDb();
+
+   const data = await db.collection("users").deleteOne({
+      _id: new ObjectId(request.params.id),
+   });
+
+   response.json(data);
+});
+
+module.exports = userRoutes;

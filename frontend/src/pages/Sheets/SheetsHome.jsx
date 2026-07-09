@@ -8,14 +8,8 @@ import { build2e2cSheet } from "../../utils/sheets/Build2e2cSheet";
 import { buildLTCTSheet } from "../../utils/sheets/BuildLTCTSheet";
 import { buildT2CSheet } from "../../utils/sheets/BuildT2CSheet";
 import { getLocalSheets, saveLocalSheet } from "../../storage/sheetStorage";
+import { getLocalSettings } from "../../storage/settingsStorage";
 import "./SheetsHome.css";
-
-const guestUser = {
-  letterScheme: {
-    edges: {},
-    corners: {},
-  },
-};
 
 export function SheetsHome() {
   const [sheets, setSheets] = useState([]);
@@ -68,9 +62,17 @@ export function SheetsHome() {
     return newSheet;
   }
 
+  async function getGuestUser() {
+    const settings = await getLocalSettings();
+
+    return {
+      letterScheme: settings.letterScheme,
+    };
+  }
+
   async function createSheet(newSheet) {
     try {
-      const activeUser = user ?? guestUser;
+      const activeUser = user ?? (await getGuestUser());
       const populatedSheet = await buildSheet(newSheet, activeUser);
 
       if (user) {

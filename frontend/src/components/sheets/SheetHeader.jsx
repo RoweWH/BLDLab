@@ -1,5 +1,5 @@
-import { SheetExportButton } from "./SheetExportButton";
 import { DisplayModeToggle } from "./DisplayModeToggle";
+import { SheetActionsMenu } from "./SheetActionsMenu";
 import "./SheetHeader.css";
 
 export function SheetHeader({
@@ -7,6 +7,8 @@ export function SheetHeader({
   letterScheme,
   cellDisplayMode,
   onCellDisplayModeChange,
+  onDelete,
+  onExportCsv,
 }) {
   return (
     <div className="sheet-header">
@@ -22,11 +24,7 @@ export function SheetHeader({
       </div>
 
       <div className="sheet-header__right">
-        <SheetExportButton
-          sheet={sheet}
-          letterScheme={letterScheme}
-          cellDisplayMode={cellDisplayMode}
-        />
+        <SheetActionsMenu onDelete={onDelete} onExportCsv={onExportCsv} />
       </div>
     </div>
   );

@@ -205,3 +205,15 @@ input[type='file'] {
     transform: rotate(360deg);
   }
 }
+
+.danger-button {
+  border-color: #b91c1c;
+  background: #7f1d1d;
+  color: white;
+}
+
+.danger-button:hover {
+  border-color: #dc2626;
+  background: #991b1b;
+  color: white;
+}

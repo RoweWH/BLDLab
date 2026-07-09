@@ -5,6 +5,7 @@ import { AuthStatus } from "../auth/AuthStatus";
 import logoDark from "../../assets/BLDLabLogoDark.png";
 import logoLight from "../../assets/BLDLabLogoLight.png";
 import "./NavBar.css";
+import { SettingsButton } from "../settings/SettingsButton";
 
 const linkClass = ({ isActive }) =>
   "nav-bar__link" + (isActive ? " nav-bar__link--active" : "");
@@ -139,7 +140,8 @@ export function NavBar() {
           </ul>
         </nav>
         <AuthStatus />
-        <ThemeToggle className="nav-bar__theme" />
+        <SettingsButton />
+        
       </div>
     </header>
   );

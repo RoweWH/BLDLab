@@ -1,0 +1,100 @@
+.letter-scheme-grid {
+   display: grid;
+   grid-template-columns: repeat(4, auto);
+   grid-template-rows: repeat(3, auto);
+   grid-template-areas:
+      ". u . ."
+      "l f r b"
+      ". d . .";
+
+   justify-content: center;
+   gap: 0.35rem;
+}
+
+.letter-face {
+   display: grid;
+   grid-template-columns: repeat(3, 2.6rem);
+   grid-template-rows: repeat(3, 2.6rem);
+   gap: 3px;
+}
+
+.letter-face--u {
+   grid-area: u;
+}
+
+.letter-face--l {
+   grid-area: l;
+}
+
+.letter-face--f {
+   grid-area: f;
+}
+
+.letter-face--r {
+   grid-area: r;
+}
+
+.letter-face--b {
+   grid-area: b;
+}
+
+.letter-face--d {
+   grid-area: d;
+}
+
+.letter-face__cell {
+   width: 2.6rem;
+   height: 2.6rem;
+
+   border: 1px solid var(--border);
+   border-radius: 6px;
+
+   background: var(--surface);
+   color: var(--text-h);
+
+   font: inherit;
+   font-size: 1rem;
+   font-weight: 700;
+   text-align: center;
+}
+
+.letter-face__center {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+
+   background: transparent;
+   color: var(--text-muted);
+}
+
+.letter-face__input {
+   outline: none;
+   text-transform: uppercase;
+}
+
+.letter-face__input:focus {
+   border-color: var(--accent);
+   background: var(--accent-bg);
+}
+
+@media (max-width: 700px) {
+   .letter-scheme-grid {
+      grid-template-columns: repeat(2, auto);
+      grid-template-areas:
+         "u u"
+         "l f"
+         "r b"
+         "d d";
+   }
+
+   .letter-face {
+      grid-template-columns: repeat(3, 2.25rem);
+      grid-template-rows: repeat(3, 2.25rem);
+   }
+
+   .letter-face__cell {
+      width: 2.25rem;
+      height: 2.25rem;
+      font-size: 0.9rem;
+   }
+}

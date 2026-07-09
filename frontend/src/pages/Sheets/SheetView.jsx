@@ -1,22 +1,18 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Sheet } from "../../components/sheets/Sheet";
 import { SheetHeader } from "../../components/sheets/SheetHeader";
-import { getSheet, updateSheet } from "../../api/sheetApi";
+import { deleteSheet, getSheet, updateSheet } from "../../api/sheetApi";
 import { getCurrentUser } from "../../api/userApi";
 import {
+  deleteLocalSheet,
   getLocalSheetById,
   isLocalSheetId,
   saveLocalSheet,
 } from "../../storage/sheetStorage";
+import { getLocalSettings } from "../../storage/settingsStorage";
 import "./SheetView.css";
-
-const guestUser = {
-  letterScheme: {
-    edges: {},
-    corners: {},
-  },
-};
+import { exportSheetCsv } from "../../utils/sheets/exportSheetCsv";
 
 function getLetterSchemeForSheet(sheet, user) {
   return sheet?.type === "edges"
@@ -134,6 +130,8 @@ function updateWholeSheetTraining(sheet, checked) {
 
 export function SheetView() {
   const { id } = useParams();
+  const navigate = useNavigate();
+
   const [sheet, setSheet] = useState(null);
   const [user, setUser] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -143,10 +141,16 @@ export function SheetView() {
     async function loadSheetViewData() {
       try {
         if (isLocalSheetId(id)) {
-          const localSheet = await getLocalSheetById(id);
+          const [localSheet, localSettings] = await Promise.all([
+            getLocalSheetById(id),
+            getLocalSettings(),
+          ]);
 
           setSheet(localSheet);
-          setUser(guestUser);
+          setUser({
+            letterScheme: localSettings.letterScheme,
+          });
+
           return;
         }
 
@@ -166,6 +170,20 @@ export function SheetView() {
   }, [id]);
 
   const letterScheme = getLetterSchemeForSheet(sheet, user);
+
+  async function handleDeleteSheet() {
+    try {
+      if (isLocalSheetId(id)) {
+        await deleteLocalSheet(id);
+      } else {
+        await deleteSheet(id);
+      }
+
+      navigate("/sheets");
+    } catch (error) {
+      console.error("Failed to delete sheet:", error);
+    }
+  }
 
   async function saveSheetVersion(updatedSheet, previousSheet) {
     setIsSaving(true);
@@ -205,6 +223,10 @@ export function SheetView() {
 
       return updatedSheet;
     });
+  }
+
+  function handleExportCsv() {
+    exportSheetCsv(sheet, cellDisplayMode, letterScheme);
   }
 
   function handleToggleCellTraining(columnPiece, caseId, checked) {
@@ -264,6 +286,8 @@ export function SheetView() {
           letterScheme={letterScheme}
           cellDisplayMode={cellDisplayMode}
           onCellDisplayModeChange={setCellDisplayMode}
+          onDelete={handleDeleteSheet}
+          onExportCsv={handleExportCsv}
         />
 
         <Sheet

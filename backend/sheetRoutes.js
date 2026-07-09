@@ -50,7 +50,35 @@ sheetRoutes.route("/sheets").post(verifyToken, async (request, response) => {
   });
 });
 
-module.exports = sheetRoutes
+sheetRoutes.route("/sheets/:id").delete(verifyToken, async (request, response) => {
+   try {
+      const db = database.getDb();
+
+      const result = await db.collection("sheets").deleteOne({
+         _id: new ObjectId(request.params.id),
+         userId: request.user.id,
+      });
+
+      if (result.deletedCount === 0) {
+         return response.status(404).json({
+            success: false,
+            message: "Sheet not found",
+         });
+      }
+
+      response.json({
+         success: true,
+         deletedCount: result.deletedCount,
+      });
+   } catch (error) {
+      console.error("Failed to delete sheet:", error);
+
+      response.status(500).json({
+         success: false,
+         message: "Failed to delete sheet",
+      });
+   }
+});
 
 //#4 - Update one
 sheetRoutes.route("/sheets/:id").put(verifyToken, async (request, response) => {
@@ -83,3 +111,5 @@ sheetRoutes.route("/sheets/:id").put(verifyToken, async (request, response) => {
     modifiedCount: result.modifiedCount,
   });
 });
+
+module.exports = sheetRoutes
