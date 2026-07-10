@@ -1,39 +1,93 @@
 import { useEffect, useState } from "react";
+
 import {
   getEdgeAlgsByCaseId,
   getCornerAlgsByCaseId,
   getParityAlgsByCaseId,
   verifyAlg,
 } from "../../../api/algApi";
+
 import {
   getCustomAlgs,
   createNewCustomAlg,
+  createGuestAlgorithmSubmission,
+  updateGuestAlgorithmSubmission,
+  deleteGuestAlgorithmSubmission,
+  getGuestSubmissionStatuses,
   updateCustomAlg,
   deleteCustomAlg,
 } from "../../../api/customAlgApi";
+
+import {
+  getAlgorithmsByCase,
+  getPendingAlgorithmsWithSubmissions,
+  updateAlgorithmSubmission,
+  saveAlgorithm,
+  updateAlgorithm,
+  deleteAlgorithm,
+} from "../../../storage/algorithmStorage";
+
 import { AlgList } from "./AlgList";
 import { CustomAlgModal } from "./CustomAlgModal";
-import "./AlgModal.css";
 import { TrainingCheckbox } from "../TrainingCheckbox";
 
+import "./AlgModal.css";
+
 function getDatabaseLoader(type) {
-  if (type === "edges") return getEdgeAlgsByCaseId;
-  if (type === "corners") return getCornerAlgsByCaseId;
+  if (type === "edges") {
+    return getEdgeAlgsByCaseId;
+  }
+
+  if (type === "corners") {
+    return getCornerAlgsByCaseId;
+  }
+
   return getParityAlgsByCaseId;
 }
 
-function getCustomCaseId(alg) {
-  return alg.caseId ?? alg.case?.id ?? null;
+function getCustomCaseId(algorithm) {
+  return algorithm.caseId ?? algorithm.case?.id ?? null;
 }
 
-function getCustomBLDLabId(alg) {
-  return alg.BLDLabId ?? null;
+function getCustomBLDLabId(algorithm) {
+  return (
+    algorithm.BLDLabId ??
+    algorithm.bldlabAlgorithmId ??
+    null
+  );
 }
 
-export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
+function getCustomAlgId(algorithm) {
+  return algorithm._id ?? algorithm.id;
+}
+
+function getStatus(algorithm) {
+  return algorithm?.status?.trim().toLowerCase() ?? "private";
+}
+
+function isLoggedIn() {
+  return Boolean(sessionStorage.getItem("User"));
+}
+
+function getResponseData(response) {
+  return response?.data ?? response;
+}
+
+export function AlgModal({
+  cell,
+  type,
+  onClose,
+  onSave,
+  onToggleTraining,
+}) {
+  const loggedIn = isLoggedIn();
+
   const [databaseAlgs, setDatabaseAlgs] = useState([]);
   const [customAlgs, setCustomAlgs] = useState([]);
-  const [sheetAlgs, setSheetAlgs] = useState(cell.algorithms ?? []);
+  const [sheetAlgs, setSheetAlgs] = useState(
+    cell.algorithms ?? [],
+  );
+
   const [memoryData, setMemoryData] = useState(
     cell.memoryData ?? {
       letters: "",
@@ -42,50 +96,113 @@ export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
   );
 
   const [primaryId, setPrimaryId] = useState(
-    cell.algorithms?.find((alg) => alg.primary)?.id ?? null,
+    cell.algorithms?.find((algorithm) => algorithm.primary)
+      ?.id ?? null,
   );
 
-  const [showCustomAlgModal, setShowCustomAlgModal] = useState(false);
-  const [editingCustomAlg, setEditingCustomAlg] = useState(null);
+  const [showCustomAlgModal, setShowCustomAlgModal] =
+    useState(false);
+
+  const [editingCustomAlg, setEditingCustomAlg] =
+    useState(null);
 
   const caseId = cell.id;
   const caseInfo = cell.caseInfo ?? `Case #${caseId}`;
 
   useEffect(() => {
-    async function loadDatabaseAlgs() {
+    async function loadDatabaseAlgorithms() {
       try {
-        const loadAlgs = getDatabaseLoader(type);
-        const response = await loadAlgs(caseId);
+        const loadAlgorithms = getDatabaseLoader(type);
+        const response = await loadAlgorithms(caseId);
+
         setDatabaseAlgs(response.data ?? []);
       } catch (error) {
-        console.error("Failed to load database algs:", error);
+        console.error(
+          "Failed to load database algorithms:",
+          error,
+        );
+
         setDatabaseAlgs([]);
       }
     }
 
-    if (caseId) loadDatabaseAlgs();
+    if (caseId) {
+      loadDatabaseAlgorithms();
+    }
   }, [caseId, type]);
 
   useEffect(() => {
-    async function loadCustomAlgs() {
-      try {
-        const response = await getCustomAlgs();
+    async function syncGuestSubmissions() {
+      const submittedAlgorithms =
+        await getPendingAlgorithmsWithSubmissions();
 
-        const matchingAlgs = response.data.filter(
-          (alg) =>
-            alg.caseType === type &&
-            String(getCustomCaseId(alg)) === String(caseId),
+      if (submittedAlgorithms.length === 0) {
+        return;
+      }
+
+      const submissionIds = submittedAlgorithms.map(
+        (algorithm) => algorithm.submissionId,
+      );
+
+      const response =
+        await getGuestSubmissionStatuses(submissionIds);
+
+      for (const submission of response.data ?? []) {
+        const localAlgorithm = submittedAlgorithms.find(
+          (algorithm) =>
+            String(algorithm.submissionId) ===
+            String(submission.submissionId),
         );
 
-        setCustomAlgs(matchingAlgs);
+        if (!localAlgorithm) {
+          continue;
+        }
+
+        await updateAlgorithmSubmission(
+          localAlgorithm.id,
+          submission,
+        );
+      }
+    }
+
+    async function loadCustomAlgorithms() {
+      try {
+        if (loggedIn) {
+          const response = await getCustomAlgs();
+
+          const matchingAlgorithms = (
+            response.data ?? []
+          ).filter(
+            (algorithm) =>
+              algorithm.caseType === type &&
+              String(getCustomCaseId(algorithm)) ===
+                String(caseId),
+          );
+
+          setCustomAlgs(matchingAlgorithms);
+          return;
+        }
+
+        await syncGuestSubmissions();
+
+        const localAlgorithms =
+          await getAlgorithmsByCase(type, caseId);
+
+        setCustomAlgs(localAlgorithms);
       } catch (error) {
-        console.error("Failed to load custom algs:", error);
+        console.error(
+          "Failed to load custom algorithms:",
+          error,
+        );
+
         setCustomAlgs([]);
       }
     }
 
-    if (caseId) loadCustomAlgs();
-  }, [caseId, type]);
+    if (caseId) {
+      loadCustomAlgorithms();
+    }
+  }, [caseId, type, loggedIn]);
 
   const customBLDLabIds = new Set(
     customAlgs
@@ -95,8 +212,16 @@ export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
   );
 
   const visibleDatabaseAlgs = databaseAlgs.filter(
-    (alg) => !customBLDLabIds.has(String(alg.id)),
+    (algorithm) =>
+      !customBLDLabIds.has(String(algorithm.id)),
   );
+
+  function findCustomAlgorithm(id) {
+    return customAlgs.find(
+      (algorithm) =>
+        String(getCustomAlgId(algorithm)) === String(id),
+    );
+  }
 
   function updateMemoryField(field, value) {
     setMemoryData((current) => ({
@@ -105,45 +230,240 @@ export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
     }));
   }
 
-  function handleCustomAlgCreated(newAlg) {
-    setCustomAlgs((current) => [...current, newAlg]);
+  /*
+   * Logged-in persistence
+   */
 
-    const newSheetAlg = {
-      id: newAlg._id,
-      displayText: newAlg.algorithm,
+  async function createUserAlgorithm(algorithmData) {
+    const response =
+      await createNewCustomAlg(algorithmData);
+
+    return getResponseData(response);
+  }
+
+  async function updateUserAlgorithm(
+    id,
+    algorithmData,
+  ) {
+    const response = await updateCustomAlg(
+      id,
+      algorithmData,
+    );
+
+    return getResponseData(response);
+  }
+
+  async function deleteUserAlgorithm(id) {
+    await deleteCustomAlg(id);
+  }
+
+  /*
+   * Guest persistence
+   */
+
+  async function createGuestAlgorithm(algorithmData) {
+    if (algorithmData.status === "private") {
+      return saveAlgorithm(algorithmData);
+    }
+
+    const submissionResponse =
+      await createGuestAlgorithmSubmission(
+        algorithmData,
+      );
+
+    const submission =
+      getResponseData(submissionResponse);
+
+    return saveAlgorithm({
+      ...algorithmData,
+      submissionId: submission.submissionId,
+      submissionKey: submission.submissionKey,
+      status: submission.status,
+      BLDLabId: submission.BLDLabId ?? null,
+      reviewedDate: submission.reviewedDate ?? null,
+    });
+  }
+
+  async function updateGuestAlgorithm(
+    id,
+    algorithmData,
+  ) {
+    const existingAlgorithm = findCustomAlgorithm(id);
+
+    if (!existingAlgorithm) {
+      throw new Error("Algorithm was not found");
+    }
+
+    if (getStatus(existingAlgorithm) === "public") {
+      throw new Error(
+        "Public algorithms cannot be edited",
+      );
+    }
+
+    /*
+     * A guest algorithm without a submission remains entirely
+     * local unless it is now being submitted.
+     */
+    if (!existingAlgorithm.submissionId) {
+      if (algorithmData.status === "private") {
+        return updateAlgorithm(id, algorithmData);
+      }
+
+      const submissionResponse =
+        await createGuestAlgorithmSubmission(
+          algorithmData,
+        );
+
+      const submission =
+        getResponseData(submissionResponse);
+
+      return updateAlgorithm(id, {
+        ...algorithmData,
+        submissionId: submission.submissionId,
+        submissionKey: submission.submissionKey,
+        status: submission.status,
+        BLDLabId: submission.BLDLabId ?? null,
+        reviewedDate:
+          submission.reviewedDate ?? null,
+      });
+    }
+
+    if (!existingAlgorithm.submissionKey) {
+      throw new Error(
+        "This guest submission is missing its ownership key",
+      );
+    }
+
+    /*
+     * Once a Mongo submission exists, private/pending/rejected
+     * transitions update that same record.
+     */
+    const submissionResponse =
+      await updateGuestAlgorithmSubmission(
+        existingAlgorithm.submissionId,
+        existingAlgorithm.submissionKey,
+        algorithmData,
+      );
+
+    const submission =
+      getResponseData(submissionResponse);
+
+    return updateAlgorithm(id, {
+      ...algorithmData,
+      status: submission.status,
+      BLDLabId: submission.BLDLabId ?? null,
+      reviewedDate:
+        submission.reviewedDate ?? null,
+    });
+  }
+
+  async function deleteGuestAlgorithm(id) {
+    const existingAlgorithm = findCustomAlgorithm(id);
+
+    if (!existingAlgorithm) {
+      throw new Error("Algorithm was not found");
+    }
+
+    /*
+     * A public submission stays in Mongo/BLDLab. We only delete
+     * the guest's IndexedDB copy.
+     */
+    if (getStatus(existingAlgorithm) === "public") {
+      await deleteAlgorithm(id);
+      return;
+    }
+
+    if (
+      existingAlgorithm.submissionId &&
+      existingAlgorithm.submissionKey
+    ) {
+      await deleteGuestAlgorithmSubmission(
+        existingAlgorithm.submissionId,
+        existingAlgorithm.submissionKey,
+      );
+    }
+
+    await deleteAlgorithm(id);
+  }
+
+  /*
+   * Shared operations used by CustomAlgModal
+   */
+
+  async function createCustomAlgorithm(algorithmData) {
+    return loggedIn
+      ? createUserAlgorithm(algorithmData)
+      : createGuestAlgorithm(algorithmData);
+  }
+
+  async function updateExistingCustomAlgorithm(
+    id,
+    algorithmData,
+  ) {
+    return loggedIn
+      ? updateUserAlgorithm(id, algorithmData)
+      : updateGuestAlgorithm(id, algorithmData);
+  }
+
+  async function deleteExistingCustomAlgorithm(id) {
+    return loggedIn
+      ? deleteUserAlgorithm(id)
+      : deleteGuestAlgorithm(id);
+  }
+
+  function handleCustomAlgCreated(newAlgorithm) {
+    setCustomAlgs((current) => [
+      ...current,
+      newAlgorithm,
+    ]);
+
+    const newAlgorithmId =
+      getCustomAlgId(newAlgorithm);
+
+    const newSheetAlgorithm = {
+      id: newAlgorithmId,
+      displayText: newAlgorithm.algorithm,
       primary: true,
       source: "custom",
       last50: [],
     };
 
-    setPrimaryId(newAlg._id);
+    setPrimaryId(newAlgorithmId);
 
     setSheetAlgs((current) => [
-      ...current.map((alg) => ({
-        ...alg,
+      ...current.map((algorithm) => ({
+        ...algorithm,
         primary: false,
       })),
-      newSheetAlg,
+      newSheetAlgorithm,
     ]);
 
     setShowCustomAlgModal(false);
   }
 
-  function handleCustomAlgUpdated(updatedAlg) {
+  function handleCustomAlgUpdated(updatedAlgorithm) {
+    const updatedAlgorithmId =
+      getCustomAlgId(updatedAlgorithm);
+
     setCustomAlgs((current) =>
-      current.map((alg) =>
-        String(alg._id) === String(updatedAlg._id) ? updatedAlg : alg,
+      current.map((algorithm) =>
+        String(getCustomAlgId(algorithm)) ===
+        String(updatedAlgorithmId)
+          ? updatedAlgorithm
+          : algorithm,
       ),
     );
 
     setSheetAlgs((current) =>
-      current.map((alg) =>
-        String(alg.id) === String(updatedAlg._id)
+      current.map((algorithm) =>
+        String(algorithm.id) ===
+        String(updatedAlgorithmId)
           ? {
-              ...alg,
-              displayText: updatedAlg.algorithm,
+              ...algorithm,
+              displayText:
+                updatedAlgorithm.algorithm,
             }
-          : alg,
+          : algorithm,
       ),
     );
 
@@ -151,31 +471,43 @@ export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
     setShowCustomAlgModal(false);
   }
 
-  function handleCustomAlgDeleted(deletedAlgId) {
+  function handleCustomAlgDeleted(deletedAlgorithmId) {
     setCustomAlgs((current) =>
-      current.filter((alg) => String(alg._id) !== String(deletedAlgId)),
+      current.filter(
+        (algorithm) =>
+          String(getCustomAlgId(algorithm)) !==
+          String(deletedAlgorithmId),
+      ),
     );
 
     setSheetAlgs((current) => {
-      const updated = current.filter(
-        (alg) => String(alg.id) !== String(deletedAlgId),
+      const updatedAlgorithms = current.filter(
+        (algorithm) =>
+          String(algorithm.id) !==
+          String(deletedAlgorithmId),
       );
 
-      const deletedWasPrimary = String(primaryId) === String(deletedAlgId);
+      const deletedWasPrimary =
+        String(primaryId) ===
+        String(deletedAlgorithmId);
+
       const newPrimaryId = deletedWasPrimary
-        ? (updated[0]?.id ?? null)
+        ? updatedAlgorithms[0]?.id ?? null
         : primaryId;
 
       setPrimaryId(newPrimaryId);
 
-      const updatedWithPrimary = updated.map((alg) => ({
-        ...alg,
-        primary: String(alg.id) === String(newPrimaryId),
-      }));
+      const algorithmsWithPrimary =
+        updatedAlgorithms.map((algorithm) => ({
+          ...algorithm,
+          primary:
+            String(algorithm.id) ===
+            String(newPrimaryId),
+        }));
 
-      onSave(updatedWithPrimary, memoryData);
+      onSave(algorithmsWithPrimary, memoryData);
 
-      return updatedWithPrimary;
+      return algorithmsWithPrimary;
     });
 
     setEditingCustomAlg(null);
@@ -192,22 +524,36 @@ export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
     setShowCustomAlgModal(true);
   }
 
-  function openEditCustomAlgModal(alg) {
-    setEditingCustomAlg(alg);
+  function openEditCustomAlgModal(algorithm) {
+    setEditingCustomAlg(algorithm);
     setShowCustomAlgModal(true);
   }
 
   function saveAlgs() {
-    const sortedAlgs = [...sheetAlgs].sort((a, b) => {
-      if (String(a.id) === String(primaryId)) return -1;
-      if (String(b.id) === String(primaryId)) return 1;
-      return 0;
-    });
+    const sortedAlgorithms = [...sheetAlgs].sort(
+      (first, second) => {
+        if (String(first.id) === String(primaryId)) {
+          return -1;
+        }
 
-    const algorithms = sortedAlgs.map((alg) => ({
-      ...alg,
-      primary: String(alg.id) === String(primaryId),
-    }));
+        if (
+          String(second.id) === String(primaryId)
+        ) {
+          return 1;
+        }
+
+        return 0;
+      },
+    );
+
+    const algorithms = sortedAlgorithms.map(
+      (algorithm) => ({
+        ...algorithm,
+        primary:
+          String(algorithm.id) ===
+          String(primaryId),
+      }),
+    );
 
     onSave(algorithms, memoryData);
     onClose();
@@ -241,7 +587,10 @@ export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
                 <input
                   value={memoryData.word ?? ""}
                   onChange={(event) =>
-                    updateMemoryField("word", event.target.value)
+                    updateMemoryField(
+                      "word",
+                      event.target.value,
+                    )
                   }
                 />
               </label>
@@ -252,12 +601,20 @@ export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
               title="Train this case"
               className="alg-modal__training-toggle"
               onChange={(checked) =>
-                onToggleTraining(cell.columnPiece, cell.id, checked)
+                onToggleTraining(
+                  cell.columnPiece,
+                  cell.id,
+                  checked,
+                )
               }
             />
           </div>
 
-          <button type="button" className="alg-modal__close" onClick={onClose}>
+          <button
+            type="button"
+            className="alg-modal__close"
+            onClick={onClose}
+          >
             ×
           </button>
         </div>
@@ -270,11 +627,15 @@ export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
           <div className="alg-modal__section-title">
             <div className="alg-modal__section-name">
               <span>BLDLab Algorithms</span>
-              <strong>{visibleDatabaseAlgs.length}</strong>
+              <strong>
+                {visibleDatabaseAlgs.length}
+              </strong>
             </div>
 
             {visibleDatabaseAlgs.length !== 0 && (
-              <span className="alg-modal__primary-label">Primary</span>
+              <span className="alg-modal__primary-label">
+                Primary
+              </span>
             )}
           </div>
 
@@ -284,13 +645,13 @@ export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
             setSheetAlgs={setSheetAlgs}
             primaryId={primaryId}
             setPrimaryId={setPrimaryId}
-            makeSheetAlg={(alg, primary) => ({
-              id: alg.id,
-              displayText: alg.algorithm,
+            makeSheetAlg={(algorithm, primary) => ({
+              id: algorithm.id,
+              displayText: algorithm.algorithm,
               primary,
               source: "bldlab",
             })}
-            getAlgId={(alg) => alg.id}
+            getAlgId={(algorithm) => algorithm.id}
           />
         </div>
 
@@ -302,7 +663,9 @@ export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
                 <strong>{customAlgs.length}</strong>
               </div>
 
-              <span className="alg-modal__primary-label">Primary</span>
+              <span className="alg-modal__primary-label">
+                Primary
+              </span>
             </div>
 
             <AlgList
@@ -311,19 +674,25 @@ export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
               setSheetAlgs={setSheetAlgs}
               primaryId={primaryId}
               setPrimaryId={setPrimaryId}
-              makeSheetAlg={(alg, primary) => ({
-                id: alg._id,
-                displayText: alg.algorithm,
+              makeSheetAlg={(algorithm, primary) => ({
+                id: getCustomAlgId(algorithm),
+                displayText: algorithm.algorithm,
                 primary,
                 source: "custom",
               })}
-              getAlgId={(alg) => alg._id}
-              renderStatus={(alg) => (
-                <span className={`alg-status alg-status--${alg.status}`}>
-                  {alg.status}
-                </span>
-              )}
-              onCustomMenuClick={openEditCustomAlgModal}
+              getAlgId={getCustomAlgId}
+              renderStatus={(algorithm) =>
+                algorithm.status ? (
+                  <span
+                    className={`alg-status alg-status--${algorithm.status}`}
+                  >
+                    {algorithm.status}
+                  </span>
+                ) : null
+              }
+              onCustomMenuClick={
+                openEditCustomAlgModal
+              }
             />
           </div>
         )}
@@ -337,11 +706,19 @@ export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
             Add Algorithm
           </button>
 
-          <button type="button" className="inverse-button" onClick={onClose}>
+          <button
+            type="button"
+            className="inverse-button"
+            onClick={onClose}
+          >
             Cancel
           </button>
 
-          <button type="button" className="button-style" onClick={saveAlgs}>
+          <button
+            type="button"
+            className="button-style"
+            onClick={saveAlgs}
+          >
             Save
           </button>
         </div>
@@ -352,13 +729,25 @@ export function AlgModal({ cell, type, onClose, onSave, onToggleTraining }) {
             type={type}
             editingAlg={editingCustomAlg}
             verifyAlg={verifyAlg}
-            createNewCustomAlg={createNewCustomAlg}
-            updateCustomAlg={updateCustomAlg}
-            deleteCustomAlg={deleteCustomAlg}
+            createNewCustomAlg={
+              createCustomAlgorithm
+            }
+            updateCustomAlg={
+              updateExistingCustomAlgorithm
+            }
+            deleteCustomAlg={
+              deleteExistingCustomAlgorithm
+            }
             onClose={closeCustomAlgModal}
-            onAlgCreated={handleCustomAlgCreated}
-            onAlgUpdated={handleCustomAlgUpdated}
-            onAlgDeleted={handleCustomAlgDeleted}
+            onAlgCreated={
+              handleCustomAlgCreated
+            }
+            onAlgUpdated={
+              handleCustomAlgUpdated
+            }
+            onAlgDeleted={
+              handleCustomAlgDeleted
+            }
           />
         )}
       </div>

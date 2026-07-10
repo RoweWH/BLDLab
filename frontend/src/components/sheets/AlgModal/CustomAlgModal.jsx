@@ -1,5 +1,17 @@
-import "./AlgModal.css";
 import { useState } from "react";
+import "./AlgModal.css";
+
+function normalizeStatus(status) {
+  return status?.trim().toLowerCase() ?? "private";
+}
+
+function shouldInitiallyShare(status, editing) {
+  if (!editing) {
+    return true;
+  }
+
+  return status === "pending";
+}
 
 export function CustomAlgModal({
   caseId,
@@ -14,19 +26,23 @@ export function CustomAlgModal({
   onClose,
   onAlgDeleted,
 }) {
-  const editing = !!editingAlg;
-  const isPublic = editingAlg?.status?.trim().toLowerCase() === "public";
+  const editing = Boolean(editingAlg);
+  const status = normalizeStatus(editingAlg?.status);
+  const isPublic = status === "public";
 
   const [newAlgorithm, setNewAlgorithm] = useState(editingAlg?.algorithm ?? "");
-  const [error, setError] = useState("");
+
   const [shareAlgorithm, setShareAlgorithm] = useState(
-    editing ? editingAlg.status !== "private" : true,
+    shouldInitiallyShare(status, editing),
   );
 
-  async function deleteAlgorithm() {
-    const algId = editingAlg?._id ?? editingAlg?.id;
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
-    if (!algId) {
+  async function handleDelete() {
+    const algorithmId = editingAlg?._id ?? editingAlg?.id;
+
+    if (!algorithmId) {
       setError("Missing algorithm id");
       return;
     }
@@ -35,57 +51,96 @@ export function CustomAlgModal({
       "Are you sure you want to delete this algorithm?",
     );
 
-    if (!confirmed) return;
+    if (!confirmed) {
+      return;
+    }
 
     try {
-      await deleteCustomAlg(algId);
-      onAlgDeleted(algId);
+      setError("");
+      setSaving(true);
+
+      await deleteCustomAlg(algorithmId);
+      onAlgDeleted(algorithmId);
     } catch (error) {
       console.error("Failed to delete algorithm:", error);
-      setError("Failed to delete algorithm");
+
+      setError(
+        error.response?.data?.message ??
+          error.message ??
+          "Failed to delete algorithm",
+      );
+    } finally {
+      setSaving(false);
     }
   }
 
-  async function submitAlgorithm() {
+  async function handleSubmit() {
+    if (saving || isPublic) {
+      return;
+    }
+
     setError("");
 
-    const valid = await verifyAlg(
-      {
-        id: caseId,
-        algorithms: [
-          {
-            algorithm: newAlgorithm,
-          },
-        ],
-      },
-      type,
-    );
+    const algorithmText = newAlgorithm.trim();
 
-    if (!valid) {
-      setError("Invalid Algorithm");
+    if (!algorithmText) {
+      setError("Enter an algorithm");
       return;
     }
 
-    const algData = {
-      caseId,
-      caseType: type,
-      algorithm: newAlgorithm,
-      status: shareAlgorithm ? "pending" : "private",
-    };
+    try {
+      setSaving(true);
 
-    if (editing) {
-      const updatedAlg = {
-        ...editingAlg,
-        ...algData,
+      const valid = await verifyAlg(
+        {
+          id: caseId,
+          algorithms: [
+            {
+              algorithm: algorithmText,
+            },
+          ],
+        },
+        type,
+      );
+
+      if (!valid) {
+        setError("Invalid Algorithm");
+        return;
+      }
+
+      const algorithmData = {
+        caseId,
+        caseType: type,
+        algorithm: algorithmText,
+        status: shareAlgorithm ? "pending" : "private",
       };
 
-      await updateCustomAlg(editingAlg._id, updatedAlg);
-      onAlgUpdated(updatedAlg);
-      return;
-    }
+      if (editing) {
+        const algorithmId = editingAlg._id ?? editingAlg.id;
 
-    const response = await createNewCustomAlg(algData);
-    onAlgCreated(response.data);
+        const updatedAlgorithm = await updateCustomAlg(
+          algorithmId,
+          algorithmData,
+        );
+
+        onAlgUpdated(updatedAlgorithm);
+        return;
+      }
+
+      const createdAlgorithm = await createNewCustomAlg(algorithmData);
+
+      onAlgCreated(createdAlgorithm);
+    } catch (error) {
+      console.error("Failed to save algorithm:", error);
+
+      setError(
+        error.response?.data?.message ??
+          error.message ??
+          "Failed to save algorithm",
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (isPublic) {
@@ -99,6 +154,7 @@ export function CustomAlgModal({
               type="button"
               className="alg-modal__close"
               onClick={onClose}
+              disabled={saving}
             >
               ×
             </button>
@@ -106,11 +162,12 @@ export function CustomAlgModal({
 
           <div className="alg-modal__body">
             <p className="alg-modal__description">
-              This algorithm has already been added to the shared BLDLab
-              database. You can remove it from your personal algorithms, but it
-              will remain available in the public database.
+              This algorithm is already public in the BLDLab database.
             </p>
 
+            <p className="alg-modal__description">
+              Deleting it only removes it from your personal algorithms.
+            </p>
             {error && <p className="error-message">{error}</p>}
           </div>
 
@@ -118,12 +175,18 @@ export function CustomAlgModal({
             <button
               type="button"
               className="inverse-button"
-              onClick={deleteAlgorithm}
+              onClick={handleDelete}
+              disabled={saving}
             >
-              Delete
+              {saving ? "Deleting..." : "Delete"}
             </button>
 
-            <button type="button" className="button-style" onClick={onClose}>
+            <button
+              type="button"
+              className="button-style"
+              onClick={onClose}
+              disabled={saving}
+            >
               Cancel
             </button>
           </div>
@@ -138,7 +201,12 @@ export function CustomAlgModal({
         <div className="alg-modal__header">
           <h2>{editing ? "Edit Algorithm" : "Add Algorithm"}</h2>
 
-          <button type="button" className="alg-modal__close" onClick={onClose}>
+          <button
+            type="button"
+            className="alg-modal__close"
+            onClick={onClose}
+            disabled={saving}
+          >
             ×
           </button>
         </div>
@@ -150,7 +218,8 @@ export function CustomAlgModal({
             className="custom-alg-input"
             type="text"
             value={newAlgorithm}
-            onChange={(e) => setNewAlgorithm(e.target.value)}
+            onChange={(event) => setNewAlgorithm(event.target.value)}
+            disabled={saving}
           />
 
           {error && <p className="error-message">{error}</p>}
@@ -159,9 +228,13 @@ export function CustomAlgModal({
             <input
               type="checkbox"
               checked={shareAlgorithm}
-              onChange={(e) => setShareAlgorithm(e.target.checked)}
+              onChange={(event) => setShareAlgorithm(event.target.checked)}
+              disabled={saving}
             />
-            Submit this algorithm to the shared BLDLab database
+
+            {status === "rejected"
+              ? "Resubmit this algorithm to the shared BLDLab database"
+              : "Submit this algorithm to the shared BLDLab database"}
           </label>
         </div>
 
@@ -170,22 +243,29 @@ export function CustomAlgModal({
             <button
               type="button"
               className="inverse-button"
-              onClick={deleteAlgorithm}
+              onClick={handleDelete}
+              disabled={saving}
             >
               Delete
             </button>
           )}
 
-          <button type="button" className="inverse-button" onClick={onClose}>
+          <button
+            type="button"
+            className="inverse-button"
+            onClick={onClose}
+            disabled={saving}
+          >
             Cancel
           </button>
 
           <button
             type="button"
             className="button-style"
-            onClick={submitAlgorithm}
+            onClick={handleSubmit}
+            disabled={saving}
           >
-            {editing ? "Save" : "Add"}
+            {saving ? "Saving..." : editing ? "Save" : "Add"}
           </button>
         </div>
       </div>
