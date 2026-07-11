@@ -1,83 +1,154 @@
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { importAlgs } from "../../api/algApi";
 import "./Import.css";
 
 export function Import() {
-  const [file, setFile] = useState();
-  const [valid, setValid] = useState();
-  const [duplicate, setDuplicate] = useState();
-  const [invalid, setInvalid] = useState();
+  const [fileName, setFileName] = useState("");
+  const [valid, setValid] = useState([]);
+  const [duplicate, setDuplicate] = useState([]);
+  const [invalid, setInvalid] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isImporting, setIsImporting] = useState(false);
 
   const inputFile = useRef(null);
 
-  const handleFile = (e) => {
-    const file = e.target.files[0];
-    const fileExtension = file.name.substring(file.name.lastIndexOf("."));
-    if (fileExtension !== ".csv") {
-      alert("Please upload a .csv file");
-      inputFile.current.value = "";
-      inputFile.current.type = "file";
+  const handleFile = (event) => {
+    const selectedFile = event.target.files?.[0];
+
+    clearResults();
+
+    if (!selectedFile) {
+      setFileName("");
       return;
     }
-    setFile(file);
+
+    const fileExtension = selectedFile.name
+      .substring(selectedFile.name.lastIndexOf("."))
+      .toLowerCase();
+
+    if (fileExtension !== ".csv") {
+      setErrorMessage("Please upload a .csv file.");
+      setFileName("");
+      resetFileInput();
+      return;
+    }
+
+    setFileName(selectedFile.name);
   };
 
   const submitFile = async () => {
+    const selectedFile = inputFile.current?.files?.[0];
+
+    if (!selectedFile) {
+      setErrorMessage("Please upload a CSV file first.");
+      return;
+    }
+
     try {
-      setErrorMessage("");
-      let file = inputFile.current.files[0];
-      if (!file) {
-        alert("Please upload a file first");
+      setIsImporting(true);
+      clearResults();
+
+      const csvText = await selectedFile.text();
+      const algorithms = parseCSV(csvText);
+
+      if (algorithms.length === 0) {
+        setErrorMessage("No algorithms were found in the selected CSV file.");
         return;
       }
-      let algorithms = parseCSV(await file.text());
-      let response = await importAlgs(algorithms);
+
+      const response = await importAlgs(algorithms);
+
       setValid(response.validAlgorithms);
-      setInvalid(response.invalidAlgorithms);
       setDuplicate(response.duplicateAlgorithms);
+      setInvalid(response.invalidAlgorithms);
+
+      const processedCount =
+        response.validAlgorithms.length +
+        response.duplicateAlgorithms.length +
+        response.invalidAlgorithms.length;
+
+      console.log("Import results:", {
+        submitted: algorithms.length,
+        processed: processedCount,
+        valid: response.validAlgorithms.length,
+        duplicate: response.duplicateAlgorithms.length,
+        invalid: response.invalidAlgorithms.length,
+      });
+
+      if (processedCount !== algorithms.length) {
+        setErrorMessage(
+          `Submitted ${algorithms.length} algorithms, but the server returned results for ${processedCount}.`,
+        );
+      }
     } catch (error) {
-      setErrorMessage("Failed to Import");
+      console.error("Algorithm import failed:", error);
+
+      const responseData = error.response?.data;
+
+      if (typeof responseData === "string") {
+        setErrorMessage(responseData);
+      } else if (responseData?.message) {
+        setErrorMessage(responseData.message);
+      } else {
+        setErrorMessage("Failed to import algorithms.");
+      }
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const clearResults = () => {
+    setValid([]);
+    setDuplicate([]);
+    setInvalid([]);
+    setErrorMessage("");
+  };
+
+  const resetFileInput = () => {
+    if (inputFile.current) {
+      inputFile.current.value = "";
     }
   };
 
   function parseCSV(csvText, delimiter = ",", minLength = 10) {
-    if (typeof csvText !== "string" || csvText.length === 0) {
+    if (typeof csvText !== "string" || csvText.trim().length === 0) {
       return [];
     }
 
     const algorithms = [];
+
     let currentField = "";
     let currentRow = [];
     let inQuotes = false;
 
     function cleanValue(value) {
-      if (typeof value !== "string") return "";
+      if (typeof value !== "string") {
+        return "";
+      }
 
-      let cleaned = value
-        .replace(/^\uFEFF/, "") // remove BOM if present
-        .replace(/[\0]/g, "") // remove null chars
+      return value
+        .replace(/^\uFEFF/, "")
+        .replace(/\0/g, "")
         .trim();
-
-      return cleaned;
     }
 
     function pushField() {
-      const cleaned = cleanValue(currentField);
-      currentRow.push(cleaned);
+      currentRow.push(cleanValue(currentField));
       currentField = "";
     }
 
     function pushRow() {
-      if (currentRow.length === 0) return;
+      if (currentRow.length === 0) {
+        return;
+      }
 
       for (const field of currentRow) {
-        if (
-          field &&
+        const isValidField =
           field.length >= minLength &&
           field !== delimiter &&
-          !/^[,\s]+$/.test(field)
-        ) {
+          !/^[,\s]+$/.test(field);
+
+        if (isValidField) {
           algorithms.push(field);
         }
       }
@@ -85,33 +156,40 @@ export function Import() {
       currentRow = [];
     }
 
-    for (let i = 0; i < csvText.length; i++) {
-      const char = csvText[i];
-      const nextChar = csvText[i + 1];
+    for (let index = 0; index < csvText.length; index++) {
+      const character = csvText[index];
+      const nextCharacter = csvText[index + 1];
 
-      if (char === '"') {
-        if (inQuotes && nextChar === '"') {
+      if (character === '"') {
+        if (inQuotes && nextCharacter === '"') {
           currentField += '"';
-          i++;
+          index++;
         } else {
           inQuotes = !inQuotes;
         }
-      } else if (char === delimiter && !inQuotes) {
+
+        continue;
+      }
+
+      if (character === delimiter && !inQuotes) {
         pushField();
-      } else if ((char === "\n" || char === "\r") && !inQuotes) {
+        continue;
+      }
+
+      if ((character === "\n" || character === "\r") && !inQuotes) {
         pushField();
 
-        if (char === "\r" && nextChar === "\n") {
-          i++;
+        if (character === "\r" && nextCharacter === "\n") {
+          index++;
         }
 
         pushRow();
-      } else {
-        currentField += char;
+        continue;
       }
+
+      currentField += character;
     }
 
-    // flush final field/row
     if (currentField.length > 0 || currentRow.length > 0) {
       pushField();
       pushRow();
@@ -120,46 +198,74 @@ export function Import() {
     return algorithms;
   }
 
-  const hasUploadResults = valid?.length > 0 || duplicate?.length > 0;
+  const hasUploadResults =
+    valid.length > 0 || duplicate.length > 0 || invalid.length > 0;
+
+  const totalProcessed = valid.length + duplicate.length + invalid.length;
 
   return (
     <div className="import-section">
       <div className="upload-card">
-        <input type="file" onChange={handleFile} ref={inputFile} />
+        <input
+          ref={inputFile}
+          type="file"
+          accept=".csv,text/csv"
+          onChange={handleFile}
+          disabled={isImporting}
+        />
 
-        <button className="button-style" onClick={submitFile}>
-          Upload File
+        {fileName && <div className="selected-file">{fileName}</div>}
+
+        <button
+          className="button-style"
+          type="button"
+          onClick={submitFile}
+          disabled={isImporting}
+        >
+          {isImporting ? "Importing..." : "Upload File"}
         </button>
       </div>
 
-      {errorMessage ? (
-        <div className="error-message">{errorMessage}</div>
-      ) : (
-        hasUploadResults && (
-          <div className="results-section">
-            <details className="result-dropdown">
-              <summary>
-                Successfully Imported Algorithms ({valid.length})
-              </summary>
+      {errorMessage && <div className="error-message">{errorMessage}</div>}
 
-              <div className="result-content">
-                {valid.map((alg, index) => (
-                  <div key={index}>{alg}</div>
-                ))}
-              </div>
-            </details>
-
-            <details className="result-dropdown">
-              <summary>Duplicate Algorithms ({duplicate.length})</summary>
-
-              <div className="result-content">
-                {duplicate.map((alg, index) => (
-                  <div key={index}>{alg}</div>
-                ))}
-              </div>
-            </details>
+      {hasUploadResults && (
+        <div className="results-section">
+          <div className="import-summary">
+            Processed Algorithms: {totalProcessed}
           </div>
-        )
+
+          <details className="result-dropdown">
+            <summary>Successfully Imported Algorithms ({valid.length})</summary>
+
+            <div className="result-content">
+              {valid.map((alg, index) => (
+                <div key={`${alg.id}-${index}`}>
+                  {alg.id}: {alg.algorithm}
+                </div>
+              ))}
+            </div>
+          </details>
+
+          <details className="result-dropdown">
+            <summary>Duplicate Algorithms ({duplicate.length})</summary>
+
+            <div className="result-content">
+              {duplicate.map((alg, index) => (
+                <div key={`${alg}-${index}`}>{alg}</div>
+              ))}
+            </div>
+          </details>
+
+          <details className="result-dropdown">
+            <summary>Invalid Algorithms ({invalid.length})</summary>
+
+            <div className="result-content">
+              {invalid.map((alg, index) => (
+                <div key={`${alg}-${index}`}>{alg}</div>
+              ))}
+            </div>
+          </details>
+        </div>
       )}
     </div>
   );

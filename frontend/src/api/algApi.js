@@ -76,8 +76,17 @@ export async function getParityAlgById(id) {
 }
 
 export async function importAlgs(algorithms) {
-   const response = await axios.post(`${BLDDB_API_URL}/import`, algorithms);
-   return response?.data;
+  if (!Array.isArray(algorithms)) {
+    throw new TypeError("Algorithms must be provided as an array.");
+  }
+
+  const response = await axios.post(`${BLDDB_API_URL}/import`, algorithms);
+
+  return {
+    validAlgorithms: response.data?.validAlgorithms ?? [],
+    duplicateAlgorithms: response.data?.duplicateAlgorithms ?? [],
+    invalidAlgorithms: response.data?.invalidAlgorithms ?? [],
+  };
 }
 
 export async function verifyAlg(submission, type) {
