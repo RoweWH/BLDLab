@@ -9,6 +9,7 @@ export function Import() {
   const [invalid, setInvalid] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isImporting, setIsImporting] = useState(false);
+  const [submittedCount, setSubmittedCount] = useState(0);
 
   const inputFile = useRef(null);
 
@@ -49,35 +50,49 @@ export function Import() {
       clearResults();
 
       const csvText = await selectedFile.text();
-      const algorithms = parseCSV(csvText);
+      const parseResult = parseCSV(csvText);
+      const algorithms = parseResult.algorithms;
+
+      setSubmittedCount(algorithms.length);
+
+      runParserDiagnostics({
+        csvText,
+        algorithms,
+        parseResult,
+      });
 
       if (algorithms.length === 0) {
-        setErrorMessage("No algorithms were found in the selected CSV file.");
+        setErrorMessage("No values were found in the selected CSV file.");
         return;
       }
 
       const response = await importAlgs(algorithms);
 
-      setValid(response.validAlgorithms);
-      setDuplicate(response.duplicateAlgorithms);
-      setInvalid(response.invalidAlgorithms);
+      const validAlgorithms = response.validAlgorithms ?? [];
+      const duplicateAlgorithms = response.duplicateAlgorithms ?? [];
+      const invalidAlgorithms = response.invalidAlgorithms ?? [];
+
+      setValid(validAlgorithms);
+      setDuplicate(duplicateAlgorithms);
+      setInvalid(invalidAlgorithms);
 
       const processedCount =
-        response.validAlgorithms.length +
-        response.duplicateAlgorithms.length +
-        response.invalidAlgorithms.length;
+        validAlgorithms.length +
+        duplicateAlgorithms.length +
+        invalidAlgorithms.length;
 
-      console.log("Import results:", {
-        submitted: algorithms.length,
-        processed: processedCount,
-        valid: response.validAlgorithms.length,
-        duplicate: response.duplicateAlgorithms.length,
-        invalid: response.invalidAlgorithms.length,
-      });
+      console.group("Import results");
+      console.log("Submitted:", algorithms.length);
+      console.log("Processed:", processedCount);
+      console.log("Valid:", validAlgorithms.length);
+      console.log("Duplicate:", duplicateAlgorithms.length);
+      console.log("Invalid:", invalidAlgorithms.length);
+      console.log("Full API response:", response);
+      console.groupEnd();
 
       if (processedCount !== algorithms.length) {
         setErrorMessage(
-          `Submitted ${algorithms.length} algorithms, but the server returned results for ${processedCount}.`,
+          `Submitted ${algorithms.length} values, but the API returned results for ${processedCount}.`,
         );
       }
     } catch (error) {
@@ -101,6 +116,7 @@ export function Import() {
     setValid([]);
     setDuplicate([]);
     setInvalid([]);
+    setSubmittedCount(0);
     setErrorMessage("");
   };
 
@@ -110,9 +126,14 @@ export function Import() {
     }
   };
 
-  function parseCSV(csvText, delimiter = ",", minLength = 10) {
+  function parseCSV(csvText, delimiter = ",") {
     if (typeof csvText !== "string" || csvText.trim().length === 0) {
-      return [];
+      return {
+        algorithms: [],
+        totalFields: 0,
+        emptyFields: 0,
+        rows: 0,
+      };
     }
 
     const algorithms = [];
@@ -120,6 +141,10 @@ export function Import() {
     let currentField = "";
     let currentRow = [];
     let inQuotes = false;
+
+    let totalFields = 0;
+    let emptyFields = 0;
+    let rows = 0;
 
     function cleanValue(value) {
       if (typeof value !== "string") {
@@ -133,8 +158,15 @@ export function Import() {
     }
 
     function pushField() {
-      currentRow.push(cleanValue(currentField));
+      const cleaned = cleanValue(currentField);
+
+      currentRow.push(cleaned);
       currentField = "";
+      totalFields++;
+
+      if (!cleaned) {
+        emptyFields++;
+      }
     }
 
     function pushRow() {
@@ -142,13 +174,13 @@ export function Import() {
         return;
       }
 
-      for (const field of currentRow) {
-        const isValidField =
-          field.length >= minLength &&
-          field !== delimiter &&
-          !/^[,\s]+$/.test(field);
+      rows++;
 
-        if (isValidField) {
+      for (const field of currentRow) {
+        const isNonEmptyValue =
+          field.length > 0 && field !== delimiter && !/^[,\s]+$/.test(field);
+
+        if (isNonEmptyValue) {
           algorithms.push(field);
         }
       }
@@ -195,7 +227,64 @@ export function Import() {
       pushRow();
     }
 
-    return algorithms;
+    return {
+      algorithms,
+      totalFields,
+      emptyFields,
+      rows,
+    };
+  }
+
+  function runParserDiagnostics({ csvText, algorithms, parseResult }) {
+    const nonEmptyLines = csvText
+      .split(/\r?\n/)
+      .filter((line) => line.trim().length > 0);
+
+    const duplicateValues = algorithms.filter(
+      (algorithm, index) => algorithms.indexOf(algorithm) !== index,
+    );
+
+    const uniqueDuplicateValues = [...new Set(duplicateValues)];
+
+    const veryShortValues = algorithms.filter((value) => value.length < 10);
+
+    console.group("CSV parser diagnostics");
+    console.log("Non-empty lines:", nonEmptyLines.length);
+    console.log("Rows parsed:", parseResult.rows);
+    console.log("Total fields:", parseResult.totalFields);
+    console.log("Empty fields:", parseResult.emptyFields);
+    console.log("Submitted values:", algorithms.length);
+    console.log("Values shorter than 10 characters:", veryShortValues.length);
+
+    if (veryShortValues.length > 0) {
+      console.log("Short values:", veryShortValues);
+    }
+
+    console.log("Duplicate values inside CSV:", uniqueDuplicateValues.length);
+
+    if (uniqueDuplicateValues.length > 0) {
+      console.log("CSV duplicate values:", uniqueDuplicateValues);
+    }
+
+    console.log("All submitted values:", algorithms);
+    console.groupEnd();
+
+    console.assert(
+      parseResult.totalFields >= algorithms.length,
+      "Parser test failed: submitted values exceed total parsed fields.",
+    );
+
+    console.assert(
+      algorithms.every(
+        (value) => typeof value === "string" && value.trim().length > 0,
+      ),
+      "Parser test failed: algorithms contains an empty or non-string value.",
+    );
+
+    console.assert(
+      !algorithms.some((value) => value.includes("\0")),
+      "Parser test failed: a null character remained in the parsed data.",
+    );
   }
 
   const hasUploadResults =
@@ -230,6 +319,10 @@ export function Import() {
 
       {hasUploadResults && (
         <div className="results-section">
+          <div className="import-summary">
+            Submitted Algorithms: {submittedCount}
+          </div>
+
           <div className="import-summary">
             Processed Algorithms: {totalProcessed}
           </div>
