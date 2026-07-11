@@ -9,7 +9,7 @@ export function isLocalSheetId(id) {
 }
 
 export async function getLocalSheets() {
-   return db.sheets.orderBy("updatedAt").reverse().toArray();
+   return db.sheets.orderBy("createdAt").toArray();
 }
 
 export async function getLocalSheetById(sheetId) {

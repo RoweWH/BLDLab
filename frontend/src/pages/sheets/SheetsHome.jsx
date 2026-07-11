@@ -9,6 +9,12 @@ import { buildLTCTSheet } from "../../utils/sheets/BuildLTCTSheet";
 import { buildT2CSheet } from "../../utils/sheets/BuildT2CSheet";
 import { getLocalSheets, saveLocalSheet } from "../../storage/sheetStorage";
 import { getLocalSettings } from "../../storage/settingsStorage";
+import defaultUF from "../../data/defaultSheets/defaultUF";
+import defaultUFR from "../../data/defaultSheets/defaultUFR";
+import default2E2C from "../../data/defaultSheets/default2E2C";
+import defaultLTCT from "../../data/defaultSheets/defaultLTCT";
+import defaultT2C from "../../data/defaultSheets/defaultT2C";
+
 import "./SheetsHome.css";
 
 export function SheetsHome() {
@@ -32,7 +38,50 @@ export function SheetsHome() {
       } catch {
         setUser(null);
 
-        const localSheets = await getLocalSheets();
+        let localSheets = await getLocalSheets();
+
+        if (localSheets.length === 0) {
+          const defaultSheetTemplates = [
+            {
+              sheet: defaultUF,
+              id: "local-defaultUF",
+              createdAt: "2026-01-01T00:00:00.000Z",
+            },
+            {
+              sheet: defaultUFR,
+              id: "local-defaultUFR",
+              createdAt: "2026-01-02T00:00:00.000Z",
+            },
+            {
+              sheet: default2E2C,
+              id: "local-default2E2C",
+              createdAt: "2026-01-03T00:00:00.000Z",
+            },
+            {
+              sheet: defaultLTCT,
+              id: "local-defaultLTCT",
+              createdAt: "2026-01-04T00:00:00.000Z",
+            },
+            {
+              sheet: defaultT2C,
+              id: "local-defaultT2C",
+              createdAt: "2026-01-05T00:00:00.000Z",
+            },
+          ];
+
+          const savedDefaultSheets = await Promise.all(
+            defaultSheetTemplates.map(async ({ sheet, id }) => {
+              const defaultSheet = structuredClone(sheet);
+
+              defaultSheet._id = id;
+
+              return saveLocalSheet(defaultSheet);
+            }),
+          );
+
+          localSheets = savedDefaultSheets;
+        }
+
         setSheets(localSheets);
       } finally {
         setLoading(false);
@@ -85,7 +134,7 @@ export function SheetsHome() {
       } else {
         const savedSheet = await saveLocalSheet(populatedSheet);
 
-        setSheets((currentSheets) => [savedSheet, ...currentSheets]);
+        setSheets((currentSheets) => [...currentSheets, savedSheet]);
       }
 
       setShowCreateModal(false);
